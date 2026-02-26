@@ -1,0 +1,163 @@
+// src/aiService.js
+
+/**
+ * Heuristic NLP Parser for RailMatch
+ * Parses natural language into structured filters or creation intents.
+ */
+
+const WAGON_TYPES = [
+    { type: 'Крытый', synonyms: ['крыт', 'крытые', 'крытых'] },
+    { type: 'Полувагон', synonyms: ['полувагон', 'полувагоны', 'пв'] },
+    { type: 'Платформа', synonyms: ['платформ', 'платформы'] },
+    { type: 'Цистерна', synonyms: ['цистерн', 'цистерны', 'бочк'] },
+    { type: 'Зерновоз', synonyms: ['зерновоз'] },
+    { type: 'Хоппер', synonyms: ['хоппер'] },
+    { type: 'Рефрижератор', synonyms: ['реф', 'рефрижератор'] }
+];
+
+const CARGO_TYPES = ['Уголь', 'Зерно', 'Лес', 'Металл', 'Нефть', 'Щебень', 'Мраморный щебень', 'Удобрения', 'Песок', 'Пиломатериалы', 'Руда', 'Трубы'];
+
+const CITY_ABBREVIATIONS = {
+    'мск': 'Москва',
+    'спб': 'Санкт-Петербург',
+    'питер': 'Санкт-Петербург',
+    'екб': 'Екатеринбург',
+    'нск': 'Новосибирск',
+    'рнд': 'Ростов-на-Дону',
+    'ростов': 'Ростов-на-Дону',
+    'владик': 'Владивосток',
+    'крд': 'Краснодар',
+    'казань': 'Казань',
+    'омск': 'Омск'
+};
+
+const capitalize = (str) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+const resolveCityName = (name) => {
+    if (!name) return null;
+    const cleanName = name.replace(/[.,]/g, '').toLowerCase().trim();
+    if (CITY_ABBREVIATIONS[cleanName]) {
+        return CITY_ABBREVIATIONS[cleanName];
+    }
+    // Basic lemmatization for Russian prepositions "из", "в"
+    let lemmatized = cleanName;
+    if (lemmatized.length > 4) {
+        lemmatized = lemmatized.replace(/(ы|и|у|е|ом|ах|ях|а)$/i, '');
+    }
+    return capitalize(lemmatized);
+};
+
+export const parsePrompt = (prompt) => {
+    let lowerPrompt = prompt.toLowerCase();
+
+    // Normalize dashes
+    lowerPrompt = lowerPrompt.replace(/\s*-\s*/g, ' - ');
+
+    let result = {
+        intent: 'search',
+        stationFrom: null,
+        stationTo: null,
+        wagonType: null,
+        cargoType: null,
+        totalWagons: null,
+        totalTons: null
+    };
+
+    // 1. Determine Intent
+    const createKeywords = ['хочу отправить', 'нужно отправить', 'отправляю', 'создать', 'сформировать', 'создай', 'мне нужно', 'буду отправлять', 'заявк'];
+    if (createKeywords.some(kw => lowerPrompt.includes(kw))) {
+        result.intent = 'create';
+    }
+
+    // 2. Extract Wagon Type
+    for (const w of WAGON_TYPES) {
+        if (w.synonyms.some(s => lowerPrompt.includes(s))) {
+            result.wagonType = w.type;
+            break;
+        }
+    }
+
+    // 3. Extract Cargo Type
+    result.cargoType = CARGO_TYPES.find(c => lowerPrompt.includes(c.toLowerCase().slice(0, -4))) || null;
+
+    // 4. Extract Numbers for Wagons & Tons
+    let numbers = [...lowerPrompt.matchAll(/(\d+)/g)].map(m => parseInt(m[1], 10));
+
+    const wagonsMatch = lowerPrompt.match(/(\d+)\s*(?:вагон|вагонов|вагона|шт|штук|пв|цистерн|платформ)/i);
+    if (wagonsMatch && wagonsMatch[1]) result.totalWagons = Number(wagonsMatch[1]);
+
+    const tonsMatch = lowerPrompt.match(/(\d+)\s*(?:тонн|т\.|т\b)/i);
+    let explicitTons = null;
+    if (tonsMatch && tonsMatch[1]) {
+        explicitTons = Number(tonsMatch[1]);
+        if (lowerPrompt.includes(' по ' + explicitTons) && result.totalWagons) {
+            explicitTons = explicitTons * result.totalWagons;
+        }
+        result.totalTons = explicitTons;
+    }
+
+    // Fallback if numbers exist but no explicit units
+    if (numbers.length > 0) {
+        if (!result.totalWagons && !result.totalTons && numbers.length >= 2) {
+            const sorted = [...numbers].sort((a, b) => a - b);
+            result.totalWagons = sorted[0];
+            result.totalTons = sorted[1];
+        } else if (!result.totalWagons && numbers.length === 1 && numbers[0] < 200) {
+            result.totalWagons = numbers[0];
+        } else if (!result.totalTons && numbers.length === 1 && numbers[0] >= 200) {
+            result.totalTons = numbers[0];
+        }
+    }
+
+    // 5. Extract Stations
+    let promptForStations = lowerPrompt; // keep a copy to consume matched parts safely
+
+    // A. "из X" / "в Y"
+    const fromMatch = promptForStations.match(/(?:из|от)\s+([а-яА-ЯёЁa-zA-Z-]+)/i);
+    if (fromMatch && fromMatch[1]) {
+        result.stationFrom = resolveCityName(fromMatch[1]);
+        promptForStations = promptForStations.replace(fromMatch[0], '');
+    }
+
+    const toMatch = promptForStations.match(/(?:в|до)\s+([а-яА-ЯёЁa-zA-Z-]+)/i);
+    if (toMatch && toMatch[1] && !['вагонах', 'вагоне', 'цистернах', 'цистерне', 'полувагонах', 'бочках'].includes(toMatch[1])) {
+        result.stationTo = resolveCityName(toMatch[1]);
+        promptForStations = promptForStations.replace(toMatch[0], '');
+    }
+
+    // B. "X - Y"
+    if (!result.stationFrom || !result.stationTo) {
+        const routeMatch = promptForStations.match(/([а-яА-ЯёЁa-zA-Z]+)\s+-\s+([а-яА-ЯёЁa-zA-Z]+)/i);
+        if (routeMatch) {
+            if (!result.stationFrom) result.stationFrom = resolveCityName(routeMatch[1]);
+            if (!result.stationTo) result.stationTo = resolveCityName(routeMatch[2]);
+        }
+    }
+
+    // C. Fallback: Remaining capitalized/unrecognized words
+    if (!result.stationFrom || !result.stationTo) {
+        const stopWords = ['хочу', 'отправить', 'по', 'шт', 'т', 'вагон', 'вагонов', 'вагона', 'тонн', 'нужно', 'из', 'в', 'от', 'до', 'мне', 'заявк', 'создать', 'найти', 'ищу'];
+        const words = promptForStations.split(/\s+/).map(w => w.replace(/[.,]/g, ''));
+
+        let potentialCities = words.filter(w => {
+            if (w.length < 3 || stopWords.includes(w) || !isNaN(w)) return false;
+            if (CITY_ABBREVIATIONS[w]) return true;
+
+            const isWagon = WAGON_TYPES.some(wt => wt.synonyms.some(s => w.includes(s)));
+            const isCargo = CARGO_TYPES.some(c => w.includes(c.toLowerCase().slice(0, -4)));
+            return !isWagon && !isCargo;
+        });
+
+        if (potentialCities.length >= 1 && !result.stationFrom) {
+            result.stationFrom = resolveCityName(potentialCities[0]);
+        }
+        if (potentialCities.length >= 2 && !result.stationTo) {
+            result.stationTo = resolveCityName(potentialCities[1]);
+        }
+    }
+
+    return result;
+};
