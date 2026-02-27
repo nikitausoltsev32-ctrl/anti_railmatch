@@ -8,7 +8,8 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
         cargoType: initialData?.cargoType || '',
         wagonType: initialData?.wagonType || 'Крытый',
         totalWagons: initialData?.totalWagons || '',
-        totalTons: initialData?.totalTons || ''
+        totalTons: initialData?.totalTons || '',
+        targetPrice: initialData?.targetPrice || ''
     });
 
     // In case initialData changes while component is mounted (though usually it mounts fresh)
@@ -41,19 +42,19 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Станция отправления</label>
-                            <input name="stationFrom" value={formData.stationFrom} onChange={handleChange} placeholder="Напр. Екатеринбург" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="stationFrom" value={formData.stationFrom || ''} onChange={handleChange} placeholder="Напр. Екатеринбург" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Станция назначения</label>
-                            <input name="stationTo" value={formData.stationTo} onChange={handleChange} placeholder="Напр. Москва" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="stationTo" value={formData.stationTo || ''} onChange={handleChange} placeholder="Напр. Москва" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Груз</label>
-                            <input name="cargoType" value={formData.cargoType} onChange={handleChange} placeholder="Напр. Уголь" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="cargoType" value={formData.cargoType || ''} onChange={handleChange} placeholder="Напр. Уголь" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Тип вагона</label>
-                            <select name="wagonType" value={formData.wagonType} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold appearance-none">
+                            <select name="wagonType" value={formData.wagonType || 'Крытый'} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold appearance-none">
                                 <option value="Крытый">Крытый</option>
                                 <option value="Полувагон">Полувагон</option>
                                 <option value="Платформа">Платформа</option>
@@ -62,20 +63,20 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Количество вагонов (шт)</label>
-                            <input name="totalWagons" type="number" min="1" value={formData.totalWagons} onChange={handleChange} placeholder="10" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="totalWagons" type="number" min="1" value={formData.totalWagons || ''} onChange={handleChange} placeholder="10" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Общий вес (тонн)</label>
-                            <input name="totalTons" type="number" min="1" value={formData.totalTons} onChange={handleChange} placeholder="600" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4 font-bold flex items-center gap-2">Ставка (₽ / ваг.) <Sparkles className="w-3 h-3 text-blue-500" /></label>
+                            <input name="targetPrice" type="number" min="1" value={formData.targetPrice || ''} onChange={handleChange} placeholder="Напр. 15000" className="w-full px-6 py-4 bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-black" />
                         </div>
                     </div>
 
                     <button
                         onClick={() => {
-                            if (!formData.stationFrom || !formData.stationTo || !formData.cargoType || !formData.totalWagons || !formData.totalTons) return;
+                            if (!formData.stationFrom || !formData.stationTo || !formData.cargoType || !formData.totalWagons) return;
                             onPublish(formData);
                         }}
-                        disabled={!formData.stationFrom || !formData.stationTo || !formData.cargoType || !formData.totalWagons || !formData.totalTons}
+                        disabled={!formData.stationFrom || !formData.stationTo || !formData.cargoType || !formData.totalWagons}
                         className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-lg shadow-blue-500/20 uppercase tracking-widest transition-all hover:shadow-blue-500/40 active:scale-95 flex items-center justify-center gap-2">
                         Опубликовать заявку
                     </button>

@@ -98,7 +98,7 @@ export default function AnalyticsDashboard({ requests, bids }) {
                         </div>
                     </div>
                     <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                             <AreaChart data={priceHistory}>
                                 <defs>
                                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
@@ -125,7 +125,7 @@ export default function AnalyticsDashboard({ requests, bids }) {
                     <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-8">Распределение активных заявок</p>
 
                     <div className="h-[250px] w-full mb-8">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                             <BarChart data={demandByWagon} layout="vertical">
                                 <XAxis type="number" hide />
                                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 900, fill: '#94a3b8', textTransform: 'uppercase' }} width={80} />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Plus, Check, CheckCircle, Sparkles, TrendingUp, Package, Clock, ShieldCheck, MapPin, Truck, AlertCircle, Activity, TrendingDown } from 'lucide-react';
+import { ArrowRight, Plus, Check, CheckCircle, Sparkles, TrendingUp, Package, Clock, ShieldCheck, MapPin, Truck, AlertCircle, Activity, TrendingDown, Award } from 'lucide-react';
 import { parsePrompt } from '../src/aiService';
 
 export default function MyRequestsView({ requests, bids, userInn, setView, onAccept, onAiCreate }) {
@@ -137,8 +137,8 @@ export default function MyRequestsView({ requests, bids, userInn, setView, onAcc
                                 <div>
                                     <div className="flex items-center gap-3 mb-4">
                                         <span className="text-[11px] font-bold text-slate-400">ID-{req.id.substring(0, 8)}</span>
-                                        <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${req.status === 'completed' ? 'bg-slate-200 text-slate-600' : 'bg-blue-100 text-blue-700'}`}>{req.status === 'open' ? 'Идет поиск' : 'Завершена'}</span>
-                                        <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700">{req.wagonType}</span>
+                                        <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${req.status === 'completed' ? 'bg-slate-200 text-slate-600' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>{req.status === 'open' ? 'Идет поиск' : 'Завершена'}</span>
+                                        <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">{req.wagonType}</span>
                                     </div>
                                     <div className="text-2xl font-black dark:text-white flex items-center gap-4 mb-2">
                                         <MapPin className="w-5 h-5 text-slate-400" /> {req.stationFrom} <ArrowRight className="w-5 h-5 text-blue-300" /> <MapPin className="w-5 h-5 text-slate-400" /> {req.stationTo}
@@ -156,23 +156,40 @@ export default function MyRequestsView({ requests, bids, userInn, setView, onAcc
                                 </div>
                             </div>
                             {reqBids.length > 0 && (
-                                <div className="bg-slate-50 dark:bg-slate-900/40 p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {reqBids.map(bid => (
-                                        <div key={bid.id} className="bg-white dark:bg-[#111827] p-6 rounded-3xl border border-blue-100 dark:border-slate-700 shadow-md hover:-translate-y-1 transition-all">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div className="font-black text-slate-800 dark:text-white text-base">
-                                                    {bid.ownerName}
-                                                    <div className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">ИНН: {bid.ownerInn || '---'}</div>
-                                                </div>
-                                                <div className="flex flex-col items-end">
-                                                    <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-lg text-xs font-bold">{bid.wagons} ваг.</div>
-                                                    <div className="px-3 py-1 text-indigo-600 text-[10px] font-black">{bid.tons} т.</div>
-                                                </div>
-                                            </div>
-                                            <div className="text-2xl font-black text-slate-900 dark:text-white mb-6 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">{bid.price.toLocaleString()} <span className="text-sm text-slate-400">₽/шт</span></div>
-                                            {bid.status === 'pending' ? <button onClick={() => onAccept(bid)} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95">Заключить сделку</button> : <div className="w-full py-3 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 text-[11px] font-black uppercase tracking-widest rounded-xl text-center flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Сделка активна</div>}
-                                        </div>
-                                    ))}
+                                <div className="bg-slate-50 dark:bg-[#0B1120]/50 p-8 border-t border-slate-100 dark:border-slate-800/80">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/20"><Sparkles className="w-4 h-4 text-white" /></div>
+                                        <span className="text-sm font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">AI-сортировка: Лучшие отклики первыми</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {(() => {
+                                            const sortedBids = [...reqBids].sort((a, b) => a.price - b.price);
+                                            return sortedBids.map((bid, idx) => {
+                                                const isBest = idx === 0 && req.status === 'open';
+                                                return (
+                                                    <div key={bid.id} className={`p-6 rounded-3xl border shadow-md hover:-translate-y-1 transition-all relative overflow-hidden group ${isBest ? 'bg-white dark:bg-[#111827] border-blue-400 dark:border-blue-500 ring-2 ring-blue-500/20 shadow-blue-500/10' : 'bg-white dark:bg-[#111827] border-slate-200 dark:border-slate-700/50'}`}>
+                                                        {isBest && (
+                                                            <div className="absolute top-0 right-0 z-10 px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-2xl shadow-lg flex items-center gap-1.5">
+                                                                <Award className="w-3 h-3" /> Выгодное
+                                                            </div>
+                                                        )}
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <div className="font-black text-slate-800 dark:text-white text-base">
+                                                                {bid.ownerName}
+                                                                <div className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">ИНН: {bid.ownerInn || '---'}</div>
+                                                            </div>
+                                                            <div className="flex flex-col items-end">
+                                                                <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold">{bid.wagons} ваг.</div>
+                                                                <div className="px-3 py-1 text-indigo-600 dark:text-indigo-400 text-[10px] font-black">{bid.tons} т.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-2xl font-black text-slate-900 dark:text-white mb-6 bg-slate-50 dark:bg-[#0B1120] p-3 rounded-xl border border-slate-100 dark:border-slate-800">{bid.price.toLocaleString()} <span className="text-sm text-slate-400 font-bold">₽/шт</span></div>
+                                                        {bid.status === 'pending' ? <button onClick={() => onAccept(bid)} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Заключить сделку</button> : <div className="w-full py-3 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 text-[11px] font-black uppercase tracking-widest rounded-xl text-center flex items-center justify-center gap-2"><CheckCircle className="w-4 h-4" /> Сделка активна</div>}
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
                                 </div>
                             )}
                         </div>

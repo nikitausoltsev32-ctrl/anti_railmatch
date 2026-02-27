@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
-export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark }) {
+export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading }) {
     const [formData, setFormData] = useState({
         email: '', password: '', company: '', inn: '', phone: ''
     });
@@ -33,8 +33,12 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                         </div>
                     )}
 
-                    <button type="submit" className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all">
-                        {mode === 'login' ? 'Войти' : 'Создать аккаунт'}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale-[0.5]"
+                    >
+                        {loading ? 'Обработка...' : (mode === 'login' ? 'Войти' : 'Создать аккаунт')}
                     </button>
                 </form>
                 <button onClick={() => setMode(mode === 'login' ? 'register' : 'login')} className="w-full text-center mt-8 text-slate-400 font-bold text-sm hover:text-blue-600 transition-colors">{mode === 'login' ? 'Нет аккаунта? Регистрация' : 'Есть аккаунт? Войти'}</button>

@@ -8,7 +8,7 @@ import {
     MessageSquare, Send, Phone, Paperclip, MoreVertical,
     Settings, CreditCard, Share2, Award, History, Copy,
     Sparkles, Bot, Plus, Moon, Sun, ArrowUpRight, Check,
-    Briefcase, Activity, FileText, Handshake, Eye, Shield, Lock, AlertTriangle
+    Briefcase, Activity, FileText, Handshake, Eye, Shield, AlertTriangle
 } from 'lucide-react';
 
 // --- БИЗНЕС-ЛОГИКА БЕЗОПАСНОСТИ ---
@@ -16,7 +16,8 @@ const STOP_WORDS = [
     'давайте в обход', 'скину в телегу', 'оплата на карту', 'наберите мне напрямую',
     'мой номер', 'мой телефон', 'пишите в вотсап', 'связаться в телеграме',
     'перезвоните на', 'мои реквизиты', 'оплатить на карту',
-    'контакты', 'телефон', 'email', 'почта', 'whatsapp', 'telegram'
+    'контакты', 'телефон', 'email', 'почта', 'whatsapp', 'telegram', 'viber', 'личку', 'в личку',
+    'direct', 'директ', 'мобильный', 'сотовый', 'созвонимся', '@', '.ru', '.com', '.net'
 ];
 
 const MAX_PROFILE_VIEWS_PER_DAY = 50;
@@ -32,8 +33,21 @@ const SEASONAL_MULTIPLIERS = {
     'winter': 1.15, 'summer': 1.10, 'autumn': 1.05, 'spring': 1.00
 };
 
-const DEMAND_COEFFICIENTS = {
-    'high': 1.20, 'medium': 1.10, 'low': 1.00
+const calculateAiPrice = (req) => {
+    if (!req) return 0;
+    const cargoKey = req.cargoType?.toLowerCase() || '';
+    const base = AI_PRICING_BASE_RATES[cargoKey] || 12000;
+    let multiplier = 1.0;
+
+    // 1. Коэффициент объема (Volume Discount)
+    if (req.totalWagons >= 50) multiplier *= 0.95;
+    else if (req.totalWagons >= 10) multiplier *= 0.97;
+
+    // 2. Сезонный множитель (Seasonal Multiplier: +15% в Март/Октябрь)
+    const month = new Date().getMonth();
+    if ([2, 9].includes(month)) multiplier *= 1.15;
+
+    return Math.round(base * multiplier);
 };
 
 // --- ИМПОРТЫ КОМПОНЕНТОВ ---
@@ -55,6 +69,44 @@ import { parsePrompt } from './src/aiService';
 // --- СУПАБЕЙЗ ИНИЦИАЛИЗАЦИЯ ---
 import { supabase } from './src/supabaseClient';
 
+// --- УТИЛИТЫ ЗАЩИТЫ (ANTI-LEAKAGE) ---
+const maskContact = (text, isSecured) => {
+    if (!text) return '';
+    if (isSecured) return text;
+    // Маскируем телефон или email
+    if (text.includes('@')) {
+        const [name, domain] = text.split('@');
+        return `${name[0]}***@${domain}`;
+    }
+    return text.replace(/(\+?\d)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 ($2) ***-**-$5');
+};
+
+const validateMessageIntent = (text) => {
+    const lower = text.toLowerCase();
+    // 1. Улучшенная регулярка для телефонов (ловит +7, 8900..., а также варианты с пробелами и точками)
+    const normalized = text.replace(/[\s-().]/g, '');
+    const hasPhone = /(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}/.test(text) || /(\d{7,})/.test(normalized);
+
+    // 2. Проверка стоп-слов
+    const hasStopWord = STOP_WORDS.some(sw => lower.includes(sw));
+
+    // 3. Проверка на "хитрые" попытки (т.е.л.е.ф.о.н или похожие)
+    const isObfuscated = STOP_WORDS.some(sw => {
+        if (sw.length < 3) return false;
+        const pattern = sw.split('').join('\\s*[-._]*\\s*');
+        return new RegExp(pattern, 'i').test(lower);
+    });
+
+    if (hasPhone || hasStopWord || isObfuscated) {
+        return {
+            valid: false,
+            cleaned: '[КОНТАКТЫ СКРЫТЫ СИСТЕМОЙ БЕЗОПАСНОСТИ - Оплата в обход платформы ведет к блокировке аккаунта]',
+            isViolation: true
+        };
+    }
+    return { valid: true, cleaned: text, isViolation: false };
+};
+
 // --- ГЛАВНЫЙ КОМПОНЕНТ ---
 export default function App() {
     const [isDark, setIsDark] = useState(false);
@@ -64,6 +116,7 @@ export default function App() {
     const [requests, setRequests] = useState([]);
     const [bids, setBids] = useState([]);
     const [messages, setMessages] = useState([]);
+    const [profiles, setProfiles] = useState([]);
 
     // Навигация
     const [screen, setScreen] = useState('landing'); // 'landing' | 'auth' | 'app'
@@ -72,6 +125,7 @@ export default function App() {
     // Состояние пользователя
     const [userProfile, setUserProfile] = useState(null);
     const [authMode, setAuthMode] = useState('login');
+    const [authLoading, setAuthLoading] = useState(false);
     const [regRole, setRegRole] = useState('owner');
 
     // UI стейты
@@ -81,6 +135,8 @@ export default function App() {
     const [showDemoAlert, setShowDemoAlert] = useState(false);
     const [aiFilters, setAiFilters] = useState(null);
     const [aiCreateData, setAiCreateData] = useState(null);
+    const [isAiSearching, setIsAiSearching] = useState(false);
+    const [securityWarning, setSecurityWarning] = useState(null); // { message: string, severity: 'warning' | 'critical' }
 
     // 1. ШРИФТ И ТЕМА
     useEffect(() => {
@@ -95,31 +151,48 @@ export default function App() {
 
     // 2. АВТОРИЗАЦИЯ SUPABASE И ЗАГРУЗКА ПРОФИЛЯ
     useEffect(() => {
-        const fetchProfile = async (userId) => {
-            const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-            if (data) {
-                setUserProfile({
-                    id: data.id,
-                    name: "Пользователь", // можно расширить
-                    company: data.company,
-                    inn: data.inn,
-                    role: data.role,
-                    phone: data.phone,
-                    plan: data.plan || 'Free',
-                    verification_status: data.verification_status || 'unverified',
-                    is_verified: data.is_verified || false
-                });
-                setScreen('app');
-                setView(data.role === 'owner' ? 'catalog' : 'my-requests');
-            } else {
-                console.warn("Профиль не найден для юзера:", userId);
+        const fetchProfile = async (userId, isInitialLogin = false) => {
+            try {
+                const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+                if (error) {
+                    console.error("Profile fetch error:", error);
+                    if (error.code === 'PGRST116') { // Not found
+                        // Maybe it's a new registration and the profile insert is still in progress
+                        // We wait a bit and retry once
+                        setTimeout(async () => {
+                            const { data: retryData } = await supabase.from('profiles').select('*').eq('id', userId).single();
+                            if (retryData) {
+                                setUserProfile(retryData);
+                                if (isInitialLogin) {
+                                    setScreen('app');
+                                    setView(retryData.role === 'owner' ? 'catalog' : 'my-requests');
+                                }
+                            } else {
+                                alert("Профиль не найден. Если вы только что зарегистрировались, попробуйте войти через минуту.");
+                                await supabase.auth.signOut();
+                            }
+                        }, 1500);
+                        return;
+                    }
+                    throw error;
+                }
+
+                if (data) {
+                    setUserProfile(data);
+                    if (isInitialLogin) {
+                        setScreen('app');
+                        setView(data.role === 'owner' ? 'catalog' : 'my-requests');
+                    }
+                }
+            } catch (err) {
+                console.error("fetchProfile failed:", err);
             }
         };
 
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) {
                 setSbUser(session.user);
-                fetchProfile(session.user.id);
+                fetchProfile(session.user.id, true);
             }
         });
 
@@ -127,7 +200,9 @@ export default function App() {
             const user = session?.user || null;
             setSbUser(user);
             if (user) {
-                fetchProfile(user.id);
+                // Только при явном входе меняем экраны, чтобы не выкидывало при TOKEN_REFRESHED
+                const isInitialLogin = _event === 'SIGNED_IN';
+                fetchProfile(user.id, isInitialLogin);
             } else {
                 setUserProfile(null);
                 // setScreen('landing'); // Изменил: если логаут, мы идём на лендинг (вызывается в handleLogout)
@@ -142,14 +217,19 @@ export default function App() {
         if (!sbUser) return;
 
         const fetchInitialData = async () => {
-            const { data: initialRequests } = await supabase.from('requests').select('*, profiles:shipperId(is_verified)').order('created_at', { ascending: false });
+            const { data: initialRequests, error: reqError } = await supabase.from('requests').select('*').order('created_at', { ascending: false });
+            if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
+
 
             const { data: initialBids } = await supabase.from('bids').select('*').order('created_at', { ascending: false });
             if (initialBids) setBids(initialBids);
 
             const { data: initialMessages } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
             if (initialMessages) setMessages(initialMessages);
+
+            const { data: initialProfiles } = await supabase.from('profiles').select('inn, role, company');
+            if (initialProfiles) setProfiles(initialProfiles);
         };
         fetchInitialData();
 
@@ -157,7 +237,8 @@ export default function App() {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, async (payload) => {
                 if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
                     // Fetch full data with join for the new/updated record
-                    const { data } = await supabase.from('requests').select('*, profiles:shipperId(is_verified)').eq('id', payload.new.id).single();
+                    const { data, error } = await supabase.from('requests').select('*').eq('id', payload.new.id).single();
+                    if (error) console.error("Realtime request fetch error:", error);
                     if (data) {
                         if (payload.eventType === 'INSERT') setRequests(prev => [data, ...prev]);
                         else setRequests(prev => prev.map(r => r.id === data.id ? data : r));
@@ -205,28 +286,48 @@ export default function App() {
     };
 
     const handleAuthSubmit = async (formData) => {
-        const { email, password, company, inn, phone } = formData;
+        if (authLoading) return;
+        const email = formData.email?.trim();
+        const password = formData.password?.trim();
+        const { company, inn, phone } = formData;
+
+        if (!email || !password) {
+            alert("Пожалуйста, заполните все поля");
+            return;
+        }
+
+        setAuthLoading(true);
 
         try {
             if (authMode === 'register') {
                 const { data, error } = await supabase.auth.signUp({ email, password });
-                if (error) { alert("Ошибка регистрации: " + error.message); return; }
+                if (error) {
+                    console.error("Registration failed:", error);
+                    alert("Ошибка регистрации: " + (error.message || "Проверьте данные"));
+                    setAuthLoading(false);
+                    return;
+                }
 
                 const userId = data.user?.id;
                 if (userId) {
                     const { error: profileError } = await supabase.from('profiles').insert([
-                        { id: userId, company, inn, phone, role: regRole, plan: 'Free' }
+                        { id: userId, company, inn, phone, role: regRole, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
-
-                // В Супабейсе если почта не требует подтверждения, юзер уже залогинен и триггернет useEffect
-                // Если требует, authStateChange не сработает
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) alert("Ошибка входа: " + error.message);
+                if (error) {
+                    console.error("Login failed:", error);
+                    alert("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message));
+                }
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error("Auth submit catch:", e);
+            alert("Произошла непредвиденная ошибка");
+        } finally {
+            setAuthLoading(false);
+        }
     };
 
     const handleLogout = async () => {
@@ -291,16 +392,43 @@ export default function App() {
 
     const handleSendMessage = async (chatId, text) => {
         if (!sbUser || !text.trim()) return;
+
+        const validation = validateMessageIntent(text);
+
         try {
+            // Если нарушение - инкрементируем счетчик в профиле
+            if (validation.isViolation) {
+                const newAttempts = (userProfile.leakage_attempts || 0) + 1;
+
+                // Shadow flagging: инкрементируем попытки
+                await supabase.from('profiles').update({ leakage_attempts: newAttempts }).eq('id', sbUser.id);
+                setUserProfile(prev => ({ ...prev, leakage_attempts: newAttempts }));
+
+                if (newAttempts >= 3) {
+                    setSecurityWarning({
+                        message: "ВНИМАНИЕ: Зафиксированы множественные попытки обхода платформы. Ваш аккаунт передан на модерацию.",
+                        severity: 'critical'
+                    });
+                } else {
+                    setSecurityWarning({
+                        message: "Система безопасности RailMatch скрыла контактные данные. Пожалуйста, используйте безопасную сделку.",
+                        severity: 'warning'
+                    });
+                }
+
+                // Скрываем предупреждение через 5 секунд
+                setTimeout(() => setSecurityWarning(null), 5000);
+            }
+
             const { error } = await supabase.from('messages').insert([{
                 chat_id: chatId,
                 sender_id: sbUser.id,
-                text: text
+                text: validation.cleaned
             }]);
             if (error) throw error;
         } catch (err) {
             console.error("Error sending message:", err);
-            alert("Ошибка при отправке сообщения");
+            // setSecurityWarning({ message: "Ошибка при отправке сообщения", severity: 'warning' });
         }
     };
 
@@ -311,8 +439,6 @@ export default function App() {
             const isShipper = userProfile.role === 'shipper';
             const updateField = isShipper ? { shipper_confirmed: true } : { owner_confirmed: true };
 
-            // 1. Оптимистичное обновление локального стейта (опционально, realtime должно подхватить)
-            // Но мы лучше сделаем update в базе, и получим ответ
             const { data: updatedBid, error } = await supabase
                 .from('bids')
                 .update(updateField)
@@ -322,32 +448,28 @@ export default function App() {
 
             if (error) throw error;
 
-            // 2. Проверяем, подтвердили ли обе стороны
-            const fullyConfirmed = (updatedBid.shipper_confirmed && updatedBid.owner_confirmed) || (isShipper && updatedBid.owner_confirmed) || (!isShipper && updatedBid.shipper_confirmed); // fallback logic
+            // Если оба подтвердили -> переходим в статус ожидания оплаты
+            const fullyConfirmed = updatedBid.shipper_confirmed && updatedBid.owner_confirmed;
 
-            if (fullyConfirmed && updatedBid.status !== 'accepted') {
-                // Если обе стороны согласны, окончательно закрываем ставку
-                await supabase.from('bids').update({ status: 'accepted' }).eq('id', bid.id);
-
-                // Обновляем количество вагонов и тонн в заявке
-                const targetReq = requests.find(r => r.id === bid.requestId);
-                if (targetReq) {
-                    const newFulfilledWagons = (targetReq.fulfilledWagons || 0) + bid.wagons;
-                    const newFulfilledTons = (targetReq.fulfilledTons || 0) + (bid.tons || 0);
-                    await supabase.from('requests').update({
-                        fulfilledWagons: newFulfilledWagons,
-                        fulfilledTons: newFulfilledTons,
-                        status: newFulfilledWagons >= targetReq.totalWagons ? 'completed' : 'open'
-                    }).eq('id', targetReq.id);
-                }
+            if (fullyConfirmed && updatedBid.status === 'pending') {
+                await supabase.from('bids').update({ status: 'pending_payment' }).eq('id', bid.id);
+                setActiveChat(prev => ({ ...prev, ...updateField, status: 'pending_payment' }));
+            } else {
+                setActiveChat(prev => ({ ...prev, ...updateField }));
             }
-
-            // Обновляем текущий чат в стейте, чтобы UI моментально отреагировал
-            setActiveChat(prev => ({ ...prev, ...updateField, status: fullyConfirmed ? 'accepted' : 'pending' }));
 
         } catch (e) {
             console.error("Deal confirmation error:", e);
             alert("Ошибка при подтверждении сделки");
+        }
+    };
+
+    const handleEscrowPayment = async (bidId) => {
+        // Имитация оплаты и депонирования
+        const { error } = await supabase.from('bids').update({ status: 'escrow_held' }).eq('id', bidId);
+        if (!error) {
+            setActiveChat(prev => ({ ...prev, status: 'escrow_held' }));
+            alert("Средства успешно внесены в качестве гарантийного платежа. Контакты партнера теперь доступны.");
         }
     };
 
@@ -358,16 +480,22 @@ export default function App() {
             stationTo: data.stationTo,
             cargoType: data.cargoType,
             wagonType: data.wagonType,
-            totalWagons: Number(data.totalWagons),
-            totalTons: Number(data.totalTons),
+            totalWagons: Number(data.totalWagons || 0),
+            totalTons: Number(data.totalTons || 0),
+            target_price: Number(data.targetPrice || 0), // Default to 0 instead of NaN if empty
             fulfilledWagons: 0,
             fulfilledTons: 0,
-            shipperInn: userProfile.inn,
+            shipperInn: userProfile.inn || '000000',
             status: 'open'
         }
         const { error } = await supabase.from('requests').insert([reqData]);
-        if (error) console.error("Error creating request", error);
-        setView('my-requests');
+        if (error) {
+            console.error("Error creating request", error);
+            alert("Ошибка при сохранении заявки. Проверьте данные.");
+        } else {
+            alert("Заявка успешно опубликована на бирже!");
+            setView(userProfile.role === 'owner' ? 'my-bids' : 'my-requests');
+        }
     };
 
     const handleAiCreate = (parsedData) => {
@@ -375,11 +503,32 @@ export default function App() {
         setView('create');
     };
 
+    const handleSeedDemoData = async () => {
+        if (!sbUser) return;
+        const mockRequests = [
+            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 10, totalTons: 600, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
+            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 15, totalTons: 900, target_price: 150000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
+            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 5, totalTons: 300, target_price: 165000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
+            { stationFrom: 'Санкт-Петербург', stationTo: 'Казань', cargoType: 'Уголь', wagonType: 'Полувагон', totalWagons: 50, totalTons: 3500, target_price: 120000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7711111111', status: 'open' },
+            { stationFrom: 'Санкт-Петербург', stationTo: 'Казань', cargoType: 'Уголь', wagonType: 'Полувагон', totalWagons: 20, totalTons: 1400, target_price: 90000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7711111111', status: 'open' }
+        ];
+        const { error } = await supabase.from('requests').insert(mockRequests);
+        if (error) {
+            console.error("Error seeding data:", error);
+            alert("Ошибка при добавлении демо-данных: " + JSON.stringify(error));
+        }
+    };
+
     const handleAiSearchResult = (parsed) => {
         if (parsed.intent === 'create' && userProfile?.role === 'shipper') {
             handleAiCreate(parsed);
         } else {
-            setAiFilters(parsed);
+            setIsAiSearching(true);
+            // Simulate AI analyzing and comparing prices
+            setTimeout(() => {
+                setAiFilters(parsed);
+                setIsAiSearching(false);
+            }, 2000);
         }
     };
 
@@ -399,6 +548,14 @@ export default function App() {
 
     // Filter requests for catalog
     const filteredCatalogRequests = requests.filter(req => {
+        // Проверка ролей: владельцы видят заявки отправителей, а отправители — предложения владельцев
+        if (userProfile && profiles.length > 0) {
+            const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
+            const creatorRole = creatorProfile?.role;
+            if (userProfile.role === 'shipper' && creatorRole !== 'owner') return false;
+            if (userProfile.role === 'owner' && creatorRole !== 'shipper') return false;
+        }
+
         if (!aiFilters) return true;
         if (aiFilters.stationFrom && !req.stationFrom.toLowerCase().includes(aiFilters.stationFrom.toLowerCase())) return false;
         if (aiFilters.stationTo && !req.stationTo.toLowerCase().includes(aiFilters.stationTo.toLowerCase())) return false;
@@ -411,7 +568,7 @@ export default function App() {
 
     if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} />;
 
-    if (screen === 'auth') return <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} />;
+    if (screen === 'auth') return <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />;
 
     return (
         <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top">
@@ -443,12 +600,7 @@ export default function App() {
                             {isDark ? <Sun className="w-5 h-5 text-orange-400" /> : <Moon className="w-5 h-5 text-indigo-500" />}
                         </button>
 
-                        {userProfile?.role === 'owner' && (
-                            <div onClick={() => requireAuth(() => setView('profile'))} title="Остаток откликов" className="flex items-center gap-2 cursor-pointer bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-xl border border-blue-100 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 hidden lg:block">Отклики</span>
-                                <span className={`text-sm font-black ${userProfile.bids_limit > 0 ? 'text-blue-700 dark:text-blue-300' : 'text-red-600 dark:text-red-400'}`}>{userProfile?.bids_limit || 0}</span>
-                            </div>
-                        )}
+                        {/* Removed Отклики Counter */}
 
                         <div onClick={() => requireAuth(() => setView('profile'))} className="flex items-center gap-3 cursor-pointer pl-6 border-l dark:border-slate-800 group">
                             <div className="text-right hidden sm:block">
@@ -461,7 +613,25 @@ export default function App() {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-10">
+            <main className="max-w-7xl mx-auto px-6 py-10 relative">
+                {/* SECURITY WARNING BANNER */}
+                {securityWarning && (
+                    <div className={`mb-8 p-6 rounded-[2rem] border animate-in fade-in slide-in-from-top-4 duration-500 z-40 shadow-xl flex items-center gap-6 ${securityWarning.severity === 'critical'
+                        ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 shadow-red-500/10'
+                        : 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400 shadow-amber-500/10'
+                        }`}>
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${securityWarning.severity === 'critical' ? 'bg-red-100 dark:bg-red-900/40 text-red-600' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600'}`}>
+                            <Ban className="w-7 h-7" />
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-1">{securityWarning.severity === 'critical' ? 'Критическая угроза' : 'Предупреждение платформы'}</h4>
+                            <p className="text-sm font-bold leading-relaxed">{securityWarning.message}</p>
+                        </div>
+                        <button onClick={() => setSecurityWarning(null)} className="p-3 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-colors">
+                            <ArrowRight className="w-5 h-5 rotate-45" />
+                        </button>
+                    </div>
+                )}
                 {view === 'catalog' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                         {(!sbUser || userProfile?.role === 'demo') && (
@@ -478,23 +648,62 @@ export default function App() {
                             userRole={userProfile?.role}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-10">
-                            {filteredCatalogRequests.length === 0 ? (
-                                <div className="col-span-full py-20 text-center text-slate-400 font-bold bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-800">
-                                    Ничего не найдено по вашему запросу.
+                        {isAiSearching ? (
+                            <div className="mt-10 py-20 flex flex-col items-center justify-center text-center animate-in fade-in duration-500">
+                                <Sparkles className="w-12 h-12 text-blue-500 animate-[spin_3s_linear_infinite] mb-6" />
+                                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-widest mb-2">AI-агент анализирует рынок</h3>
+                                <p className="text-sm font-bold text-slate-400 mb-8 max-w-md">Сравниваем ставки, маршруты и тоннаж для поиска самого оптимального варианта...</p>
+                                <div className="w-64 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div className="h-full bg-blue-600 rounded-full animate-[shimmer_2s_infinite] w-full" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)', backgroundSize: '200% 100%' }}></div>
                                 </div>
-                            ) : filteredCatalogRequests.map(req => (
-                                <RequestCard
-                                    key={req.id}
-                                    req={req}
-                                    bidCount={bids.filter(b => b.requestId === req.id).length}
-                                    onBid={() => requireAuth(() => {
-                                        setSelectedRequest(req);
-                                        setIsModalOpen(true);
-                                    })}
-                                />
-                            ))}
-                        </div>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Aviasales Logic: Best Recommendation */}
+                                {filteredCatalogRequests.length > 0 && (
+                                    <div className="mt-10 mb-6 px-6 py-4 bg-blue-600/5 dark:bg-blue-400/5 rounded-3xl border border-blue-600/10 dark:border-blue-400/10 flex items-center justify-between animate-in fade-in slide-in-from-bottom-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/20"><Sparkles className="w-4 h-4 text-white" /></div>
+                                            <span className="text-sm font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Интеллектуальный подбор: Лучшие предложения первыми</span>
+                                        </div>
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Сортировка: выгода</div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-6">
+                                    {(() => {
+                                        // Aviasales Sorting: AI Best Choice + Sorted by price
+                                        const sorted = [...filteredCatalogRequests].sort((a, b) => (b.target_price || 0) - (a.target_price || 0));
+                                        if (sorted.length === 0) return (
+                                            <div className="col-span-full py-20 text-center text-slate-400 font-bold bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center gap-4">
+                                                <p>Ничего не найдено по вашему запросу.</p>
+                                                <button onClick={handleSeedDemoData} className="px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2">
+                                                    <Sparkles className="w-4 h-4" /> Сгенерировать демо-заявки
+                                                </button>
+                                            </div>
+                                        );
+
+                                        return sorted.map((req, idx) => {
+                                            const isTop3 = idx < 3;
+                                            return (
+                                                <div key={req.id} className={isTop3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
+
+                                                    <RequestCard
+                                                        req={req}
+                                                        bidCount={bids.filter(b => b.requestId === req.id).length}
+                                                        onBid={() => requireAuth(() => {
+                                                            setSelectedRequest(req);
+                                                            setIsModalOpen(true);
+                                                        })}
+                                                        rank={idx}
+                                                    />
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
 
@@ -548,7 +757,9 @@ export default function App() {
                                     userRole={userProfile?.role}
                                     onSend={(text) => handleSendMessage(activeChat.id, text)}
                                     onAccept={() => handleConfirmDeal(activeChat)}
+                                    onEscrow={() => handleEscrowPayment(activeChat.id)}
                                     onBack={() => setView('catalog')}
+                                    maskContact={maskContact}
                                 />
                             ) : (
                                 <div className="h-full bg-white dark:bg-[#111827] rounded-[3.5rem] border-2 border-dashed dark:border-slate-800 flex flex-col items-center justify-center text-center p-10">
@@ -572,6 +783,7 @@ export default function App() {
                         userId={sbUser?.id}
                         setView={setView}
                         onChat={(b) => { setActiveChat({ ...b, shipperName: b.ownerName, shipperPhone: b.ownerPhone }); setView('chat'); }}
+                        onAiCreate={handleAiCreate}
                     />
                 )}
 
@@ -610,7 +822,9 @@ export default function App() {
                             userRole={userProfile?.role}
                             onSend={(text) => handleSendMessage(activeChat.id, text)}
                             onAccept={() => handleConfirmDeal(activeChat)}
+                            onEscrow={() => handleEscrowPayment(activeChat.id)}
                             onBack={() => setView('messenger')}
+                            maskContact={maskContact}
                         />
                     </div>
                 )}

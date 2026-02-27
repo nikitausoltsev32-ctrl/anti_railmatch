@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowRight, MessageSquare, TrendingUp, CheckCircle, Clock, Sparkles, Search, Briefcase, Wallet, MapPin, Check, PieChart, Activity, AlertCircle } from 'lucide-react';
+import { parsePrompt } from '../src/aiService';
 
-export default function MyBidsView({ bids, requests, userId, onChat, setView }) {
+export default function MyBidsView({ bids, requests, userId, onChat, setView, onAiCreate }) {
     const myBids = bids.filter(b => b.ownerId === userId);
     const [aiPrompt, setAiPrompt] = useState("");
     const [activeTab, setActiveTab] = useState('active'); // 'active' | 'completed'
@@ -25,8 +26,34 @@ export default function MyBidsView({ bids, requests, userId, onChat, setView }) 
                 <div className="pl-5 pr-4 py-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-3xl text-blue-600 dark:text-blue-400 flex items-center gap-2 border border-blue-100/50 dark:border-blue-800/50">
                     <Sparkles className="w-6 h-6 animate-pulse text-indigo-500" /><span className="text-sm font-black uppercase tracking-wider hidden lg:block">RailMatch AI</span>
                 </div>
-                <input type="text" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="Найти сверхприбыльные грузы (например: 'Покажи маршруты дороже 50тыс/ваг')..." className="flex-1 py-4 px-4 outline-none text-slate-700 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500 bg-transparent text-lg" />
-                <button onClick={() => { setAiPrompt(''); alert("AI: Отфильтровал биржу по цене от 50,000 руб."); setView('catalog'); }} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-5 mr-1 rounded-[24px] font-black uppercase tracking-widest text-sm flex items-center gap-2 shadow-md hover:-translate-y-0.5 transition-all"><span className="hidden sm:block">Искать</span><Search className="w-5 h-5" /></button>
+                <input
+                    type="text"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            if (!aiPrompt.trim()) return;
+                            const parsed = parsePrompt(aiPrompt);
+                            parsed.intent = 'create';
+                            setAiPrompt('');
+                            onAiCreate(parsed);
+                        }
+                    }}
+                    placeholder="Создать предложение вагонов (например: 'Могу дать 10 полувагонов в Москве')..."
+                    className="flex-1 py-4 px-4 outline-none text-slate-700 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500 bg-transparent text-lg"
+                />
+                <button
+                    onClick={() => {
+                        if (!aiPrompt.trim()) return;
+                        const parsed = parsePrompt(aiPrompt);
+                        parsed.intent = 'create';
+                        setAiPrompt('');
+                        onAiCreate(parsed);
+                    }}
+                    className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-5 mr-1 rounded-[24px] font-black uppercase tracking-widest text-sm flex items-center gap-2 shadow-md hover:-translate-y-0.5 transition-all"
+                >
+                    <span className="hidden sm:block">Создать</span><ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
             </div>
 
             {/* Premium Desktop Analytics Boxes for Owner */}

@@ -52,8 +52,8 @@ export default function ProfileSettings({ user, onLogout }) {
                 <div className="w-full md:w-80 flex flex-col gap-6">
                     <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 shadow-sm border dark:border-slate-800 text-center relative overflow-hidden group">
                         <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 shadow-sm ${user.verification_status === 'verified' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
-                                user.verification_status === 'pending' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
-                                    'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                            user.verification_status === 'pending' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
+                                'bg-slate-100 dark:bg-slate-800 text-slate-400'
                             }`}>
                             {user.verification_status === 'verified' ? <ShieldCheck className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                             {user.verification_status === 'verified' ? 'Верифицирован' : user.verification_status === 'pending' ? 'В проверке' : 'Не проверен'}
@@ -224,22 +224,22 @@ export default function ProfileSettings({ user, onLogout }) {
 
                             <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-500/20 mb-10 flex items-center justify-between">
                                 <div>
-                                    <p className="text-blue-200 text-xs font-black uppercase tracking-widest mb-2">Доступные отклики</p>
-                                    <h2 className="text-5xl font-black">{user.bids_limit || 0}</h2>
+                                    <h2 className="text-3xl font-black">Безлимитный доступ</h2>
+                                    <p className="text-blue-200 text-xs font-black uppercase tracking-widest mt-2">Ограничения сняты</p>
                                 </div>
                                 <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-inner">
                                     <CreditCard className="w-8 h-8 text-white" />
                                 </div>
                             </div>
 
-                            <h4 className="font-black text-lg mb-6 dark:text-white uppercase">Пакеты откликов</h4>
+                            <h4 className="font-black text-lg mb-6 dark:text-white uppercase">Пакеты услуг (в разработке)</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Starter Package */}
                                 <div className="border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 hover:shadow-xl hover:border-blue-400 dark:hover:border-blue-500 transition-all cursor-pointer group bg-slate-50 dark:bg-[#0B1120] relative overflow-hidden flex flex-col justify-between">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
                                     <div>
                                         <h5 className="font-black text-xl mb-2 dark:text-white relative z-10">Стартовый</h5>
-                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 relative z-10">+ 10 откликов</p>
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 relative z-10">Аналитика рынка</p>
                                     </div>
                                     <div className="flex justify-between items-end relative z-10">
                                         <span className="text-3xl font-black text-blue-600 dark:text-blue-400">990 ₽</span>
@@ -253,7 +253,7 @@ export default function ProfileSettings({ user, onLogout }) {
                                     <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl group-hover:bg-blue-600/20 transition-all"></div>
                                     <div>
                                         <h5 className="font-black text-xl mb-2 dark:text-white relative z-10">Бизнес</h5>
-                                        <p className="text-blue-500 text-xs font-bold uppercase tracking-widest mb-6 relative z-10">+ 50 откликов</p>
+                                        <p className="text-blue-500 text-xs font-bold uppercase tracking-widest mb-6 relative z-10">Полный доступ + Приоритет</p>
                                     </div>
                                     <div className="flex justify-between items-end relative z-10">
                                         <span className="text-3xl font-black text-blue-600 dark:text-blue-400">3 900 ₽</span>
