@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { ArrowRight, Plus, Check, CheckCircle, Sparkles, TrendingUp, Package, Clock, ShieldCheck, MapPin, Truck, AlertCircle, Activity, TrendingDown, Award } from 'lucide-react';
+import { ArrowRight, Plus, Check, CheckCircle, Sparkles, TrendingUp, Package, Clock, ShieldCheck, MapPin, Truck, AlertCircle, Activity, TrendingDown, Award, MessageSquare, Briefcase } from 'lucide-react';
 import { parsePrompt } from '../src/aiService';
 
-export default function MyRequestsView({ requests, bids, userInn, setView, onAccept, onAiCreate }) {
+export default function MyRequestsView({ requests, bids, userInn, userRole, userId, profiles, setView, onAccept, onChat, onAiCreate }) {
     const myReqs = requests.filter(r => r.shipperInn === userInn);
+    const myBids = bids.filter(b => b.ownerId === userId);
     const [aiPrompt, setAiPrompt] = useState("");
-    const [activeTab, setActiveTab] = useState('active'); // 'active' | 'completed'
+    const [activeTab, setActiveTab] = useState('active'); // 'active' | 'completed' | 'my-responses'
 
-    // Analytics calculations
+    // Analytics calculations for own requests
     const activeRequests = myReqs.filter(r => r.status === 'open').length;
     const completedRequests = myReqs.filter(r => r.status === 'completed').length;
     const totalWagonsRequested = myReqs.reduce((sum, r) => sum + r.totalWagons, 0);
@@ -19,12 +20,15 @@ export default function MyRequestsView({ requests, bids, userInn, setView, onAcc
     const deficitTons = totalTonsRequested - totalTonsFulfilled;
     const fulfillmentRate = totalWagonsRequested > 0 ? Math.round((totalWagonsFulfilled / totalWagonsRequested) * 100) : 0;
 
-    // Считаем среднюю ставку по предложенным бидам к нашим заявкам
+    // Bids analytics
     const myReqIds = myReqs.map(r => r.id);
     const incomingBids = bids.filter(b => myReqIds.includes(b.requestId));
     const avgBidPrice = incomingBids.length > 0
         ? Math.round(incomingBids.reduce((sum, b) => sum + b.price, 0) / incomingBids.length)
         : 0;
+
+    const activeBidsCount = myBids.filter(b => b.status === 'pending').length;
+    const acceptedBidsCount = myBids.filter(b => b.status === 'accepted').length;
 
     return (
         <div className="max-w-6xl mx-auto py-10 animate-in fade-in duration-500">
@@ -64,48 +68,87 @@ export default function MyRequestsView({ requests, bids, userInn, setView, onAcc
             </div>
 
             {/* Role-specific Analytics Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                {/* 1. Дефицит (Оранжевый) */}
-                <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
-                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><AlertCircle className="w-24 h-24 text-orange-600" /></div>
-                    <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 mb-6 border border-orange-100 dark:border-orange-800/50 relative z-10"><AlertCircle className="w-7 h-7" /></div>
-                    <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Дефицит</div>
-                    <div className="text-4xl font-black text-orange-600 dark:text-orange-500 relative z-10">{deficitWagons} в. / {deficitTons} т.</div>
-                    <div className="text-xs font-bold text-slate-400 mt-3 flex items-center gap-1"><TrendingUp className="w-3 h-3 text-orange-500" /> Требуется погрузка</div>
-                </div>
+            {userRole === 'shipper' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    {/* 1. Дефицит (Оранжевый) */}
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><AlertCircle className="w-24 h-24 text-orange-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 mb-6 border border-orange-100 dark:border-orange-800/50 relative z-10"><AlertCircle className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Дефицит</div>
+                        <div className="text-4xl font-black text-orange-600 dark:text-orange-500 relative z-10">{deficitWagons} в. / {deficitTons} т.</div>
+                        <div className="text-xs font-bold text-slate-400 mt-3 flex items-center gap-1"><TrendingUp className="w-3 h-3 text-orange-500" /> Требуется погрузка</div>
+                    </div>
 
-                {/* 2. Покрытие парком (Зеленый) */}
-                <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
-                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><CheckCircle className="w-24 h-24 text-emerald-600" /></div>
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mb-6 border border-emerald-100 dark:border-emerald-800/50 relative z-10"><CheckCircle className="w-7 h-7" /></div>
-                    <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Покрытие парком</div>
-                    <div className="text-4xl font-black dark:text-white relative z-10">{fulfillmentRate}%</div>
-                    <div className="text-xs font-bold text-emerald-500 mt-3 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> В рамках нормы</div>
-                </div>
+                    {/* 2. Покрытие парком (Зеленый) */}
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><CheckCircle className="w-24 h-24 text-emerald-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mb-6 border border-emerald-100 dark:border-emerald-800/50 relative z-10"><CheckCircle className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Покрытие парком</div>
+                        <div className="text-4xl font-black dark:text-white relative z-10">{fulfillmentRate}%</div>
+                        <div className="text-xs font-bold text-slate-400 mt-3 flex items-center gap-1">{fulfillmentRate > 0 ? <><TrendingUp className="w-3 h-3 text-emerald-500" /> <span className="text-emerald-500">В рамках нормы</span></> : 'Нет данных'}</div>
+                    </div>
 
-                {/* 3. Средняя ставка (Синий/Neutral) */}
-                <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
-                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><Activity className="w-24 h-24 text-blue-600" /></div>
-                    <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 mb-6 border border-blue-100 dark:border-blue-800/50 relative z-10"><Activity className="w-7 h-7" /></div>
-                    <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Средняя ставка</div>
-                    <div className="text-3xl font-black dark:text-white relative z-10">{avgBidPrice > 0 ? `${avgBidPrice.toLocaleString()} ₽` : '---'}</div>
-                    <div className="text-xs font-bold text-slate-400 mt-3 flex items-center gap-1"><TrendingDown className="w-3 h-3 text-emerald-500" /> -2% к рынку</div>
-                </div>
+                    {/* 3. Средняя ставка (Синий/Neutral) */}
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><Activity className="w-24 h-24 text-blue-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 mb-6 border border-blue-100 dark:border-blue-800/50 relative z-10"><Activity className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Средняя ставка</div>
+                        <div className="text-3xl font-black dark:text-white relative z-10">{avgBidPrice > 0 ? `${avgBidPrice.toLocaleString()} ₽` : '---'}</div>
+                        <div className="text-xs font-bold text-slate-400 mt-3">{avgBidPrice > 0 ? 'По вашим заявкам' : 'Нет данных'}</div>
+                    </div>
 
-                {/* 4. Успешно закрыто (Градиент) */}
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 rounded-[2.5rem] shadow-xl shadow-blue-600/30 relative overflow-hidden group hover:-translate-y-1 transition-transform text-white">
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><ShieldCheck className="w-24 h-24" /></div>
-                    <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 border border-white/30 relative z-10"><ShieldCheck className="w-7 h-7" /></div>
-                    <div className="text-sm font-black uppercase tracking-widest text-blue-200 mb-2 relative z-10">Успешно закрыто</div>
-                    <div className="text-4xl font-black relative z-10">{completedRequests} заявок</div>
-                    <div className="text-xs font-bold text-blue-100 mt-3 opacity-90">+2 за эту неделю</div>
+                    {/* 4. Успешно закрыто (Градиент) */}
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 rounded-[2.5rem] shadow-xl shadow-blue-600/30 relative overflow-hidden group hover:-translate-y-1 transition-transform text-white">
+                        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><ShieldCheck className="w-24 h-24" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 border border-white/30 relative z-10"><ShieldCheck className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-blue-200 mb-2 relative z-10">Успешно закрыто</div>
+                        <div className="text-4xl font-black relative z-10">{completedRequests} заявок</div>
+                        <div className="text-xs font-bold text-blue-100 mt-3 opacity-90">{completedRequests > 0 ? 'Завершённые сделки' : 'Пока нет завершённых'}</div>
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Owner analytics */}
+            {userRole === 'owner' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><Package className="w-24 h-24 text-blue-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 mb-6 border border-blue-100 dark:border-blue-800/50 relative z-10"><Package className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Мои публикации</div>
+                        <div className="text-4xl font-black dark:text-white relative z-10">{activeRequests}</div>
+                        <div className="text-xs font-bold text-slate-400 mt-3">Активных на бирже</div>
+                    </div>
+
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><Briefcase className="w-24 h-24 text-orange-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 mb-6 border border-orange-100 dark:border-orange-800/50 relative z-10"><Briefcase className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Мои отклики</div>
+                        <div className="text-4xl font-black text-orange-600 dark:text-orange-500 relative z-10">{activeBidsCount}</div>
+                        <div className="text-xs font-bold text-slate-400 mt-3">Ожидают решения</div>
+                    </div>
+
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><CheckCircle className="w-24 h-24 text-emerald-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mb-6 border border-emerald-100 dark:border-emerald-800/50 relative z-10"><CheckCircle className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Принятые сделки</div>
+                        <div className="text-4xl font-black dark:text-white relative z-10">{acceptedBidsCount}</div>
+                        <div className="text-xs font-bold text-emerald-500 mt-3 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> Заключено</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 rounded-[2.5rem] shadow-xl shadow-blue-600/30 relative overflow-hidden group hover:-translate-y-1 transition-transform text-white">
+                        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><ShieldCheck className="w-24 h-24" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 border border-white/30 relative z-10"><ShieldCheck className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-blue-200 mb-2 relative z-10">Выручка</div>
+                        <div className="text-3xl font-black relative z-10">{myBids.filter(b => b.status === 'accepted').reduce((sum, b) => sum + (b.price * b.wagons), 0).toLocaleString()} ₽</div>
+                        <div className="text-xs font-bold text-blue-100 mt-3 opacity-90">По принятым сделкам</div>
+                    </div>
+                </div>
+            )}
 
             <div className="mb-8 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <Truck className="w-6 h-6 text-slate-400" />
-                    <h2 className="text-2xl font-black dark:text-white">Грузы</h2>
+                    <h2 className="text-2xl font-black dark:text-white">Заявки и отклики</h2>
                 </div>
 
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl gap-2">
@@ -114,6 +157,12 @@ export default function MyRequestsView({ requests, bids, userInn, setView, onAcc
                         className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'active' ? 'bg-white dark:bg-[#111827] text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                     >
                         Активные ({activeRequests})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('my-responses')}
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'my-responses' ? 'bg-white dark:bg-[#111827] text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                    >
+                        Мои отклики ({myBids.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('completed')}
@@ -125,76 +174,169 @@ export default function MyRequestsView({ requests, bids, userInn, setView, onAcc
             </div>
 
             <div className="space-y-6">
-                {myReqs.filter(r => activeTab === 'active' ? r.status === 'open' : r.status === 'completed').length === 0 ? (
-                    <div className="text-center py-20 bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 font-bold">
-                        {activeTab === 'active' ? 'У вас пока нет активных заявок' : 'Архив пуст'}
-                    </div>
-                ) : myReqs.filter(r => activeTab === 'active' ? r.status === 'open' : r.status === 'completed').map(req => {
-                    const reqBids = bids.filter(b => b.requestId === req.id);
-                    return (
-                        <div key={req.id} className="bg-white dark:bg-[#111827] rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden animate-in zoom-in-95 duration-500 hover:shadow-xl transition-shadow">
-                            <div className="p-8 flex flex-col md:flex-row justify-between gap-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-transparent">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <span className="text-[11px] font-bold text-slate-400">ID-{req.id.substring(0, 8)}</span>
-                                        <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${req.status === 'completed' ? 'bg-slate-200 text-slate-600' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>{req.status === 'open' ? 'Идет поиск' : 'Завершена'}</span>
-                                        <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">{req.wagonType}</span>
-                                    </div>
-                                    <div className="text-2xl font-black dark:text-white flex items-center gap-4 mb-2">
-                                        <MapPin className="w-5 h-5 text-slate-400" /> {req.stationFrom} <ArrowRight className="w-5 h-5 text-blue-300" /> <MapPin className="w-5 h-5 text-slate-400" /> {req.stationTo}
-                                    </div>
-                                    <div className="text-sm text-slate-500 font-bold uppercase tracking-wider pl-9">{req.cargoType} • <span className="text-slate-700 dark:text-slate-300">План: {req.totalWagons} ваг. / {req.totalTons} т.</span></div>
-                                </div>
-                                <div className="bg-white dark:bg-[#0B1120] p-6 rounded-3xl min-w-[240px] text-center border border-slate-200/60 dark:border-slate-700/50 shadow-sm flex flex-col justify-center">
-                                    <div className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">Прогресс погрузки</div>
-                                    <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
-                                        {req.fulfilledWagons || 0}<span className="text-base text-slate-300">/{req.totalWagons} в.</span>
-                                    </div>
-                                    <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
-                                        {req.fulfilledTons || 0}<span className="text-base text-slate-300">/{req.totalTons} т.</span>
-                                    </div>
-                                </div>
+                {/* === TAB: Active own requests === */}
+                {activeTab === 'active' && (
+                    <>
+                        {myReqs.filter(r => r.status === 'open').length === 0 ? (
+                            <div className="text-center py-20 bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 font-bold">
+                                У вас пока нет активных заявок. Создайте первую заявку!
                             </div>
-                            {reqBids.length > 0 && (
-                                <div className="bg-slate-50 dark:bg-[#0B1120]/50 p-8 border-t border-slate-100 dark:border-slate-800/80">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/20"><Sparkles className="w-4 h-4 text-white" /></div>
-                                        <span className="text-sm font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">AI-сортировка: Лучшие отклики первыми</span>
+                        ) : myReqs.filter(r => r.status === 'open').map(req => {
+                            const reqBids = bids.filter(b => b.requestId === req.id);
+                            return (
+                                <div key={req.id} className="bg-white dark:bg-[#111827] rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden animate-in zoom-in-95 duration-500 hover:shadow-xl transition-shadow">
+                                    <div className="p-8 flex flex-col md:flex-row justify-between gap-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-transparent">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <span className="text-[11px] font-bold text-slate-400">ID-{req.id.substring(0, 8)}</span>
+                                                <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${req.status === 'completed' ? 'bg-slate-200 text-slate-600' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>{req.status === 'open' ? 'Идет поиск' : 'Завершена'}</span>
+                                                <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">{req.wagonType}</span>
+                                            </div>
+                                            <div className="text-2xl font-black dark:text-white flex items-center gap-4 mb-2">
+                                                <MapPin className="w-5 h-5 text-slate-400" /> {req.stationFrom} <ArrowRight className="w-5 h-5 text-blue-300" /> <MapPin className="w-5 h-5 text-slate-400" /> {req.stationTo}
+                                            </div>
+                                            <div className="text-sm text-slate-500 font-bold uppercase tracking-wider pl-9">{req.cargoType} • <span className="text-slate-700 dark:text-slate-300">План: {req.totalWagons} ваг. / {req.totalTons} т.</span></div>
+                                        </div>
+                                        <div className="bg-white dark:bg-[#0B1120] p-6 rounded-3xl min-w-[240px] text-center border border-slate-200/60 dark:border-slate-700/50 shadow-sm flex flex-col justify-center">
+                                            <div className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">Прогресс погрузки</div>
+                                            <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
+                                                {req.fulfilledWagons || 0}<span className="text-base text-slate-300">/{req.totalWagons} в.</span>
+                                            </div>
+                                            <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
+                                                {req.fulfilledTons || 0}<span className="text-base text-slate-300">/{req.totalTons} т.</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {(() => {
-                                            const sortedBids = [...reqBids].sort((a, b) => a.price - b.price);
-                                            return sortedBids.map((bid, idx) => {
-                                                const isBest = idx === 0 && req.status === 'open';
-                                                return (
-                                                    <div key={bid.id} className={`p-6 rounded-3xl border shadow-md hover:-translate-y-1 transition-all relative overflow-hidden group ${isBest ? 'bg-white dark:bg-[#111827] border-blue-400 dark:border-blue-500 ring-2 ring-blue-500/20 shadow-blue-500/10' : 'bg-white dark:bg-[#111827] border-slate-200 dark:border-slate-700/50'}`}>
-                                                        {isBest && (
-                                                            <div className="absolute top-0 right-0 z-10 px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-2xl shadow-lg flex items-center gap-1.5">
-                                                                <Award className="w-3 h-3" /> Выгодное
+                                    {reqBids.length > 0 && (
+                                        <div className="bg-slate-50 dark:bg-[#0B1120]/50 p-8 border-t border-slate-100 dark:border-slate-800/80">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/20"><Sparkles className="w-4 h-4 text-white" /></div>
+                                                <span className="text-sm font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">AI-сортировка: Лучшие отклики первыми</span>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {(() => {
+                                                    const sortedBids = [...reqBids].sort((a, b) => a.price - b.price);
+                                                    return sortedBids.map((bid, idx) => {
+                                                        const isBest = idx === 0 && req.status === 'open';
+                                                        return (
+                                                            <div key={bid.id} className={`p-6 rounded-3xl border shadow-md hover:-translate-y-1 transition-all relative overflow-hidden group ${isBest ? 'bg-white dark:bg-[#111827] border-blue-400 dark:border-blue-500 ring-2 ring-blue-500/20 shadow-blue-500/10' : 'bg-white dark:bg-[#111827] border-slate-200 dark:border-slate-700/50'}`}>
+                                                                {isBest && (
+                                                                    <div className="absolute top-0 right-0 z-10 px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-2xl shadow-lg flex items-center gap-1.5">
+                                                                        <Award className="w-3 h-3" /> Выгодное
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex justify-between items-start mb-4">
+                                                                    <div className="font-black text-slate-800 dark:text-white text-base">
+                                                                        {bid.ownerName}
+                                                                        <div className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">ИНН: {bid.ownerInn || '---'}</div>
+                                                                    </div>
+                                                                    <div className="flex flex-col items-end">
+                                                                        <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold">{bid.wagons} ваг.</div>
+                                                                        <div className="px-3 py-1 text-indigo-600 dark:text-indigo-400 text-[10px] font-black">{bid.tons} т.</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-2xl font-black text-slate-900 dark:text-white mb-6 bg-slate-50 dark:bg-[#0B1120] p-3 rounded-xl border border-slate-100 dark:border-slate-800">{bid.price.toLocaleString()} <span className="text-sm text-slate-400 font-bold">₽/шт</span></div>
+                                                                <button onClick={() => onChat && onChat(bid)} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2">
+                                                                    <MessageSquare className="w-4 h-4" /> Начать обсуждение
+                                                                </button>
                                                             </div>
-                                                        )}
-                                                        <div className="flex justify-between items-start mb-4">
-                                                            <div className="font-black text-slate-800 dark:text-white text-base">
-                                                                {bid.ownerName}
-                                                                <div className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">ИНН: {bid.ownerInn || '---'}</div>
-                                                            </div>
-                                                            <div className="flex flex-col items-end">
-                                                                <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold">{bid.wagons} ваг.</div>
-                                                                <div className="px-3 py-1 text-indigo-600 dark:text-indigo-400 text-[10px] font-black">{bid.tons} т.</div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-2xl font-black text-slate-900 dark:text-white mb-6 bg-slate-50 dark:bg-[#0B1120] p-3 rounded-xl border border-slate-100 dark:border-slate-800">{bid.price.toLocaleString()} <span className="text-sm text-slate-400 font-bold">₽/шт</span></div>
-                                                        {bid.status === 'pending' ? <button onClick={() => onAccept(bid)} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Заключить сделку</button> : <div className="w-full py-3 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 text-[11px] font-black uppercase tracking-widest rounded-xl text-center flex items-center justify-center gap-2"><CheckCircle className="w-4 h-4" /> Сделка активна</div>}
-                                                    </div>
-                                                );
-                                            });
-                                        })()}
+                                                        );
+                                                    });
+                                                })()}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </>
+                )}
+
+                {/* === TAB: My Responses (bids I placed on other requests) === */}
+                {activeTab === 'my-responses' && (
+                    <>
+                        {myBids.length === 0 ? (
+                            <div className="text-center py-20 bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 font-bold">
+                                Вы пока не откликались на заявки. Перейдите на биржу, чтобы найти подходящие предложения.
+                            </div>
+                        ) : myBids.map(bid => {
+                            const req = requests.find(r => r.id === bid.requestId) || {};
+                            const creatorProfile = profiles?.find(p => p.inn === req.shipperInn);
+                            return (
+                                <div key={bid.id} className="bg-white dark:bg-[#111827] p-8 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-6 hover:shadow-xl transition-all group relative overflow-hidden">
+                                    {bid.status === 'accepted' && <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-full -z-10 blur-xl"></div>}
+
+                                    <div className="flex-1 w-full">
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${bid.status === 'accepted' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                                                {bid.status === 'pending' ? <Clock className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+                                                {bid.status === 'pending' ? 'Ожидает решения' : 'Сделка заключена'}
+                                            </span>
+                                            <span className="text-xs font-bold text-slate-400 border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-lg">{new Date(bid.created_at).toLocaleDateString()}</span>
+                                            {creatorProfile?.company && (
+                                                <span className="text-xs font-bold text-slate-500">{creatorProfile.company}</span>
+                                            )}
+                                        </div>
+                                        <div className="text-2xl font-black dark:text-white flex items-center gap-3 mb-2">
+                                            <MapPin className="w-5 h-5 text-slate-400" /> {req.stationFrom || 'Неизвестно'} <ArrowRight className="w-5 h-5 text-blue-400" /> <MapPin className="w-5 h-5 text-slate-400" /> {req.stationTo || 'Неизвестно'}
+                                        </div>
+                                        <div className="text-sm text-slate-500 font-bold pl-8">
+                                            Груз: <span className="text-slate-800 dark:text-slate-200">{req.cargoType || '---'}</span> • Тип: <span className="text-slate-800 dark:text-slate-200">{req.wagonType || '---'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-50 dark:bg-[#0B1120] p-6 rounded-3xl border border-slate-100 dark:border-slate-800 flex items-center gap-6 w-full md:w-auto">
+                                        <div>
+                                            <div className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Предложение</div>
+                                            <div className="text-xl font-black text-slate-900 dark:text-white flex items-baseline gap-1">{bid.price.toLocaleString()} <span className="text-xs text-slate-400">₽/шт</span></div>
+                                            <div className="text-sm font-bold text-blue-600 mt-1">{bid.wagons} ваг. / {bid.tons || 0} т.</div>
+                                        </div>
+                                        <div className="w-px h-12 bg-slate-200 dark:bg-slate-700"></div>
+                                        <div>
+                                            <div className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Итого</div>
+                                            <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">{(bid.price * bid.wagons).toLocaleString()} ₽</div>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={() => onChat(bid)} className={`w-full md:w-auto p-6 rounded-3xl hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3 font-bold group ${bid.status === 'accepted' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-blue-500/30' : 'bg-emerald-500 hover:bg-emerald-600 text-white hover:shadow-emerald-500/30'}`}>
+                                        <MessageSquare className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                                        <span>{bid.status === 'accepted' ? 'Открыть чат' : 'Начать обсуждение'}</span>
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </>
+                )}
+
+                {/* === TAB: Completed / Archive === */}
+                {activeTab === 'completed' && (
+                    <>
+                        {myReqs.filter(r => r.status === 'completed').length === 0 ? (
+                            <div className="text-center py-20 bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 font-bold">
+                                Архив пуст
+                            </div>
+                        ) : myReqs.filter(r => r.status === 'completed').map(req => {
+                            const reqBids = bids.filter(b => b.requestId === req.id);
+                            return (
+                                <div key={req.id} className="bg-white dark:bg-[#111827] rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden">
+                                    <div className="p-8 flex flex-col md:flex-row justify-between gap-6 bg-slate-50/50 dark:bg-transparent">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <span className="text-[11px] font-bold text-slate-400">ID-{req.id.substring(0, 8)}</span>
+                                                <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-200 text-slate-600">Завершена</span>
+                                                <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">{req.wagonType}</span>
+                                            </div>
+                                            <div className="text-2xl font-black dark:text-white flex items-center gap-4 mb-2 opacity-60">
+                                                <MapPin className="w-5 h-5 text-slate-400" /> {req.stationFrom} <ArrowRight className="w-5 h-5 text-blue-300" /> <MapPin className="w-5 h-5 text-slate-400" /> {req.stationTo}
+                                            </div>
+                                            <div className="text-sm text-slate-500 font-bold uppercase tracking-wider pl-9">{req.cargoType} • {req.totalWagons} ваг. / {req.totalTons} т.</div>
+                                        </div>
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    );
-                })}
+                            );
+                        })}
+                    </>
+                )}
             </div>
         </div>
     );

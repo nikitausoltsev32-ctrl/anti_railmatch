@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, MessageSquare, TrendingUp, CheckCircle, Clock, Sparkles, Search, Briefcase, Wallet, MapPin, Check, PieChart, Activity, AlertCircle } from 'lucide-react';
 import { parsePrompt } from '../src/aiService';
 
-export default function MyBidsView({ bids, requests, userId, onChat, setView, onAiCreate }) {
+export default function MyBidsView({ bids, requests, userId, userRole, onChat, setView, onAiCreate }) {
     const myBids = bids.filter(b => b.ownerId === userId);
     const [aiPrompt, setAiPrompt] = useState("");
     const [activeTab, setActiveTab] = useState('active'); // 'active' | 'completed'
@@ -19,7 +19,7 @@ export default function MyBidsView({ bids, requests, userId, onChat, setView, on
 
     return (
         <div className="max-w-6xl mx-auto py-10 animate-in fade-in duration-500">
-            <h1 className="text-4xl font-black mb-8 dark:text-white">Мои ставки</h1>
+            <h1 className="text-4xl font-black mb-8 dark:text-white">{userRole === 'shipper' ? 'Мои отклики' : 'Мои ставки'}</h1>
 
             {/* AI Agent Bar */}
             <div className="mb-10 bg-white dark:bg-[#111827] p-2 rounded-[2rem] border border-blue-100 dark:border-slate-800 shadow-xl shadow-blue-500/5 flex items-center gap-3 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-300 group overflow-hidden">
@@ -57,43 +57,45 @@ export default function MyBidsView({ bids, requests, userId, onChat, setView, on
             </div>
 
             {/* Premium Desktop Analytics Boxes for Owner */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                {/* 1. Загрузка парка (Оранжевый/Внимание) */}
-                <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
-                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><PieChart className="w-24 h-24 text-orange-600" /></div>
-                    <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 mb-6 border border-orange-100 dark:border-orange-800/50 relative z-10"><PieChart className="w-7 h-7" /></div>
-                    <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Загрузка парка</div>
-                    <div className="text-4xl font-black text-orange-600 dark:text-orange-500 relative z-10">{utilizationRate}%</div>
-                    <div className="text-xs font-bold text-slate-400 mt-3 flex items-center gap-1"><AlertCircle className="w-3 h-3 text-orange-500" /> 22% простаивает</div>
-                </div>
+            {userRole === 'owner' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    {/* 1. Загрузка парка (Оранжевый/Внимание) */}
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><PieChart className="w-24 h-24 text-orange-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 mb-6 border border-orange-100 dark:border-orange-800/50 relative z-10"><PieChart className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Загрузка парка</div>
+                        <div className="text-4xl font-black text-orange-600 dark:text-orange-500 relative z-10">{utilizationRate}%</div>
+                        <div className="text-xs font-bold text-slate-400 mt-3 flex items-center gap-1"><AlertCircle className="w-3 h-3 text-orange-500" /> 22% простаивает</div>
+                    </div>
 
-                {/* 2. Win Rate (Зеленый) */}
-                <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
-                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><CheckCircle className="w-24 h-24 text-emerald-600" /></div>
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mb-6 border border-emerald-100 dark:border-emerald-800/50 relative z-10"><CheckCircle className="w-7 h-7" /></div>
-                    <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Win Rate</div>
-                    <div className="text-4xl font-black dark:text-white relative z-10">{winRate}%</div>
-                    <div className="text-xs font-bold text-emerald-500 mt-3 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +15% к прошлому месяцу</div>
-                </div>
+                    {/* 2. Win Rate (Зеленый) */}
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><CheckCircle className="w-24 h-24 text-emerald-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mb-6 border border-emerald-100 dark:border-emerald-800/50 relative z-10"><CheckCircle className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Win Rate</div>
+                        <div className="text-4xl font-black dark:text-white relative z-10">{winRate}%</div>
+                        <div className="text-xs font-bold text-emerald-500 mt-3 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +15% к прошлому месяцу</div>
+                    </div>
 
-                {/* 3. Прогноз выручки (Зеленый/Синий) */}
-                <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
-                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><Wallet className="w-24 h-24 text-emerald-600" /></div>
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mb-6 border border-emerald-100 dark:border-emerald-800/50 relative z-10"><Wallet className="w-7 h-7" /></div>
-                    <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Прогноз выручки</div>
-                    <div className="text-3xl font-black dark:text-white relative z-10">{projectedRevenue.toLocaleString()} ₽</div>
-                    <div className="text-xs font-bold text-emerald-500 mt-3 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> Рекордная неделя</div>
-                </div>
+                    {/* 3. Прогноз выручки (Зеленый/Синий) */}
+                    <div className="bg-white dark:bg-[#111827] p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform"><Wallet className="w-24 h-24 text-emerald-600" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mb-6 border border-emerald-100 dark:border-emerald-800/50 relative z-10"><Wallet className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2 relative z-10">Прогноз выручки</div>
+                        <div className="text-3xl font-black dark:text-white relative z-10">{projectedRevenue.toLocaleString()} ₽</div>
+                        <div className="text-xs font-bold text-emerald-500 mt-3 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> Рекордная неделя</div>
+                    </div>
 
-                {/* 4. Активные торги (Highlight) */}
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 rounded-[2.5rem] shadow-xl shadow-blue-600/30 relative overflow-hidden group hover:-translate-y-1 transition-transform text-white">
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><Activity className="w-24 h-24" /></div>
-                    <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 border border-white/30 relative z-10"><Activity className="w-7 h-7" /></div>
-                    <div className="text-sm font-black uppercase tracking-widest text-blue-200 mb-2 relative z-10">Активные торги</div>
-                    <div className="text-4xl font-black relative z-10">{activeBidsCount} ставок</div>
-                    <div className="text-xs font-bold text-blue-100 mt-3 opacity-90">Потенциал: {potentialRevenue.toLocaleString()} ₽</div>
+                    {/* 4. Активные торги (Highlight) */}
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 rounded-[2.5rem] shadow-xl shadow-blue-600/30 relative overflow-hidden group hover:-translate-y-1 transition-transform text-white">
+                        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform"><Activity className="w-24 h-24" /></div>
+                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 border border-white/30 relative z-10"><Activity className="w-7 h-7" /></div>
+                        <div className="text-sm font-black uppercase tracking-widest text-blue-200 mb-2 relative z-10">Активные торги</div>
+                        <div className="text-4xl font-black relative z-10">{activeBidsCount} ставок</div>
+                        <div className="text-xs font-bold text-blue-100 mt-3 opacity-90">Потенциал: {potentialRevenue.toLocaleString()} ₽</div>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -118,7 +120,7 @@ export default function MyBidsView({ bids, requests, userId, onChat, setView, on
             </div>
 
             <div className="space-y-6">
-                {myBids.filter(b => activeTab === 'active' ? b.status === 'pending' : b.status === 'accepted').length === 0 ? <div className="text-center py-20 bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 font-bold">{activeTab === 'active' ? 'У вас пока нет активных ставок' : 'Архив пуст'}</div> : myBids.filter(b => activeTab === 'active' ? b.status === 'pending' : b.status === 'accepted').map(bid => {
+                {myBids.filter(b => activeTab === 'active' ? b.status === 'pending' : b.status === 'accepted').length === 0 ? <div className="text-center py-20 bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 font-bold">{activeTab === 'active' ? (userRole === 'shipper' ? 'У вас пока нет активных откликов' : 'У вас пока нет активных ставок') : 'Архив пуст'}</div> : myBids.filter(b => activeTab === 'active' ? b.status === 'pending' : b.status === 'accepted').map(bid => {
                     const req = requests.find(r => r.id === bid.requestId) || {};
                     return (
                         <div key={bid.id} className="bg-white dark:bg-[#111827] p-8 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-6 hover:shadow-xl transition-all group relative overflow-hidden">

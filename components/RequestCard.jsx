@@ -1,7 +1,8 @@
 import React from 'react';
 import { Package, TrainFront, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
-export default function RequestCard({ req, onBid, bidCount = 0, rank }) {
+function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorCompany }) {
+    const isOwnerCreated = creatorRole === 'owner';
     const isCompleted = req.status === 'completed';
     const isLimitReached = bidCount >= 15;
 
@@ -29,17 +30,18 @@ export default function RequestCard({ req, onBid, bidCount = 0, rank }) {
                     {isCompleted && <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-500">Закрыта</span>}
                     {req.cargoType && <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-orange-50 text-orange-600">{req.cargoType}</span>}
                     {req.wagonType && <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-blue-50 text-blue-600">{req.wagonType}</span>}
+                    {req.created_at && <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500">{new Date(req.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span>}
                 </div>
             </div>
 
             <div className="mb-4">
                 <h3 className="text-lg font-black dark:text-white flex items-center gap-2 mb-1">
-                    <span className="truncate">{req.stationFrom}</span>
+                    <span>{req.stationFrom}</span>
                     <ArrowRight className="w-4 h-4 text-slate-300 shrink-0" />
-                    <span className="truncate">{req.stationTo}</span>
+                    <span>{req.stationTo}</span>
                 </h3>
                 <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-slate-500">{req.shipperName || 'Грузоотправитель'}</span>
+                    <span className="text-[11px] font-bold text-slate-500">{creatorCompany || (isOwnerCreated ? 'Владелец вагонов' : 'Грузоотправитель')}</span>
                     {req.profiles?.is_verified && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" title="Проверен" />}
                 </div>
             </div>
@@ -47,7 +49,7 @@ export default function RequestCard({ req, onBid, bidCount = 0, rank }) {
             <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-4 flex flex-col gap-4">
                 <div className="flex items-center justify-between text-[11px] font-bold">
                     <div className="text-slate-500">
-                        Нужно: <span className="text-slate-800 dark:text-white">{req.totalWagons}</span> ваг. / <span className="text-slate-800 dark:text-white">{req.totalTons}</span> т.
+                        {isOwnerCreated ? 'Свободно' : 'Нужно'}: <span className="text-slate-800 dark:text-white">{req.totalWagons}</span> ваг. / <span className="text-slate-800 dark:text-white">{req.totalTons}</span> т.
                     </div>
                     {req.target_price && (
                         <div className="text-emerald-600 dark:text-emerald-400">
@@ -72,10 +74,12 @@ export default function RequestCard({ req, onBid, bidCount = 0, rank }) {
                             : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 active:scale-95'
                             }`}
                     >
-                        {isCompleted ? 'Закрыто' : isLimitReached ? 'Лимит' : 'Откликнуться'}
+                        {isCompleted ? 'Закрыто' : isLimitReached ? 'Лимит' : (isOwnerCreated ? 'Заказать' : 'Откликнуться')}
                     </button>
                 </div>
             </div>
         </div>
     );
 }
+
+export default React.memo(RequestCard);

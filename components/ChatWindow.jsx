@@ -48,71 +48,62 @@ export default function ChatWindow({ chat, messages, currentUserId, userRole, on
 
     return (
         <div className="min-h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="bg-white dark:bg-[#111827] h-[750px] rounded-[3.5rem] border dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="bg-white dark:bg-[#111827] h-[750px] rounded-[2.5rem] border dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
 
-                {/* Header */}
-                <div className="p-8 border-b dark:border-slate-800 flex justify-between items-center bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl z-20">
-                    <div className="flex items-center gap-5">
-                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 md:hidden">
+                {/* Compact Header */}
+                <div className="px-6 py-4 border-b dark:border-slate-800 flex justify-between items-center bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl z-20">
+                    <div className="flex items-center gap-4">
+                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 relative group">
-                            <MessageSquare className="w-7 h-7 group-hover:scale-110 transition-transform" />
-                            {isAccepted && <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 border-2 border-white dark:border-[#111827] animate-bounce"><CheckCircle2 className="w-3 h-3" /></div>}
+                        <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md relative">
+                            <MessageSquare className="w-5 h-5" />
+                            {isAccepted && <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 border-2 border-white dark:border-[#111827]"><CheckCircle2 className="w-2.5 h-2.5" /></div>}
                         </div>
                         <div>
-                            <div className="font-black dark:text-white uppercase tracking-tight text-lg flex items-center gap-2">
+                            <div className="font-black dark:text-white text-base flex items-center gap-2">
                                 {chat.ownerName || chat.shipperName || 'Переговоры'}
-                                {isAccepted && <span className="text-[10px] bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-md font-black tracking-widest">СДЕЛКА</span>}
+                                {isAccepted && <span className="text-[9px] bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded font-black">СДЕЛКА</span>}
                             </div>
-                            <div className="flex items-center gap-3 mt-1">
-                                <div className="text-[10px] text-emerald-600 font-black uppercase flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-md">
-                                    <ShieldCheck className="w-3 h-3" /> Проверен
-                                </div>
-                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                                    <Phone className="w-3 h-3" /> {maskContact(chat.ownerPhone || chat.shipperPhone, chat.status === 'escrow_held' || isAccepted)}
-                                </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[9px] text-emerald-600 font-bold flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Проверен</span>
+                                <span className="text-[9px] text-slate-400 font-bold flex items-center gap-1"><Phone className="w-3 h-3" /> {maskContact(chat.ownerPhone || chat.shipperPhone, chat.status === 'escrow_held' || isAccepted)}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         {!isAccepted && (
                             <button
                                 onClick={onAccept}
                                 disabled={isShipper ? chat.shipper_confirmed : chat.owner_confirmed}
-                                className={`group relative px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 overflow-hidden ${(isShipper ? chat.shipper_confirmed : chat.owner_confirmed)
-                                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default shadow-none'
-                                    : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 active:scale-95'
+                                className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${(isShipper ? chat.shipper_confirmed : chat.owner_confirmed)
+                                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default'
+                                    : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md active:scale-95'
                                     }`}
                             >
-                                <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full ${!(isShipper ? chat.shipper_confirmed : chat.owner_confirmed) && 'group-hover:animate-[shimmer_1.5s_infinite]'}`}></div>
-                                <CheckCircle2 className={`w-4 h-4 ${!(isShipper ? chat.shipper_confirmed : chat.owner_confirmed) && 'animate-pulse'}`} />
-                                <span className="relative">
-                                    {(isShipper ? chat.shipper_confirmed : chat.owner_confirmed)
-                                        ? 'Ждем партнера...'
-                                        : 'Оформить сделку'}
-                                </span>
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                {(isShipper ? chat.shipper_confirmed : chat.owner_confirmed) ? 'Ждем партнера...' : 'Оформить сделку'}
                             </button>
                         )}
                         {chat.status === 'pending_payment' && isShipper && (
                             <button
                                 onClick={() => setShowPaymentModal(true)}
-                                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 flex items-center gap-2 animate-bounce"
+                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center gap-2 ring-2 ring-blue-400/30 ring-offset-2 ring-offset-white dark:ring-offset-[#111827]"
                             >
-                                <Wallet className="w-4 h-4" /> Внести гарантийный платеж
+                                <Wallet className="w-3.5 h-3.5" /> Внести гарантийный платеж
                             </button>
                         )}
                         {chat.status === 'escrow_held' && (
                             <button
                                 onClick={() => setShowDocs(true)}
-                                className="px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 flex items-center gap-2 hover:scale-105 transition-all"
+                                className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center gap-2 hover:bg-blue-700 transition-all"
                             >
-                                <FileText className="w-4 h-4" /> Документы
+                                <FileText className="w-3.5 h-3.5" /> Документы
                             </button>
                         )}
-                        <button className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-400 hidden sm:block">
-                            <MoreVertical />
+                        <button className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
+                            <MoreVertical className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
@@ -310,78 +301,49 @@ export default function ChatWindow({ chat, messages, currentUserId, userRole, on
                     </div>
                 )}
 
-                {/* VISUAL DEAL STATUS BAR */}
-                <div className="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/30 border-b dark:border-slate-800 flex flex-col gap-5 z-10 shadow-inner">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Маршрут</span>
-                                <div className="text-sm font-bold dark:text-white flex items-center gap-2">
-                                    {chat.stationFrom} <ArrowLeft className="w-3 h-3 rotate-180 text-blue-500" /> {chat.stationTo}
-                                </div>
-                            </div>
-                            <div className="w-px h-8 bg-slate-200 dark:border-slate-800 mx-2 hidden sm:block"></div>
-                            <div className="flex flex-col gap-1 hidden sm:flex">
-                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Объем</span>
-                                <div className="text-sm font-bold dark:text-white">{chat.wagons} ваг. / {chat.tons} т.</div>
-                            </div>
-                            <div className="w-px h-8 bg-slate-200 dark:border-slate-800 mx-2 hidden lg:block"></div>
-                            <div className="flex flex-col gap-1 hidden lg:flex">
-                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Финальная цена</span>
-                                <div className="text-sm font-bold text-blue-600 dark:text-blue-400">{chat.price?.toLocaleString()} ₽/шт</div>
-                            </div>
+                {/* Compact Deal Status Bar */}
+                <div className="px-6 py-3 bg-slate-50/80 dark:bg-slate-900/30 border-b dark:border-slate-800 z-10">
+                    <div className="flex items-center justify-between gap-4">
+                        {/* Route + Volume + Price — inline */}
+                        <div className="flex items-center gap-4 text-xs font-bold">
+                            <span className="dark:text-white flex items-center gap-1.5">
+                                {chat.stationFrom} <ArrowLeft className="w-3 h-3 rotate-180 text-blue-500" /> {chat.stationTo}
+                            </span>
+                            <span className="w-px h-4 bg-slate-200 dark:bg-slate-700"></span>
+                            <span className="text-slate-500">{chat.wagons} ваг. / {chat.tons} т.</span>
+                            <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 hidden sm:block"></span>
+                            <span className="text-blue-600 dark:text-blue-400 hidden sm:block">{chat.price?.toLocaleString()} ₽/шт</span>
                         </div>
 
-                        {/* FINTECH STEPPER (5 STEPS) */}
-                        <div className="flex items-center gap-2 sm:gap-4 relative px-4 py-2 bg-white dark:bg-slate-950/50 rounded-[2rem] border dark:border-slate-800 shadow-sm overflow-x-auto no-scrollbar">
-                            {[
-                                { id: 'negotiation', label: '1. Переговоры', icon: MessageSquare },
-                                { id: 'escrow', label: '2. Гарантийный платеж', icon: Wallet },
-                                { id: 'loading', label: '3. Погрузка', icon: Package },
-                                { id: 'transit', label: '4. В пути', icon: TrainFront },
-                                { id: 'act', label: '5. Акт', icon: FileText }
-                            ].map((step, idx, arr) => {
-                                const statusMap = {
-                                    'pending': 0,
-                                    'pending_payment': 1,
-                                    'escrow_held': 1,
-                                    'loading': 2,
-                                    'in_transit': 3,
-                                    'accepted': 4 // Final step
-                                };
-                                const currentStepIdx = statusMap[chat.status] || 0;
-                                const isActive = currentStepIdx === idx;
-                                const isCompleted = currentStepIdx > idx;
-
-                                return (
-                                    <React.Fragment key={step.id}>
-                                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500/20' : ''}`}>
-                                            <div className={`w-2 h-2 rounded-full ${isCompleted ? 'bg-emerald-500' : isActive ? 'bg-blue-600 animate-pulse' : 'bg-slate-200 dark:bg-slate-800'}`}></div>
-                                            <span className={`text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${isCompleted ? 'text-emerald-500' : isActive ? 'text-blue-600' : 'text-slate-400'}`}>
-                                                {step.label}
-                                            </span>
-                                        </div>
-                                        {idx < arr.length - 1 && <div className="w-4 h-px bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>}
+                        {/* Stepper — compact inline */}
+                        <div className="flex items-center gap-1">
+                            {(() => {
+                                const steps = ['Переговоры', 'Платеж', 'Погрузка', 'В пути', 'Акт'];
+                                const statusMap = { 'pending': 0, 'pending_payment': 1, 'escrow_held': 1, 'loading': 2, 'in_transit': 3, 'accepted': 4 };
+                                const current = statusMap[chat.status] || 0;
+                                return steps.map((s, i) => (
+                                    <React.Fragment key={i}>
+                                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${i < current ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' :
+                                            i === current ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' :
+                                                'text-slate-400'
+                                            }`}>{s}</span>
+                                        {i < steps.length - 1 && <div className="w-2 h-px bg-slate-200 dark:bg-slate-700"></div>}
                                     </React.Fragment>
-                                );
-                            })}
+                                ));
+                            })()}
                         </div>
                     </div>
 
-                    {/* CONFIRMATION STATUS CHIPS */}
-                    <div className="flex gap-4 pt-4 border-t dark:border-slate-800/50">
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${chat.shipper_confirmed
-                            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
-                            {chat.shipper_confirmed ? <CheckCircle2 className="w-3 h-3" /> : <div className="w-3 h-3 border-2 border-slate-200 dark:border-slate-800 rounded-full"></div>}
-                            Отправитель подтвердил
-                        </div>
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${chat.owner_confirmed
-                            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
-                            {chat.owner_confirmed ? <CheckCircle2 className="w-3 h-3" /> : <div className="w-3 h-3 border-2 border-slate-200 dark:border-slate-800 rounded-full"></div>}
-                            Владелец подтвердил
-                        </div>
+                    {/* Confirmation badges — slim */}
+                    <div className="flex gap-3 mt-2">
+                        <span className={`flex items-center gap-1.5 text-[11px] font-bold ${chat.shipper_confirmed ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {chat.shipper_confirmed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 border border-slate-300 dark:border-slate-700 rounded-full inline-block"></span>}
+                            Отправитель
+                        </span>
+                        <span className={`flex items-center gap-1.5 text-[11px] font-bold ${chat.owner_confirmed ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {chat.owner_confirmed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 border border-slate-300 dark:border-slate-700 rounded-full inline-block"></span>}
+                            Владелец
+                        </span>
                     </div>
                 </div>
 
@@ -394,7 +356,7 @@ export default function ChatWindow({ chat, messages, currentUserId, userRole, on
                             </div>
                             <h3 className="text-xl font-black dark:text-white uppercase tracking-[0.2em]">Начало диалога</h3>
                             <p className="text-xs text-slate-500 max-w-xs mt-3 font-bold leading-relaxed">
-                                Согласуйте финальные условия и нажмите кнопку «Заключить сделку» для фиксации лота.
+                                Согласуйте финальные условия перевозки, а затем нажмите «Оформить сделку» для фиксации.
                             </p>
                         </div>
                     ) : (
@@ -418,22 +380,22 @@ export default function ChatWindow({ chat, messages, currentUserId, userRole, on
                     )}
                 </div>
 
-                {/* Input Area */}
-                <div className="p-8 bg-white dark:bg-[#111827] border-t dark:border-slate-800">
-                    <div className="flex gap-4 items-center bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-3xl border dark:border-slate-800 focus-within:ring-4 ring-blue-500/10 transition-all border-l-4 border-l-blue-600">
+                {/* Compact Input Area */}
+                <div className="px-6 py-4 bg-white dark:bg-[#111827] border-t dark:border-slate-800">
+                    <div className="flex gap-3 items-center bg-slate-50 dark:bg-slate-900/50 p-2 rounded-2xl border dark:border-slate-800 focus-within:ring-2 ring-blue-500/20 transition-all">
                         <input
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Напишите сообщение..."
-                            className="flex-1 bg-transparent px-6 py-4 outline-none dark:text-white font-bold placeholder:text-slate-400"
+                            className="flex-1 bg-transparent px-4 py-3 outline-none dark:text-white font-bold text-sm placeholder:text-slate-400"
                         />
                         <button
                             onClick={handleSend}
                             disabled={!inputText.trim()}
-                            className="w-14 h-14 bg-blue-600 disabled:opacity-50 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all"
+                            className="w-11 h-11 bg-blue-600 disabled:opacity-50 text-white rounded-xl flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
                         >
-                            <Send className="w-6 h-6" />
+                            <Send className="w-5 h-5" />
                         </button>
                     </div>
                 </div>

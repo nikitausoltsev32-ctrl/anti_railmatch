@@ -12,10 +12,14 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
         targetPrice: initialData?.targetPrice || ''
     });
 
-    // In case initialData changes while component is mounted (though usually it mounts fresh)
     useEffect(() => {
         if (initialData) {
-            setFormData(prev => ({ ...prev, ...initialData }));
+            setFormData(prev => {
+                const updated = { ...prev, ...initialData };
+                if (!updated.wagonType) updated.wagonType = 'Крытый';
+                if (!updated.cargoType) updated.cargoType = 'ТНП';
+                return updated;
+            });
         }
     }, [initialData]);
 

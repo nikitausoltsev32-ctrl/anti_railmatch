@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import {
     TrainFront, MapPin, Package, Calendar,
     Weight, Box, Filter, Search, ChevronDown,
@@ -119,8 +119,12 @@ export default function App() {
     const [profiles, setProfiles] = useState([]);
 
     // Навигация
-    const [screen, setScreen] = useState('landing'); // 'landing' | 'auth' | 'app'
-    const [view, setView] = useState('catalog'); // 'catalog' | 'my-requests' | 'my-bids' | 'messenger' | 'profile' | 'create'
+    const [screen, setScreen] = useState(() => localStorage.getItem('rm_screen') || 'landing'); // 'landing' | 'auth' | 'app'
+    const [view, setView] = useState(() => localStorage.getItem('rm_view') || 'catalog'); // 'catalog' | 'my-requests' | 'my-bids' | 'messenger' | 'profile' | 'create'
+
+    // Persist state across reloads so user isn't kicked to main page
+    useEffect(() => { localStorage.setItem('rm_screen', screen); }, [screen]);
+    useEffect(() => { localStorage.setItem('rm_view', view); }, [view]);
 
     // Состояние пользователя
     const [userProfile, setUserProfile] = useState(null);
@@ -136,6 +140,7 @@ export default function App() {
     const [aiFilters, setAiFilters] = useState(null);
     const [aiCreateData, setAiCreateData] = useState(null);
     const [isAiSearching, setIsAiSearching] = useState(false);
+    const [quickFilter, setQuickFilter] = useState({ wagonType: null, direction: null });
     const [securityWarning, setSecurityWarning] = useState(null); // { message: string, severity: 'warning' | 'critical' }
 
     // 1. ШРИФТ И ТЕМА
@@ -164,8 +169,11 @@ export default function App() {
                             if (retryData) {
                                 setUserProfile(retryData);
                                 if (isInitialLogin) {
+                                    const savedScreen = localStorage.getItem('rm_screen');
                                     setScreen('app');
-                                    setView(retryData.role === 'owner' ? 'catalog' : 'my-requests');
+                                    if (savedScreen !== 'app') {
+                                        setView('catalog');
+                                    }
                                 }
                             } else {
                                 alert("Профиль не найден. Если вы только что зарегистрировались, попробуйте войти через минуту.");
@@ -180,8 +188,11 @@ export default function App() {
                 if (data) {
                     setUserProfile(data);
                     if (isInitialLogin) {
+                        const savedScreen = localStorage.getItem('rm_screen');
                         setScreen('app');
-                        setView(data.role === 'owner' ? 'catalog' : 'my-requests');
+                        if (savedScreen !== 'app') {
+                            setView('catalog');
+                        }
                     }
                 }
             } catch (err) {
@@ -333,6 +344,8 @@ export default function App() {
     const handleLogout = async () => {
         await supabase.auth.signOut();
         setScreen('landing');
+        localStorage.removeItem('rm_screen');
+        localStorage.removeItem('rm_view');
     };
 
     const requireAuth = (callback) => {
@@ -478,8 +491,8 @@ export default function App() {
         const reqData = {
             stationFrom: data.stationFrom,
             stationTo: data.stationTo,
-            cargoType: data.cargoType,
-            wagonType: data.wagonType,
+            cargoType: data.cargoType || 'ТНП',
+            wagonType: data.wagonType || 'Крытый',
             totalWagons: Number(data.totalWagons || 0),
             totalTons: Number(data.totalTons || 0),
             target_price: Number(data.targetPrice || 0), // Default to 0 instead of NaN if empty
@@ -488,13 +501,13 @@ export default function App() {
             shipperInn: userProfile.inn || '000000',
             status: 'open'
         }
-        const { error } = await supabase.from('requests').insert([reqData]);
+        const { error, data: insertedReq } = await supabase.from('requests').insert([reqData]);
         if (error) {
             console.error("Error creating request", error);
-            alert("Ошибка при сохранении заявки. Проверьте данные.");
+            alert("Ошибка при сохранении заявки: " + (error.message || JSON.stringify(error)));
         } else {
             alert("Заявка успешно опубликована на бирже!");
-            setView(userProfile.role === 'owner' ? 'my-bids' : 'my-requests');
+            setView('my-requests');
         }
     };
 
@@ -505,14 +518,21 @@ export default function App() {
 
     const handleSeedDemoData = async () => {
         if (!sbUser) return;
-        const mockRequests = [
-            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 10, totalTons: 600, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
-            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 15, totalTons: 900, target_price: 150000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
-            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 5, totalTons: 300, target_price: 165000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
-            { stationFrom: 'Санкт-Петербург', stationTo: 'Казань', cargoType: 'Уголь', wagonType: 'Полувагон', totalWagons: 50, totalTons: 3500, target_price: 120000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7711111111', status: 'open' },
-            { stationFrom: 'Санкт-Петербург', stationTo: 'Казань', cargoType: 'Уголь', wagonType: 'Полувагон', totalWagons: 20, totalTons: 1400, target_price: 90000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7711111111', status: 'open' }
+        // Генерируем демо-заявки от обеих ролей чтобы каждая роль видела контент на бирже
+        const shipperRequests = [
+            { stationFrom: 'Москва', stationTo: 'Екатеринбург', cargoType: 'Металл', wagonType: 'Полувагон', totalWagons: 20, totalTons: 1200, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
+            { stationFrom: 'Санкт-Петербург', stationTo: 'Казань', cargoType: 'Уголь', wagonType: 'Полувагон', totalWagons: 50, totalTons: 3500, target_price: 120000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
+            { stationFrom: 'Краснодар', stationTo: 'Москва', cargoType: 'Зерно', wagonType: 'Хоппер', totalWagons: 30, totalTons: 2100, target_price: 95000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
+            { stationFrom: 'Новосибирск', stationTo: 'Челябинск', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 8, totalTons: 480, target_price: 140000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7711111111', status: 'open' },
         ];
-        const { error } = await supabase.from('requests').insert(mockRequests);
+        const ownerRequests = [
+            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 10, totalTons: 600, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7722222222', status: 'open' },
+            { stationFrom: 'Москва', stationTo: 'Челябинск', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 15, totalTons: 900, target_price: 150000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7722222222', status: 'open' },
+            { stationFrom: 'Казань', stationTo: 'Санкт-Петербург', cargoType: 'Нефть', wagonType: 'Цистерна', totalWagons: 25, totalTons: 1500, target_price: 200000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7733333333', status: 'open' },
+            { stationFrom: 'Самара', stationTo: 'Воронеж', cargoType: 'Щебень', wagonType: 'Полувагон', totalWagons: 40, totalTons: 2800, target_price: 85000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7733333333', status: 'open' },
+        ];
+        const allRequests = [...shipperRequests, ...ownerRequests];
+        const { error } = await supabase.from('requests').insert(allRequests);
         if (error) {
             console.error("Error seeding data:", error);
             alert("Ошибка при добавлении демо-данных: " + JSON.stringify(error));
@@ -546,14 +566,26 @@ export default function App() {
         }
     };
 
-    // Filter requests for catalog
-    const filteredCatalogRequests = requests.filter(req => {
+    // Filter requests for catalog — memoized to prevent re-filtering on every render
+    const filteredCatalogRequests = useMemo(() => requests.filter(req => {
+        // Скрываем закрытые/завершённые заявки с биржи
+        if (req.status === 'completed' || req.status === 'closed') return false;
+
         // Проверка ролей: владельцы видят заявки отправителей, а отправители — предложения владельцев
-        if (userProfile && profiles.length > 0) {
+        if (userProfile && userProfile.role !== 'demo') {
+            // Пока профили не загрузились — не показываем ничего (убираем мерцание)
+            if (profiles.length === 0) return false;
             const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
             const creatorRole = creatorProfile?.role;
             if (userProfile.role === 'shipper' && creatorRole !== 'owner') return false;
             if (userProfile.role === 'owner' && creatorRole !== 'shipper') return false;
+        }
+
+        // Быстрые фильтры
+        if (quickFilter.wagonType && req.wagonType !== quickFilter.wagonType) return false;
+        if (quickFilter.direction) {
+            const dir = quickFilter.direction;
+            if (!req.stationFrom.toLowerCase().includes(dir.toLowerCase()) && !req.stationTo.toLowerCase().includes(dir.toLowerCase())) return false;
         }
 
         if (!aiFilters) return true;
@@ -562,7 +594,10 @@ export default function App() {
         if (aiFilters.wagonType && !req.wagonType.toLowerCase().includes(aiFilters.wagonType.toLowerCase())) return false;
         if (aiFilters.cargoType && !req.cargoType.toLowerCase().includes(aiFilters.cargoType.toLowerCase())) return false;
         return true;
-    });
+    }), [requests, userProfile, profiles, quickFilter, aiFilters]);
+
+    // Memoize unread indicator
+    const hasUnread = useMemo(() => messages.some(m => m.sender_id !== sbUser?.id), [messages, sbUser]);
 
     // --- RENDERING ---
 
@@ -580,17 +615,14 @@ export default function App() {
                     </div>
                     <nav className="hidden md:flex items-center gap-8">
                         <button onClick={() => setView('catalog')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'catalog' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Биржа</button>
-                        {userProfile?.role === 'shipper' && (
-                            <button onClick={() => setView('my-requests')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'my-requests' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Мои заявки</button>
-                        )}
-                        {userProfile?.role === 'owner' && (
-                            <button onClick={() => setView('my-bids')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'my-bids' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Мои ставки</button>
-                        )}
+                        <button onClick={() => setView('my-requests')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'my-requests' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>
+                            Мои заявки
+                        </button>
                         <button onClick={() => setView('analytics')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'analytics' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Аналитика</button>
                         <button onClick={() => setView('dislocation')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'dislocation' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Дислокация</button>
                         <button onClick={() => setView('messenger')} className={`text-sm font-black uppercase tracking-widest transition-all flex items-center gap-2 ${view === 'messenger' || view === 'chat' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>
                             Сообщения
-                            {messages.filter(m => m.sender_id !== sbUser?.id).length > 0 && (
+                            {hasUnread && (
                                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                             )}
                         </button>
@@ -648,6 +680,29 @@ export default function App() {
                             userRole={userProfile?.role}
                         />
 
+                        {/* Quick Filters */}
+                        <div className="mt-6 flex flex-wrap items-center gap-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">Фильтры:</span>
+                            {['Крытый', 'Полувагон', 'Цистерна', 'Платформа', 'Хоппер'].map(wt => (
+                                <button key={wt} onClick={() => setQuickFilter(prev => ({ ...prev, wagonType: prev.wagonType === wt ? null : wt }))}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${quickFilter.wagonType === wt ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-400'}`}>
+                                    {wt}
+                                </button>
+                            ))}
+                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                            {['Москва', 'Екатеринбург', 'Санкт-Петербург', 'Казань'].map(city => (
+                                <button key={city} onClick={() => setQuickFilter(prev => ({ ...prev, direction: prev.direction === city ? null : city }))}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${quickFilter.direction === city ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400'}`}>
+                                    {city}
+                                </button>
+                            ))}
+                            {(quickFilter.wagonType || quickFilter.direction) && (
+                                <button onClick={() => setQuickFilter({ wagonType: null, direction: null })} className="px-4 py-2 rounded-xl text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 transition-all">
+                                    ✕ Сбросить
+                                </button>
+                            )}
+                        </div>
+
                         {isAiSearching ? (
                             <div className="mt-10 py-20 flex flex-col items-center justify-center text-center animate-in fade-in duration-500">
                                 <Sparkles className="w-12 h-12 text-blue-500 animate-[spin_3s_linear_infinite] mb-6" />
@@ -685,6 +740,7 @@ export default function App() {
 
                                         return sorted.map((req, idx) => {
                                             const isTop3 = idx < 3;
+                                            const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
                                             return (
                                                 <div key={req.id} className={isTop3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
 
@@ -696,6 +752,8 @@ export default function App() {
                                                             setIsModalOpen(true);
                                                         })}
                                                         rank={idx}
+                                                        creatorRole={creatorProfile?.role}
+                                                        creatorCompany={creatorProfile?.company}
                                                     />
                                                 </div>
                                             );
@@ -721,13 +779,14 @@ export default function App() {
                                 {(bids || []).filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn)).map(chatBid => {
                                     const req = requests.find(r => r.id === chatBid.requestId);
                                     const isMeOwner = chatBid.ownerId === sbUser?.id;
-                                    const partnerName = isMeOwner ? (req?.stationTo || 'Заявка') : chatBid.ownerName;
+                                    const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
+                                    const partnerName = isMeOwner ? (creatorProfile?.company || req?.stationTo || 'Заявка') : chatBid.ownerName;
                                     const isActive = activeChat?.id === chatBid.id;
 
                                     return (
                                         <div
                                             key={chatBid.id}
-                                            onClick={() => setActiveChat({ ...chatBid, stationFrom: req?.stationFrom, stationTo: req?.stationTo, cargoType: req?.cargoType })}
+                                            onClick={() => setActiveChat({ ...chatBid, stationFrom: req?.stationFrom, stationTo: req?.stationTo, cargoType: req?.cargoType, shipperName: creatorProfile?.company || 'Неизвестно', shipperPhone: creatorProfile?.phone || 'Неизвестно' })}
                                             className={`p-4 rounded-2xl cursor-pointer transition-all border ${isActive
                                                 ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20'
                                                 : 'bg-slate-50 dark:bg-slate-800/50 border-transparent hover:border-blue-300 dark:hover:border-slate-600'
@@ -776,24 +835,31 @@ export default function App() {
                     </div>
                 )}
 
-                {view === 'my-bids' && (
-                    <MyBidsView
-                        bids={bids}
-                        requests={requests}
-                        userId={sbUser?.id}
-                        setView={setView}
-                        onChat={(b) => { setActiveChat({ ...b, shipperName: b.ownerName, shipperPhone: b.ownerPhone }); setView('chat'); }}
-                        onAiCreate={handleAiCreate}
-                    />
-                )}
+
 
                 {view === 'my-requests' && (
                     <MyRequestsView
                         requests={requests}
                         bids={bids}
                         userInn={userProfile?.inn}
+                        userRole={userProfile?.role}
+                        userId={sbUser?.id}
+                        profiles={profiles}
                         setView={setView}
                         onAccept={handleConfirmDeal}
+                        onChat={(b) => {
+                            const req = requests.find(r => r.id === b.requestId);
+                            const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
+                            setActiveChat({
+                                ...b,
+                                stationFrom: req?.stationFrom,
+                                stationTo: req?.stationTo,
+                                cargoType: req?.cargoType,
+                                shipperName: creatorProfile?.company || userProfile?.company || 'Неизвестно',
+                                shipperPhone: creatorProfile?.phone || userProfile?.phone || 'Неизвестно'
+                            });
+                            setView('chat');
+                        }}
                         onAiCreate={handleAiCreate}
                     />
                 )}
