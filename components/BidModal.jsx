@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
 export default function BidModal({ request, userLimit, onClose, onConfirm }) {
+    const maxWagons = request.totalWagons - (request.fulfilledWagons || 0);
     const [price, setPrice] = useState("");
-    const [wagons, setWagons] = useState(request.totalWagons - (request.fulfilledWagons || 0));
+    const [wagons, setWagons] = useState(maxWagons);
     const [tons, setTons] = useState("");
+
+    const isValid = Number(price) > 0 && Number(wagons) > 0 && Number(wagons) <= maxWagons;
+    const totalSum = Number(price) * Number(wagons) || 0;
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
@@ -20,10 +25,33 @@ export default function BidModal({ request, userLimit, onClose, onConfirm }) {
                 )}
 
                 <div className="space-y-6">
-                    <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Цена за 1 вагон</label><input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" className="w-full px-8 py-5 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-black text-2xl text-center" /></div>
-                    <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Количество вагонов</label><input type="number" value={wagons} onChange={e => setWagons(e.target.value)} max={request.totalWagons} className="w-full px-8 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-center" /></div>
-                    <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Вес (тонн)</label><input type="number" value={tons} onChange={e => setTons(e.target.value)} className="w-full px-8 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-center" /></div>
-                    <button onClick={() => onConfirm(price, wagons, tons)} className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-500/20 uppercase tracking-widest text-xs hover:-translate-y-0.5 active:scale-95 transition-all mt-4">Отправить предложение</button>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Цена за 1 вагон (₽)</label>
+                        <input type="number" min="1" value={price} onChange={e => setPrice(e.target.value)} placeholder="Введите цену" className={`w-full px-8 py-5 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-black text-2xl text-center ${price !== '' && Number(price) <= 0 ? 'ring-2 ring-red-400' : ''}`} />
+                        {price !== '' && Number(price) <= 0 && <p className="text-xs text-red-500 font-bold ml-4">Укажите цену больше 0</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Количество вагонов (макс. {maxWagons})</label>
+                        <input type="number" min="1" max={maxWagons} value={wagons} onChange={e => setWagons(e.target.value)} className={`w-full px-8 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-center ${Number(wagons) > maxWagons ? 'ring-2 ring-red-400' : ''}`} />
+                        {Number(wagons) > maxWagons && <p className="text-xs text-red-500 font-bold ml-4">Максимум {maxWagons} вагонов</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Вес (тонн)</label>
+                        <input type="number" min="0" value={tons} onChange={e => setTons(e.target.value)} className="w-full px-8 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-center" />
+                    </div>
+
+                    {totalSum > 0 && (
+                        <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl text-center border border-emerald-100 dark:border-emerald-800/50">
+                            <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Сумма сделки</div>
+                            <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{totalSum.toLocaleString()} ₽</div>
+                        </div>
+                    )}
+
+                    <button
+                        onClick={() => { if (isValid) onConfirm(price, wagons, tons); }}
+                        disabled={!isValid}
+                        className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-500/20 uppercase tracking-widest text-xs hover:-translate-y-0.5 active:scale-95 transition-all mt-4 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    >Отправить предложение</button>
                 </div>
             </div>
         </div>

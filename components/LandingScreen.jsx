@@ -49,7 +49,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                 </h1>
 
                 <p className="text-lg md:text-2xl text-slate-500 dark:text-slate-400 max-w-3xl mb-14 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-10 duration-1000">
-                    Находите выгодные ставки, управляйте сделками и экономьте время с помощью современного интерфейса и встроенного AI-агента.
+                    Комиссия всего 2.5% — в 8 раз дешевле брокеров. Безопасные сделки через эскроу, AI-поиск и прямые контакты с контрагентом.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-6 w-full max-w-xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-300">
@@ -66,7 +66,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                 <div className="glass-card p-12 rounded-[3rem] hover:-translate-y-2 transition-transform duration-500 group">
                     <div className="w-20 h-20 rounded-[2rem] bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center mb-10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"><Package className="w-10 h-10 text-blue-600" /></div>
                     <h3 className="text-4xl font-extrabold mb-6 dark:text-white">Грузоотправителям</h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-lg font-medium mb-10 leading-relaxed">Размещайте грузы бесплатно. Получайте лучшие предложения напрямую от собственников парка за считанные минуты.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-lg font-medium mb-10 leading-relaxed">Размещайте грузы бесплатно. Получайте ставки напрямую от собственников — без посредников и наценок. Оплата через защищённый эскроу.</p>
                     <ul className="space-y-6 text-base font-bold text-slate-700 dark:text-slate-300">
                         <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><Check className="text-emerald-600 w-5 h-5" /></div> Создание заявки за 60 секунд</li>
                         <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><ShieldCheck className="text-emerald-600 w-5 h-5" /></div> Прямые контакты без посредников</li>
@@ -76,7 +76,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                     <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700"><Zap className="w-64 h-64 text-blue-500" /></div>
                     <div className="relative z-10 w-20 h-20 rounded-[2rem] bg-slate-800 flex items-center justify-center mb-10 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 border border-slate-700"><TrainFront className="w-10 h-10 text-blue-400" /></div>
                     <h3 className="text-4xl font-extrabold mb-6 relative z-10">Владельцам парка</h3>
-                    <p className="text-slate-400 text-lg font-medium mb-10 leading-relaxed relative z-10">Обеспечьте 100% загрузку вашего парка вагонов. Работа по подписке без скрытых комиссий с каждой сделки.</p>
+                    <p className="text-slate-400 text-lg font-medium mb-10 leading-relaxed relative z-10">Обеспечьте 100% загрузку вашего парка. Прозрачная комиссия 2.5% только с успешной сделки — никаких абонентских плат и скрытых платежей.</p>
                     <ul className="space-y-6 text-base font-bold relative z-10">
                         <li className="flex items-center gap-4"><div className="p-2 bg-slate-800 border border-slate-700 rounded-xl"><Check className="text-blue-400 w-5 h-5" /></div> Доступ к рынку грузов</li>
                         <li className="flex items-center gap-4"><div className="p-2 bg-slate-800 border border-slate-700 rounded-xl"><Sparkles className="text-blue-400 w-5 h-5" /></div> AI-агент для умного поиска</li>
@@ -112,8 +112,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         },
                         {
                             step: '03',
-                            title: 'Обсудите и заключите сделку',
-                            desc: 'Переходите в защищённый чат, обсуждайте условия и оформляйте сделку прямо на платформе. Все контакты раскрываются только после оплаты.',
+                            title: 'Безопасная сделка через эскроу',
+                            desc: 'Обсуждайте условия в защищённом чате. Оплата через эскроу-счёт — деньги замораживаются до подписания акта. Комиссия платформы — всего 2.5%.',
                             icon: <MessageSquare className="w-7 h-7" />,
                             color: 'emerald'
                         }
@@ -121,8 +121,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         <div key={idx} className="glass-card p-10 rounded-[2.5rem] hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
                             <div className="absolute top-6 right-8 text-8xl font-black text-slate-100 dark:text-slate-800/50 select-none">{item.step}</div>
                             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 ${item.color === 'blue' ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600' :
-                                    item.color === 'indigo' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600' :
-                                        'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600'
+                                item.color === 'indigo' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600' :
+                                    'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600'
                                 }`}>{item.icon}</div>
                             <h3 className="text-2xl font-extrabold mb-4 relative z-10 dark:text-white">{item.title}</h3>
                             <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed relative z-10">{item.desc}</p>
@@ -144,8 +144,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         { icon: <BarChart3 className="w-6 h-6" />, title: 'Аналитика', desc: 'Отслеживайте ставки, выручку, процент выполнения заявок. Прозрачная статистика по каждой сделке.', bg: 'bg-indigo-50 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400' },
                         { icon: <MessageSquare className="w-6 h-6" />, title: 'Защищённый чат', desc: 'Обсуждайте условия в встроенном мессенджере. Система блокирует попытки обмена контактами до оплаты.', bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400' },
                         { icon: <Search className="w-6 h-6" />, title: 'Умный подбор', desc: 'Интеллектуальная сортировка предложений по выгоде. Лучшие варианты — всегда наверху.', bg: 'bg-amber-50 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' },
-                        { icon: <Lock className="w-6 h-6" />, title: 'Безопасные сделки', desc: 'Контакты партнёра раскрываются только после взаимного подтверждения и гарантийного платежа.', bg: 'bg-rose-50 dark:bg-rose-900/30', text: 'text-rose-600 dark:text-rose-400' },
-                        { icon: <Users className="w-6 h-6" />, title: 'Без посредников', desc: 'Прямая связь между грузоотправителем и владельцем вагонов. Никаких скрытых комиссий с каждой сделки.', bg: 'bg-violet-50 dark:bg-violet-900/30', text: 'text-violet-600 dark:text-violet-400' },
+                        { icon: <Lock className="w-6 h-6" />, title: 'Эскроу-защита', desc: 'Средства замораживаются на эскроу-счёте до подписания акта. Комиссия 2.5% — в 8 раз дешевле традиционных брокеров.', bg: 'bg-rose-50 dark:bg-rose-900/30', text: 'text-rose-600 dark:text-rose-400' },
+                        { icon: <Users className="w-6 h-6" />, title: 'Без посредников', desc: 'Прямая связь между грузоотправителем и владельцем вагонов. Прозрачная комиссия только с успешной сделки — никаких скрытых платежей.', bg: 'bg-violet-50 dark:bg-violet-900/30', text: 'text-violet-600 dark:text-violet-400' },
                     ].map((feat, idx) => (
                         <div key={idx} className="glass-card p-8 rounded-3xl hover:-translate-y-1 transition-all duration-300 group">
                             <div className={`w-14 h-14 rounded-2xl ${feat.bg} ${feat.text} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>{feat.icon}</div>
@@ -165,8 +165,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 border border-white rounded-full"></div>
                     </div>
                     <div className="relative z-10">
-                        <h2 className="text-4xl md:text-5xl font-black mb-6">Готовы начать?</h2>
-                        <p className="text-lg text-blue-100 max-w-xl mx-auto mb-10 font-medium">Присоединяйтесь к платформе и находите лучшие предложения на рынке железнодорожных перевозок уже сегодня.</p>
+                        <h2 className="text-4xl md:text-5xl font-black mb-6">Перестаньте переплачивать брокерам</h2>
+                        <p className="text-lg text-blue-100 max-w-xl mx-auto mb-10 font-medium">Комиссия 2.5% вместо 15–20% у посредников. Безопасные расчёты через эскроу. Регистрация — 2 минуты.</p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <button onClick={onStart} className="px-12 py-5 bg-white text-blue-600 font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all flex items-center justify-center gap-3 group">
                                 Зарегистрироваться <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

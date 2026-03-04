@@ -8,7 +8,7 @@ import {
     MessageSquare, Send, Phone, Paperclip, MoreVertical,
     Settings, CreditCard, Share2, Award, History, Copy,
     Sparkles, Bot, Plus, Moon, Sun, ArrowUpRight, Check,
-    Briefcase, Activity, FileText, Handshake, Eye, Shield, AlertTriangle
+    Briefcase, Activity, FileText, Handshake, Eye, Shield, AlertTriangle, Ban
 } from 'lucide-react';
 
 // --- БИЗНЕС-ЛОГИКА БЕЗОПАСНОСТИ ---
@@ -366,19 +366,22 @@ export default function App() {
             return;
         }
 
-        // Проверка глобального лимита пользователя (SaaS)
+        // Проверка глобального лимита пользователя (SaaS) - ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ MVP
+        /*
         if (userProfile.role === 'owner' && (userProfile.bids_limit === undefined || userProfile.bids_limit <= 0)) {
             alert("У вас исчерпан лимит откликов. Пополните баланс в профиле (Вкладка 'Биллинг').");
             setView('profile');
             setIsModalOpen(false);
             return;
         }
+        */
 
         const bidData = {
             requestId: selectedRequest.id,
             ownerId: sbUser.id,
             ownerName: userProfile.company,
             ownerPhone: userProfile.phone,
+            ownerInn: userProfile.inn,
             price: Number(price),
             wagons: Number(wagons),
             tons: Number(tons),
@@ -398,8 +401,18 @@ export default function App() {
         }
 
         setIsModalOpen(false);
-        // Мгновенный переход в чат
-        setActiveChat({ ...selectedRequest, shipperName: 'Загрузка...', id: data.id }); // data.id is the bid ID
+        // Мгновенный переход в чат — обогащаем данными заявки и ставки
+        setActiveChat({
+            ...data,
+            stationFrom: selectedRequest.stationFrom,
+            stationTo: selectedRequest.stationTo,
+            cargoType: selectedRequest.cargoType,
+            wagonType: selectedRequest.wagonType,
+            totalWagons: selectedRequest.totalWagons,
+            totalTons: selectedRequest.totalTons,
+            shipperInn: selectedRequest.shipperInn,
+            shipperName: selectedRequest.shipperName || 'Загрузка...',
+        });
         setView('chat');
     };
 
@@ -467,8 +480,20 @@ export default function App() {
             if (fullyConfirmed && updatedBid.status === 'pending') {
                 await supabase.from('bids').update({ status: 'pending_payment' }).eq('id', bid.id);
                 setActiveChat(prev => ({ ...prev, ...updateField, status: 'pending_payment' }));
+                // Системное уведомление
+                await supabase.from('messages').insert([{
+                    chat_id: bid.id,
+                    sender_id: 'system',
+                    text: 'Обе стороны подтвердили сделку! Переход к этапу оплаты. Примите условия комиссии для продолжения.'
+                }]);
             } else {
                 setActiveChat(prev => ({ ...prev, ...updateField }));
+                const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
+                await supabase.from('messages').insert([{
+                    chat_id: bid.id,
+                    sender_id: 'system',
+                    text: `${roleName} подтвердил сделку. Ожидаем подтверждение второй стороны.`
+                }]);
             }
 
         } catch (e) {
@@ -479,13 +504,189 @@ export default function App() {
 
     const handleEscrowPayment = async (bidId) => {
         // Имитация оплаты и депонирования
-        const { error } = await supabase.from('bids').update({ status: 'escrow_held' }).eq('id', bidId);
+        const { error } = await supabase.from('bids').update({ status: 'escrow_held', payment_doc_uploaded: true }).eq('id', bidId);
         if (!error) {
-            setActiveChat(prev => ({ ...prev, status: 'escrow_held' }));
-            alert("Средства успешно внесены в качестве гарантийного платежа. Контакты партнера теперь доступны.");
+            setActiveChat(prev => ({ ...prev, status: 'escrow_held', payment_doc_uploaded: true }));
+            // Системное сообщение в чат
+            await supabase.from('messages').insert([{
+                chat_id: bidId,
+                sender_id: 'system',
+                text: 'Гарантийный платёж внесён. Средства заморожены до подписания акта приёмки. Контакты партнёра теперь доступны.'
+            }]);
         }
     };
 
+    const handleCommissionAccept = async (bidId) => {
+        if (!sbUser || !userProfile) return;
+        const isShipper = userProfile.role === 'shipper';
+        const field = isShipper ? 'commission_accepted_shipper' : 'commission_accepted_owner';
+
+        const { data, error } = await supabase
+            .from('bids')
+            .update({ [field]: true })
+            .eq('id', bidId)
+            .select()
+            .single();
+
+        if (error) { console.error('Commission accept error:', error); return; }
+
+        setActiveChat(prev => ({ ...prev, [field]: true }));
+
+        const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
+        await supabase.from('messages').insert([{
+            chat_id: bidId,
+            sender_id: 'system',
+            text: `${roleName} принял условия комиссии платформы.`
+        }]);
+    };
+
+    const handleStageConfirm = async (bidId, stage) => {
+        if (!sbUser || !userProfile) return;
+        const isShipper = userProfile.role === 'shipper';
+
+        try {
+            // Определяем поле подтверждения для текущего этапа
+            const confirmField = isShipper ? `${stage}_confirmed_shipper` : `${stage}_confirmed_owner`;
+
+            const { data, error } = await supabase
+                .from('bids')
+                .update({ [confirmField]: true })
+                .eq('id', bidId)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Проверяем, подтвердили ли оба
+            const shipperField = `${stage}_confirmed_shipper`;
+            const ownerField = `${stage}_confirmed_owner`;
+            const bothConfirmed = data[shipperField] && data[ownerField];
+
+            const statusTransitions = {
+                'loading': 'in_transit',
+                'transit': 'accepted'
+            };
+
+            let newStatus = null;
+            // Для loading: владелец подтверждает подачу вагонов -> переход в loading
+            if (stage === 'escrow' && !isShipper) {
+                newStatus = 'loading';
+            }
+            // Для transit: грузоотправитель подтверждает погрузку
+            if (stage === 'loading' && isShipper) {
+                newStatus = 'in_transit';
+            }
+            // Для акта: оба должны подтвердить
+            if (stage === 'transit' && bothConfirmed) {
+                newStatus = 'accepted';
+            }
+
+            if (newStatus) {
+                await supabase.from('bids').update({ status: newStatus }).eq('id', bidId);
+                setActiveChat(prev => ({ ...prev, ...data, status: newStatus }));
+            } else {
+                setActiveChat(prev => ({ ...prev, ...data }));
+            }
+
+            // Системное сообщение
+            const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
+            const stageNames = { 'escrow': 'подачу вагонов', 'loading': 'погрузку', 'transit': 'акт выполненных работ' };
+            await supabase.from('messages').insert([{
+                chat_id: bidId,
+                sender_id: 'system',
+                text: newStatus
+                    ? `Этап подтверждён! Сделка перешла на следующий этап.`
+                    : `${roleName} подтвердил ${stageNames[stage] || stage}. Ожидаем подтверждение партнёра.`
+            }]);
+
+        } catch (e) {
+            console.error('Stage confirm error:', e);
+            alert('Ошибка при подтверждении этапа');
+        }
+    };
+
+    const handleDocUpload = async (bidId, stage) => {
+        if (!sbUser) return;
+        const docField = `${stage}_doc_uploaded`;
+
+        const { error } = await supabase
+            .from('bids')
+            .update({ [docField]: true })
+            .eq('id', bidId);
+
+        if (!error) {
+            setActiveChat(prev => ({ ...prev, [docField]: true }));
+            const docNames = {
+                'payment': 'платёжное поручение',
+                'loading': 'подтверждение подачи вагонов',
+                'transit': 'ж/д накладную',
+                'act': 'акт выполненных работ'
+            };
+            await supabase.from('messages').insert([{
+                chat_id: bidId,
+                sender_id: 'system',
+                text: `📄 Загружен документ: ${docNames[stage] || stage}`
+            }]);
+        }
+    };
+
+    const handleDocumentSign = async (bidId, docType, blob, formData, mergedData) => {
+        if (!sbUser || !userProfile) return;
+        try {
+            const isShipper = userProfile.role === 'shipper';
+            const signField = isShipper ? 'signed_by_shipper' : 'signed_by_owner';
+            const signerField = isShipper ? 'signer_shipper_name' : 'signer_owner_name';
+            const signerName = formData.signer_name || userProfile.ceo_name || userProfile.company;
+
+            // 1. Try to upload to Supabase Storage
+            let filePath = null;
+            try {
+                const fileName = `${bidId}/${docType}_v1.pdf`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('Documents')
+                    .upload(fileName, blob, { contentType: 'application/pdf', upsert: true });
+                if (!uploadError) filePath = uploadData?.path || fileName;
+            } catch (storageErr) {
+                console.warn('Storage upload skipped (bucket may not exist):', storageErr);
+            }
+
+            // 2. Save document record to deal_documents
+            try {
+                await supabase.from('deal_documents').insert([{
+                    bid_id: bidId,
+                    doc_type: docType,
+                    status: 'signed_one',
+                    [signField]: true,
+                    [signerField]: signerName,
+                    file_path: filePath,
+                    form_data: formData,
+                }]);
+            } catch (dbErr) {
+                console.warn('deal_documents insert skipped (table may not exist yet):', dbErr);
+            }
+
+            // 3. Update bid doc flag
+            const docFlagMap = { contract: 'payment_doc_uploaded', gu12: 'loading_doc_uploaded', waybill: 'transit_doc_uploaded', upd: 'act_doc_uploaded', act: 'act_doc_uploaded' };
+            const docFlag = docFlagMap[docType];
+            if (docFlag) {
+                await supabase.from('bids').update({ [docFlag]: true }).eq('id', bidId);
+                setActiveChat(prev => ({ ...prev, [docFlag]: true }));
+            }
+
+            // 4. System message
+            const docNames = { contract: 'Договор ТЭО', gu12: 'Заявка ГУ-12', waybill: 'ЖД-накладная', upd: 'УПД', act: 'Акт выполненных работ' };
+            const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
+            await supabase.from('messages').insert([{
+                chat_id: bidId,
+                sender_id: 'system',
+                text: `📝 ${roleName} подписал документ: ${docNames[docType] || docType}`
+            }]);
+
+        } catch (e) {
+            console.error('Document sign error:', e);
+            alert('Ошибка при подписании документа');
+        }
+    };
     const handleCreateRequest = async (data) => {
         if (!sbUser || !userProfile) return;
         const reqData = {
@@ -518,13 +719,27 @@ export default function App() {
 
     const handleSeedDemoData = async () => {
         if (!sbUser) return;
-        // Генерируем демо-заявки от обеих ролей чтобы каждая роль видела контент на бирже
+
+        // Сначала создаём демо-профили обеих ролей, чтобы фильтрация по ролям на бирже работала
+        const demoProfiles = [
+            { id: crypto.randomUUID(), company: 'ДемоГруз ООО', inn: '7700000000', role: 'shipper', phone: '+7 (999) 100-00-01', plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 },
+            { id: crypto.randomUUID(), company: 'ДемоГруз-2 ОАО', inn: '7711111111', role: 'shipper', phone: '+7 (999) 100-00-02', plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 },
+            { id: crypto.randomUUID(), company: 'ТрансВагон ЗАО', inn: '7722222222', role: 'owner', phone: '+7 (999) 200-00-01', plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 },
+            { id: crypto.randomUUID(), company: 'ВагонПарк ООО', inn: '7733333333', role: 'owner', phone: '+7 (999) 200-00-02', plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 },
+        ];
+        // Upsert чтобы не дублировать
+        for (const dp of demoProfiles) {
+            await supabase.from('profiles').upsert(dp, { onConflict: 'inn', ignoreDuplicates: true });
+        }
+
+        // Заявки от грузоотправителей (видны владельцам)
         const shipperRequests = [
             { stationFrom: 'Москва', stationTo: 'Екатеринбург', cargoType: 'Металл', wagonType: 'Полувагон', totalWagons: 20, totalTons: 1200, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
             { stationFrom: 'Санкт-Петербург', stationTo: 'Казань', cargoType: 'Уголь', wagonType: 'Полувагон', totalWagons: 50, totalTons: 3500, target_price: 120000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
             { stationFrom: 'Краснодар', stationTo: 'Москва', cargoType: 'Зерно', wagonType: 'Хоппер', totalWagons: 30, totalTons: 2100, target_price: 95000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
             { stationFrom: 'Новосибирск', stationTo: 'Челябинск', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 8, totalTons: 480, target_price: 140000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7711111111', status: 'open' },
         ];
+        // Заявки от владельцев (видны отправителям)
         const ownerRequests = [
             { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 10, totalTons: 600, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7722222222', status: 'open' },
             { stationFrom: 'Москва', stationTo: 'Челябинск', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 15, totalTons: 900, target_price: 150000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7722222222', status: 'open' },
@@ -786,7 +1001,7 @@ export default function App() {
                                     return (
                                         <div
                                             key={chatBid.id}
-                                            onClick={() => setActiveChat({ ...chatBid, stationFrom: req?.stationFrom, stationTo: req?.stationTo, cargoType: req?.cargoType, shipperName: creatorProfile?.company || 'Неизвестно', shipperPhone: creatorProfile?.phone || 'Неизвестно' })}
+                                            onClick={() => setActiveChat({ ...chatBid, stationFrom: req?.stationFrom, stationTo: req?.stationTo, cargoType: req?.cargoType, wagonType: req?.wagonType || chatBid.wagonType, shipperInn: req?.shipperInn, shipperName: creatorProfile?.company || 'Неизвестно', shipperPhone: creatorProfile?.phone || 'Неизвестно' })}
                                             className={`p-4 rounded-2xl cursor-pointer transition-all border ${isActive
                                                 ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20'
                                                 : 'bg-slate-50 dark:bg-slate-800/50 border-transparent hover:border-blue-300 dark:hover:border-slate-600'
@@ -814,9 +1029,14 @@ export default function App() {
                                     messages={(messages || []).filter(m => m.chat_id === activeChat.id)}
                                     currentUserId={sbUser?.id}
                                     userRole={userProfile?.role}
+                                    userProfile={userProfile}
                                     onSend={(text) => handleSendMessage(activeChat.id, text)}
                                     onAccept={() => handleConfirmDeal(activeChat)}
                                     onEscrow={() => handleEscrowPayment(activeChat.id)}
+                                    onCommissionAccept={() => handleCommissionAccept(activeChat.id)}
+                                    onStageConfirm={(stage) => handleStageConfirm(activeChat.id, stage)}
+                                    onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
+                                    onDocSign={handleDocumentSign}
                                     onBack={() => setView('catalog')}
                                     maskContact={maskContact}
                                 />
@@ -855,6 +1075,8 @@ export default function App() {
                                 stationFrom: req?.stationFrom,
                                 stationTo: req?.stationTo,
                                 cargoType: req?.cargoType,
+                                wagonType: req?.wagonType,
+                                shipperInn: req?.shipperInn,
                                 shipperName: creatorProfile?.company || userProfile?.company || 'Неизвестно',
                                 shipperPhone: creatorProfile?.phone || userProfile?.phone || 'Неизвестно'
                             });
@@ -876,6 +1098,8 @@ export default function App() {
                     <ProfileSettings
                         user={userProfile || { name: 'Загрузка...', company: '', inn: '' }}
                         onLogout={handleLogout}
+                        bids={bids}
+                        requests={requests}
                     />
                 )}
 
@@ -886,9 +1110,14 @@ export default function App() {
                             messages={(messages || []).filter(m => m.chat_id === activeChat.id)}
                             currentUserId={sbUser?.id}
                             userRole={userProfile?.role}
+                            userProfile={userProfile}
                             onSend={(text) => handleSendMessage(activeChat.id, text)}
                             onAccept={() => handleConfirmDeal(activeChat)}
                             onEscrow={() => handleEscrowPayment(activeChat.id)}
+                            onCommissionAccept={() => handleCommissionAccept(activeChat.id)}
+                            onStageConfirm={(stage) => handleStageConfirm(activeChat.id, stage)}
+                            onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
+                            onDocSign={handleDocumentSign}
                             onBack={() => setView('messenger')}
                             maskContact={maskContact}
                         />

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Settings, Bot, Users, FileText, Upload, Check, X, Mail, Phone, Building2, User, CreditCard, ArrowRight, Clock } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ShieldCheck, Settings, Bot, Users, FileText, Upload, Check, X, Mail, Phone, Building2, User, History, ArrowRight, Clock, TrendingUp, Wallet } from 'lucide-react';
 import { supabase } from '../src/supabaseClient';
 
-export default function ProfileSettings({ user, onLogout }) {
+export default function ProfileSettings({ user, onLogout, bids = [], requests = [] }) {
     const [activeTab, setActiveTab] = useState('general');
     const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
@@ -17,23 +17,47 @@ export default function ProfileSettings({ user, onLogout }) {
         if (files.length === 0) return;
         setUploading(true);
         try {
-            const filenames = files.map(f => f.name);
-            const { error } = await supabase
+            const uploadedUrls = [];
+
+            // Загружаем каждый файл в бакет 'Documents'
+            for (const file of files) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${user.id}_verification_${Date.now()}.${fileExt}`;
+                const filePath = `verification/${fileName}`;
+
+                const { data, error: uploadError } = await supabase.storage
+                    .from('Documents')
+                    .upload(filePath, file);
+
+                if (uploadError) {
+                    console.error("Ошибка загрузки файла в Storage:", uploadError);
+                    throw uploadError;
+                }
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('Documents')
+                    .getPublicUrl(filePath);
+
+                uploadedUrls.push(publicUrl);
+            }
+
+            // Обновляем профиль с новыми ссылками на документы и статусом 'pending'
+            const { error: profileUpdateError } = await supabase
                 .from('profiles')
                 .update({
                     verification_status: 'pending',
-                    documents: filenames
+                    documents: uploadedUrls // теперь здесь массив публичных ссылок, а не просто имен
                 })
                 .eq('id', user.id);
 
-            if (error) throw error;
+            if (profileUpdateError) throw profileUpdateError;
 
-            alert("Документы отправлены на проверку. Срок обработки: 24 часа.");
+            alert("Документы успешно отправлены на проверку. Срок обработки: до 24 часов.");
             setFiles([]);
-            // UI will update via parent state after Supabase notification or prop change
+            user.verification_status = 'pending'; // Локальное обновление для UI
         } catch (err) {
             console.error("Verification submit error:", err);
-            alert("Ошибка при отправке документов");
+            alert("Ошибка при отправке документов. Убедитесь, что бакет 'Documents' создан в Supabase.");
         } finally {
             setUploading(false);
         }
@@ -78,11 +102,9 @@ export default function ProfileSettings({ user, onLogout }) {
                         <button onClick={() => setActiveTab('notif')} className={`w-full p-4 text-left rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-4 transition-all ${activeTab === 'notif' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
                             <Bot className="w-5 h-5" /> Уведомления
                         </button>
-                        {user.role === 'owner' && (
-                            <button onClick={() => setActiveTab('billing')} className={`w-full p-4 text-left rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-4 transition-all ${activeTab === 'billing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
-                                <CreditCard className="w-5 h-5" /> Биллинг
-                            </button>
-                        )}
+                        <button onClick={() => setActiveTab('deals')} className={`w-full p-4 text-left rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-4 transition-all ${activeTab === 'deals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
+                            <History className="w-5 h-5" /> История сделок
+                        </button>
                     </div>
                 </div>
 
@@ -165,104 +187,199 @@ export default function ProfileSettings({ user, onLogout }) {
                     )}
 
                     {activeTab === 'team' && (
-                        <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 border dark:border-slate-800 shadow-sm animate-in fade-in zoom-in-95 duration-300">
-                            <div className="flex justify-between items-center mb-10">
-                                <h3 className="text-2xl font-black dark:text-white uppercase tracking-tight">Логисты компании</h3>
-                                <button className="px-5 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:shadow-lg transition-all active:scale-95">+ Добавить сотрудника</button>
+                        <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 border dark:border-slate-800 shadow-sm relative overflow-hidden">
+                            <div className="absolute inset-0 bg-white/60 dark:bg-[#111827]/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6">
+                                <div className="p-4 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl mb-4">
+                                    <Clock className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-xl font-black uppercase tracking-widest mb-2 dark:text-white">В разработке</h3>
+                                <p className="text-sm font-bold text-slate-500 max-w-sm">Функционал управления командой и ролевого доступа появится в следующем обновлении.</p>
                             </div>
-
-                            <div className="space-y-4">
-                                {teamMembers.map(member => (
-                                    <div key={member.id} className="p-6 bg-slate-50 dark:bg-[#0B1120] rounded-[2rem] border dark:border-slate-800 flex items-center justify-between group hover:border-blue-200 transition-all">
-                                        <div className="flex items-center gap-6">
-                                            <div className="w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center border dark:border-slate-700 shadow-sm relative">
-                                                <User className="w-7 h-7 text-slate-400" />
-                                                <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#0B1120] ${member.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
-                                            </div>
-                                            <div>
-                                                <div className="font-black dark:text-white flex items-center gap-2">
-                                                    {member.name}
-                                                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-md text-[8px] font-black uppercase tracking-widest">{member.role}</span>
-                                                </div>
-                                                <div className="text-xs text-slate-400 font-bold mt-1.5 flex items-center gap-4">
-                                                    <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {member.email}</span>
+                            <div className="opacity-40 pointer-events-none filter blur-[2px]">
+                                <div className="flex justify-between items-center mb-8">
+                                    <div><h3 className="text-2xl font-black dark:text-white uppercase tracking-tight">Управление командой</h3><p className="text-slate-400 font-medium">Приглашайте коллег и настраивайте права доступа.</p></div>
+                                    <button disabled className="px-5 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-black uppercase tracking-widest text-[10px] hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"><Plus className="w-4 h-4" /> Добавить сотрудника</button>
+                                </div>
+                                <div className="space-y-4">
+                                    {teamMembers.map(member => (
+                                        <div key={member.id} className="p-6 bg-slate-50 dark:bg-[#0B1120] rounded-[2rem] border dark:border-slate-800 flex items-center justify-between">
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center border dark:border-slate-700 shadow-sm relative"><User className="w-7 h-7 text-slate-400" /></div>
+                                                <div>
+                                                    <div className="font-black dark:text-white flex items-center gap-2">{member.name}</div>
+                                                    <div className="text-xs text-slate-400 font-bold mt-1.5">{member.email}</div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <button className="p-3 text-slate-300 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100"><Settings className="w-5 h-5" /></button>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'notif' && (
-                        <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 border dark:border-slate-800 shadow-sm">
-                            <h3 className="text-2xl font-black mb-6 dark:text-white uppercase tracking-tight">Telegram Уведомления</h3>
-                            <p className="text-slate-400 mb-10 font-medium">Подключите официального бота RailMatch, чтобы мгновенно получать уведомления о новых ставках, сообщениях в чате и изменении статуса ваших документов.</p>
+                        <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 border dark:border-slate-800 shadow-sm relative overflow-hidden">
+                            <div className="absolute inset-0 bg-white/60 dark:bg-[#111827]/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6">
+                                <div className="p-4 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl mb-4">
+                                    <Bot className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-xl font-black uppercase tracking-widest mb-2 dark:text-white">Интеграция с Telegram</h3>
+                                <p className="text-sm font-bold text-slate-500 max-w-sm">Бот уведомлений RailMatch проходит финальное тестирование. Запуск в ближайшее время.</p>
+                            </div>
+                            <div className="opacity-30 pointer-events-none filter blur-sm">
+                                <h3 className="text-2xl font-black mb-6 dark:text-white uppercase tracking-tight">Telegram Уведомления</h3>
+                                <p className="text-slate-400 mb-10 font-medium">Подключите официального бота RailMatch, чтобы мгновенно получать уведомления о новых ставках, сообщениях в чате и изменении статуса ваших документов.</p>
 
-                            <div className="bg-slate-50 dark:bg-[#0B1120] rounded-3xl p-10 border-2 border-dashed border-blue-100 dark:border-blue-900/30 text-center relative overflow-hidden">
-                                <Bot className="w-20 h-20 text-blue-100 dark:text-blue-900/20 absolute -top-4 -right-4 rotate-12" />
-                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] mb-4">Ваш уникальный код</p>
-                                <div className="text-4xl font-black dark:text-white tracking-[0.5em] mb-10">CODE-881-22</div>
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    <button className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:shadow-blue-500/40 transition-all">Копировать код</button>
-                                    <button className="flex-1 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs transition-all">Открыть бот</button>
+                                <div className="bg-slate-50 dark:bg-[#0B1120] rounded-3xl p-10 border-2 border-dashed border-blue-100 dark:border-blue-900/30 text-center relative overflow-hidden">
+                                    <Bot className="w-20 h-20 text-blue-100 dark:text-blue-900/20 absolute -top-4 -right-4 rotate-12" />
+                                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] mb-4">Ваш уникальный код</p>
+                                    <div className="text-4xl font-black dark:text-white tracking-[0.5em] mb-10">CODE-881-22</div>
+                                    <div className="flex flex-col sm:flex-row gap-4">
+                                        <button disabled className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg transition-all">Копировать код</button>
+                                        <button disabled className="flex-1 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs transition-all">Открыть бот</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {activeTab === 'billing' && user.role === 'owner' && (
-                        <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 border dark:border-slate-800 shadow-sm animate-in fade-in zoom-in-95 duration-300">
-                            <div className="flex justify-between items-center mb-10">
-                                <h3 className="text-2xl font-black dark:text-white uppercase tracking-tight">Управление балансом</h3>
-                                <div className="px-5 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-2 shadow-sm">
-                                    <ShieldCheck className="w-4 h-4" /> Безопасная оплата
-                                </div>
-                            </div>
+                    {activeTab === 'deals' && (() => {
+                        // Фильтруем сделки текущего пользователя
+                        const userDeals = bids.filter(b => {
+                            const isOwner = b.ownerId === user.id;
+                            const relatedReq = requests.find(r => r.id === b.requestId);
+                            const isShipper = relatedReq?.shipperInn === user.inn;
+                            return isOwner || isShipper;
+                        });
 
-                            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-500/20 mb-10 flex items-center justify-between">
+                        const completedDeals = userDeals.filter(b => b.status === 'accepted' || b.status === 'completed');
+                        const activeDeals = userDeals.filter(b => ['escrow_held', 'loading', 'in_transit', 'pending_payment'].includes(b.status));
+
+                        const totalVolume = completedDeals.reduce((sum, b) => sum + (b.price * b.wagons), 0);
+                        const totalCommission = Math.round(totalVolume * 0.025);
+
+                        const statusLabels = {
+                            'pending': 'Ожидает',
+                            'pending_payment': 'Ожидает оплаты',
+                            'escrow_held': 'Эскроу внесён',
+                            'loading': 'Погрузка',
+                            'in_transit': 'В пути',
+                            'accepted': 'Завершена',
+                            'completed': 'Завершена',
+                            'rejected': 'Отклонена'
+                        };
+                        const statusColors = {
+                            'pending': 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+                            'pending_payment': 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
+                            'escrow_held': 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
+                            'loading': 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400',
+                            'in_transit': 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400',
+                            'accepted': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
+                            'completed': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
+                            'rejected': 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-400'
+                        };
+
+                        return (
+                            <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 border dark:border-slate-800 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+                                <div className="flex justify-between items-center mb-10">
+                                    <h3 className="text-2xl font-black dark:text-white uppercase tracking-tight">История сделок</h3>
+                                    <div className="px-5 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-2 shadow-sm">
+                                        <ShieldCheck className="w-4 h-4" /> Эскроу защита
+                                    </div>
+                                </div>
+
+                                {/* Сводка */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                                    <div className="bg-slate-50 dark:bg-[#0B1120] rounded-[2rem] p-6 border dark:border-slate-800">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center"><History className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Всего сделок</span>
+                                        </div>
+                                        <p className="text-3xl font-black dark:text-white">{userDeals.length}</p>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-[#0B1120] rounded-[2rem] p-6 border dark:border-slate-800">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center"><TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /></div>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Объём завершённых</span>
+                                        </div>
+                                        <p className="text-3xl font-black dark:text-white">{totalVolume.toLocaleString()} ₽</p>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-[#0B1120] rounded-[2rem] p-6 border dark:border-slate-800">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-xl flex items-center justify-center"><Wallet className="w-5 h-5 text-violet-600 dark:text-violet-400" /></div>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Комиссия (2.5%)</span>
+                                        </div>
+                                        <p className="text-3xl font-black text-violet-600 dark:text-violet-400">{totalCommission.toLocaleString()} ₽</p>
+                                    </div>
+                                </div>
+
+                                {/* Активные сделки */}
+                                {activeDeals.length > 0 && (
+                                    <div className="mb-8">
+                                        <h4 className="font-black text-sm uppercase tracking-widest dark:text-white mb-4 flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span> Активные ({activeDeals.length})
+                                        </h4>
+                                        <div className="space-y-3">
+                                            {activeDeals.map(deal => {
+                                                const relatedReq = requests.find(r => r.id === deal.requestId);
+                                                const amount = deal.price * deal.wagons;
+                                                const commission = Math.round(amount * 0.025);
+                                                return (
+                                                    <div key={deal.id} className="p-5 bg-slate-50 dark:bg-[#0B1120] rounded-[1.5rem] border dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-blue-200 dark:hover:border-blue-800 transition-all">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-black dark:text-white text-sm truncate">{relatedReq?.stationFrom || '—'} → {relatedReq?.stationTo || '—'}</div>
+                                                            <div className="text-xs text-slate-400 font-bold mt-1">{deal.wagons} ваг. × {deal.price?.toLocaleString()} ₽ = {amount.toLocaleString()} ₽</div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 shrink-0">
+                                                            <span className="text-[10px] font-black text-violet-500">−{commission.toLocaleString()} ₽</span>
+                                                            <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${statusColors[deal.status] || 'bg-slate-100 text-slate-500'}`}>
+                                                                {statusLabels[deal.status] || deal.status}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Завершённые сделки */}
                                 <div>
-                                    <h2 className="text-3xl font-black">Безлимитный доступ</h2>
-                                    <p className="text-blue-200 text-xs font-black uppercase tracking-widest mt-2">Ограничения сняты</p>
-                                </div>
-                                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-inner">
-                                    <CreditCard className="w-8 h-8 text-white" />
-                                </div>
-                            </div>
-
-                            <h4 className="font-black text-lg mb-6 dark:text-white uppercase">Пакеты услуг (в разработке)</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Starter Package */}
-                                <div className="border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 hover:shadow-xl hover:border-blue-400 dark:hover:border-blue-500 transition-all cursor-pointer group bg-slate-50 dark:bg-[#0B1120] relative overflow-hidden flex flex-col justify-between">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
-                                    <div>
-                                        <h5 className="font-black text-xl mb-2 dark:text-white relative z-10">Стартовый</h5>
-                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 relative z-10">Аналитика рынка</p>
-                                    </div>
-                                    <div className="flex justify-between items-end relative z-10">
-                                        <span className="text-3xl font-black text-blue-600 dark:text-blue-400">990 ₽</span>
-                                        <button onClick={() => alert('Мок: Интеграция с платежным шлюзом (990₽)')} className="w-12 h-12 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shadow-md group-hover:bg-blue-600 group-hover:text-white transition-all text-blue-600 dark:text-blue-400"><ArrowRight className="w-5 h-5" /></button>
-                                    </div>
-                                </div>
-
-                                {/* Pro Package */}
-                                <div className="border-2 border-blue-500 dark:border-blue-600 rounded-[2rem] p-6 shadow-lg shadow-blue-500/10 cursor-pointer group bg-white dark:bg-[#111827] relative overflow-hidden flex flex-col justify-between">
-                                    <div className="absolute top-4 right-4 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">Хит</div>
-                                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl group-hover:bg-blue-600/20 transition-all"></div>
-                                    <div>
-                                        <h5 className="font-black text-xl mb-2 dark:text-white relative z-10">Бизнес</h5>
-                                        <p className="text-blue-500 text-xs font-bold uppercase tracking-widest mb-6 relative z-10">Полный доступ + Приоритет</p>
-                                    </div>
-                                    <div className="flex justify-between items-end relative z-10">
-                                        <span className="text-3xl font-black text-blue-600 dark:text-blue-400">3 900 ₽</span>
-                                        <button onClick={() => alert('Мок: Интеграция с платежным шлюзом (3900₽)')} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:bg-blue-700 transition-all">Купить</button>
-                                    </div>
+                                    <h4 className="font-black text-sm uppercase tracking-widest dark:text-white mb-4">Завершённые ({completedDeals.length})</h4>
+                                    {completedDeals.length === 0 ? (
+                                        <div className="p-12 text-center bg-slate-50 dark:bg-[#0B1120] rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                                            <History className="w-12 h-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+                                            <p className="text-slate-400 font-bold">Пока нет завершённых сделок</p>
+                                            <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest mt-2">Завершённые сделки и удержанная комиссия появятся здесь</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {completedDeals.map(deal => {
+                                                const relatedReq = requests.find(r => r.id === deal.requestId);
+                                                const amount = deal.price * deal.wagons;
+                                                const commission = Math.round(amount * 0.025);
+                                                return (
+                                                    <div key={deal.id} className="p-5 bg-slate-50 dark:bg-[#0B1120] rounded-[1.5rem] border dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-black dark:text-white text-sm truncate flex items-center gap-2">
+                                                                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                                                                {relatedReq?.stationFrom || '—'} → {relatedReq?.stationTo || '—'}
+                                                            </div>
+                                                            <div className="text-xs text-slate-400 font-bold mt-1">{deal.wagons} ваг. × {deal.price?.toLocaleString()} ₽ = {amount.toLocaleString()} ₽</div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 shrink-0">
+                                                            <span className="text-[10px] font-black text-violet-500">комиссия: {commission.toLocaleString()} ₽</span>
+                                                            <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">Завершена</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        );
+                    })()}
                 </div>
             </div>
         </div>

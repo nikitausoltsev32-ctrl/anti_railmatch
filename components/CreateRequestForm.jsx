@@ -70,6 +70,10 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
                             <input name="totalWagons" type="number" min="1" value={formData.totalWagons || ''} onChange={handleChange} placeholder="10" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
                         </div>
                         <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Общий тоннаж (тонн)</label>
+                            <input name="totalTons" type="number" min="0" value={formData.totalTons || ''} onChange={handleChange} placeholder="600" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                        </div>
+                        <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4 font-bold flex items-center gap-2">Ставка (₽ / ваг.) <Sparkles className="w-3 h-3 text-blue-500" /></label>
                             <input name="targetPrice" type="number" min="1" value={formData.targetPrice || ''} onChange={handleChange} placeholder="Напр. 15000" className="w-full px-6 py-4 bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-black" />
                         </div>
