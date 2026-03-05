@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
+const validateInn = (inn) => {
+    const digits = inn.replace(/\D/g, '');
+    return digits.length === 10 || digits.length === 12;
+};
+
+const validatePhone = (phone) => {
+    const digits = phone.replace(/\D/g, '');
+    return digits.length >= 10 && digits.length <= 12;
+};
+
 export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading }) {
     const [formData, setFormData] = useState({
         email: '', password: '', company: '', inn: '', phone: ''
     });
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const [errors, setErrors] = useState({});
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (errors[e.target.name]) setErrors(prev => ({ ...prev, [e.target.name]: null }));
+    };
+
+    const validate = () => {
+        if (mode !== 'register') return true;
+        const errs = {};
+        if (!formData.company.trim()) errs.company = 'Укажите название компании';
+        if (!validateInn(formData.inn)) errs.inn = 'ИНН должен содержать 10 или 12 цифр';
+        if (!validatePhone(formData.phone)) errs.phone = 'Укажите корректный номер телефона';
+        setErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
 
     return (
         <div className="min-h-screen animate-in fade-in duration-500 bg-slate-50 dark:bg-[#0B1120] flex items-center justify-center p-4">
@@ -21,15 +45,24 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                     </div>
                 )}
 
-                <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); if (validate()) onSubmit(formData); }} className="space-y-4">
                     <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required />
-                    <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Пароль" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
+                    <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Пароль (минимум 6 символов)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
 
                     {mode === 'register' && (
-                        <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
-                            <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required />
-                            <input name="inn" type="text" value={formData.inn} onChange={handleChange} placeholder="ИНН (любой)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required />
-                            <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="Телефон" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required />
+                        <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+                            <div>
+                                <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.company ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
+                                {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
+                            </div>
+                            <div>
+                                <input name="inn" type="text" value={formData.inn} onChange={handleChange} placeholder="ИНН (10 или 12 цифр)" maxLength={12} className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.inn ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
+                                {errors.inn && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.inn}</p>}
+                            </div>
+                            <div>
+                                <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.phone ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
+                                {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}
+                            </div>
                         </div>
                     )}
 

@@ -153,6 +153,13 @@ export default function App() {
     const [isAiSearching, setIsAiSearching] = useState(false);
     const [quickFilter, setQuickFilter] = useState({ wagonType: null, direction: null });
     const [securityWarning, setSecurityWarning] = useState(null); // { message: string, severity: 'warning' | 'critical' }
+    const [toasts, setToasts] = useState([]); // { id, message, type: 'success'|'error'|'warning'|'info' }
+
+    const showToast = useCallback((message, type = 'success') => {
+        const id = Date.now() + Math.random();
+        setToasts(prev => [...prev, { id, message, type }]);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4500);
+    }, []);
 
     // 1. ШРИФТ И ТЕМА
     useEffect(() => {
@@ -187,7 +194,7 @@ export default function App() {
                                     }
                                 }
                             } else {
-                                alert("Профиль не найден. Если вы только что зарегистрировались, попробуйте войти через минуту.");
+                                showToast("Профиль не найден. Попробуйте войти через минуту.", 'error');
                                 await supabase.auth.signOut();
                             }
                         }, 1500);
@@ -314,7 +321,7 @@ export default function App() {
         const { company, inn, phone } = formData;
 
         if (!email || !password) {
-            alert("Пожалуйста, заполните все поля");
+            showToast("Пожалуйста, заполните все поля", 'warning');
             return;
         }
 
@@ -325,7 +332,7 @@ export default function App() {
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) {
                     console.error("Registration failed:", error);
-                    alert("Ошибка регистрации: " + (error.message || "Проверьте данные"));
+                    showToast("Ошибка регистрации: " + (error.message || "Проверьте данные"), 'error');
                     setAuthLoading(false);
                     return;
                 }
@@ -341,12 +348,12 @@ export default function App() {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     console.error("Login failed:", error);
-                    alert("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message));
+                    showToast("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message), 'error');
                 }
             }
         } catch (e) {
             console.error("Auth submit catch:", e);
-            alert("Произошла непредвиденная ошибка");
+            showToast("Произошла непредвиденная ошибка", 'error');
         } finally {
             setAuthLoading(false);
         }
@@ -373,7 +380,7 @@ export default function App() {
         // Проверка лимита в 15 откликов на заявку
         const reqBids = bids.filter(b => b.requestId === selectedRequest.id);
         if (reqBids.length >= 15) {
-            alert("Лимит откликов на эту заявку (15) исчерпан.");
+            showToast("Лимит откликов на эту заявку (15) исчерпан.", 'warning');
             return;
         }
 
@@ -509,19 +516,19 @@ export default function App() {
 
         } catch (e) {
             console.error("Deal confirmation error:", e);
-            alert("Ошибка при подтверждении условий");
+            showToast("Ошибка при подтверждении условий", 'error');
         }
     };
 
     // mode: 'split' (half) | 'full' (full commission, contacts revealed immediately)
-    const handleCommissionPayment = async (bidId, mode) => {
+    const handleCommissionPayment = async (bidId, mode, customDealAmount = null) => {
         if (!sbUser || !userProfile) return;
         const isShipper = userProfile.role === 'shipper';
 
         const currentBid = bids.find(b => b.id === bidId) || activeChat;
         if (!currentBid) return;
 
-        const dealAmount = currentBid.deal_amount || (currentBid.price * currentBid.wagons) || 0;
+        const dealAmount = customDealAmount || currentBid.deal_amount || (currentBid.price * currentBid.wagons) || 0;
         const commissionTotal = Math.round(dealAmount * 0.025);
         const now = new Date().toISOString();
 
@@ -649,7 +656,7 @@ export default function App() {
 
         } catch (e) {
             console.error('Document sign error:', e);
-            alert('Ошибка при подписании документа');
+            showToast('Ошибка при подписании документа', 'error');
         }
     };
     const handleCreateRequest = async (data) => {
@@ -670,9 +677,9 @@ export default function App() {
         const { error, data: insertedReq } = await supabase.from('requests').insert([reqData]);
         if (error) {
             console.error("Error creating request", error);
-            alert("Ошибка при сохранении заявки: " + (error.message || JSON.stringify(error)));
+            showToast("Ошибка при сохранении заявки: " + (error.message || JSON.stringify(error)), 'error');
         } else {
-            alert("Заявка успешно опубликована на бирже!");
+            showToast("Заявка успешно опубликована на бирже!", 'success');
             setView('my-requests');
         }
     };
@@ -715,7 +722,7 @@ export default function App() {
         const { error } = await supabase.from('requests').insert(allRequests);
         if (error) {
             console.error("Error seeding data:", error);
-            alert("Ошибка при добавлении демо-данных: " + JSON.stringify(error));
+            showToast("Ошибка при добавлении демо-данных", 'error');
         }
     };
 
@@ -999,7 +1006,7 @@ export default function App() {
                                     userProfile={userProfile}
                                     onSend={(text) => handleSendMessage(activeChat.id, text)}
                                     onAccept={() => handleConfirmDeal(activeChat)}
-                                    onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
+                                    onPayCommission={(mode, customAmount) => handleCommissionPayment(activeChat.id, mode, customAmount)}
                                     onDocSign={handleDocumentSign}
                                     onBack={() => setView('catalog')}
                                 />
@@ -1063,6 +1070,8 @@ export default function App() {
                         onLogout={handleLogout}
                         bids={bids}
                         requests={requests}
+                        showToast={showToast}
+                        onProfileUpdate={(updated) => setUserProfile(prev => ({ ...prev, ...updated }))}
                     />
                 )}
 
@@ -1088,7 +1097,26 @@ export default function App() {
                 )}
             </main>
 
-            {isModalOpen && selectedRequest && (
+                    {/* ===== TOAST NOTIFICATIONS ===== */}
+            <div className="fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none max-w-sm w-full">
+                {toasts.map(toast => (
+                    <div key={toast.id} className={`flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border pointer-events-auto animate-in slide-in-from-right-4 fade-in duration-300 ${
+                        toast.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200' :
+                        toast.type === 'error'   ? 'bg-red-50 dark:bg-red-900/40 border-red-200 dark:border-red-700 text-red-800 dark:text-red-200' :
+                        toast.type === 'warning' ? 'bg-amber-50 dark:bg-amber-900/40 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200' :
+                                                   'bg-blue-50 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200'
+                    }`}>
+                        <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                            toast.type === 'success' ? 'bg-emerald-500' :
+                            toast.type === 'error'   ? 'bg-red-500' :
+                            toast.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
+                        }`} />
+                        <span className="text-sm font-bold leading-relaxed">{toast.message}</span>
+                    </div>
+                ))}
+            </div>
+
+    {isModalOpen && selectedRequest && (
                 <BidModal
                     request={selectedRequest}
                     userLimit={userProfile?.role === 'owner' ? userProfile?.bids_limit : null}
