@@ -13,11 +13,22 @@ import {
 
 // --- БИЗНЕС-ЛОГИКА БЕЗОПАСНОСТИ ---
 const STOP_WORDS = [
+    // Прямые попытки обхода
     'давайте в обход', 'скину в телегу', 'оплата на карту', 'наберите мне напрямую',
     'мой номер', 'мой телефон', 'пишите в вотсап', 'связаться в телеграме',
     'перезвоните на', 'мои реквизиты', 'оплатить на карту',
     'контакты', 'телефон', 'email', 'почта', 'whatsapp', 'telegram', 'viber', 'личку', 'в личку',
-    'direct', 'директ', 'мобильный', 'сотовый', 'созвонимся', '@', '.ru', '.com', '.net'
+    'direct', 'директ', 'мобильный', 'сотовый', 'созвонимся', '@', '.ru', '.com', '.net',
+    // Глаголы и фразы поиска контактов
+    'набери меня', 'набери мне', 'наберите меня', 'наберите мне',
+    'позвони мне', 'позвоните мне', 'позвони на', 'позвоните на',
+    'звони мне', 'звоните мне', 'перезвони',
+    'найди меня', 'найдите меня', 'найди в', 'найдите в',
+    'пиши мне', 'пишите мне', 'написать мне',
+    'свяжись', 'свяжитесь', 'свяжись со мной', 'свяжитесь со мной',
+    'отправлю реквизиты', 'скину реквизиты', 'дам номер', 'дам контакт', 'скину номер',
+    'в обход платформы', 'без платформы', 'напрямую', 'вне платформы', 'минуя платформу',
+    'вконтакте', 'одноклассники', 'ok.ru', 'вк ',
 ];
 
 const MAX_PROFILE_VIEWS_PER_DAY = 50;
@@ -474,134 +485,88 @@ export default function App() {
 
             if (error) throw error;
 
-            // Если оба подтвердили -> переходим в статус ожидания оплаты
             const fullyConfirmed = updatedBid.shipper_confirmed && updatedBid.owner_confirmed;
 
             if (fullyConfirmed && updatedBid.status === 'pending') {
-                await supabase.from('bids').update({ status: 'pending_payment' }).eq('id', bid.id);
-                setActiveChat(prev => ({ ...prev, ...updateField, status: 'pending_payment' }));
-                // Системное уведомление
+                await supabase.from('bids').update({ status: 'commission_pending' }).eq('id', bid.id);
+                setActiveChat(prev => ({ ...prev, ...updateField, status: 'commission_pending' }));
+                setBids(prev => prev.map(b => b.id === bid.id ? { ...b, ...updateField, status: 'commission_pending' } : b));
                 await supabase.from('messages').insert([{
                     chat_id: bid.id,
                     sender_id: 'system',
-                    text: 'Обе стороны подтвердили сделку! Переход к этапу оплаты. Примите условия комиссии для продолжения.'
+                    text: 'Условия согласованы обеими сторонами! Следующий шаг — оплата комиссии платформы (2.5%) для раскрытия контактов партнёра.'
                 }]);
             } else {
                 setActiveChat(prev => ({ ...prev, ...updateField }));
+                setBids(prev => prev.map(b => b.id === bid.id ? { ...b, ...updateField } : b));
                 const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
                 await supabase.from('messages').insert([{
                     chat_id: bid.id,
                     sender_id: 'system',
-                    text: `${roleName} подтвердил сделку. Ожидаем подтверждение второй стороны.`
+                    text: `${roleName} подтвердил условия. Ожидаем подтверждение второй стороны.`
                 }]);
             }
 
         } catch (e) {
             console.error("Deal confirmation error:", e);
-            alert("Ошибка при подтверждении сделки");
+            alert("Ошибка при подтверждении условий");
         }
     };
 
-    const handleEscrowPayment = async (bidId) => {
-        // Имитация оплаты и депонирования
-        const { error } = await supabase.from('bids').update({ status: 'escrow_held', payment_doc_uploaded: true }).eq('id', bidId);
+    // mode: 'split' (half) | 'full' (full commission, contacts revealed immediately)
+    const handleCommissionPayment = async (bidId, mode) => {
+        if (!sbUser || !userProfile) return;
+        const isShipper = userProfile.role === 'shipper';
+
+        const currentBid = bids.find(b => b.id === bidId) || activeChat;
+        if (!currentBid) return;
+
+        const dealAmount = currentBid.deal_amount || (currentBid.price * currentBid.wagons) || 0;
+        const commissionTotal = Math.round(dealAmount * 0.025);
+        const now = new Date().toISOString();
+
+        const myPaidField = isShipper ? 'shipper_paid' : 'owner_paid';
+        const myPaidAtField = isShipper ? 'shipper_paid_at' : 'owner_paid_at';
+        const otherPaidField = isShipper ? 'owner_paid' : 'shipper_paid';
+        const otherPaidAtField = isShipper ? 'owner_paid_at' : 'shipper_paid_at';
+        const otherAlreadyPaid = isShipper ? currentBid.owner_paid : currentBid.shipper_paid;
+
+        let updates = {
+            commission_amount: commissionTotal,
+            deal_amount: dealAmount,
+            [myPaidField]: true,
+            [myPaidAtField]: now,
+        };
+
+        const willReveal = mode === 'full' || otherAlreadyPaid;
+
+        if (mode === 'full') {
+            // Paying full commission upfront — mark other side as paid too
+            updates[otherPaidField] = true;
+            updates[otherPaidAtField] = now;
+        }
+
+        if (willReveal) {
+            updates.contacts_revealed = true;
+            updates.status = 'contacts_revealed';
+        } else {
+            // First payer — set 1-hour deadline for the other side
+            updates.split_deadline = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        }
+
+        const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
+
         if (!error) {
-            setActiveChat(prev => ({ ...prev, status: 'escrow_held', payment_doc_uploaded: true }));
-            // Системное сообщение в чат
-            await supabase.from('messages').insert([{
-                chat_id: bidId,
-                sender_id: 'system',
-                text: 'Гарантийный платёж внесён. Средства заморожены до подписания акта приёмки. Контакты партнёра теперь доступны.'
-            }]);
-        }
-    };
+            setActiveChat(prev => ({ ...prev, ...updates }));
+            setBids(prev => prev.map(b => b.id === bidId ? { ...b, ...updates } : b));
 
-    const handleCommissionAccept = async (bidId) => {
-        if (!sbUser || !userProfile) return;
-        const isShipper = userProfile.role === 'shipper';
-        const field = isShipper ? 'commission_accepted_shipper' : 'commission_accepted_owner';
-
-        const { data, error } = await supabase
-            .from('bids')
-            .update({ [field]: true })
-            .eq('id', bidId)
-            .select()
-            .single();
-
-        if (error) { console.error('Commission accept error:', error); return; }
-
-        setActiveChat(prev => ({ ...prev, [field]: true }));
-
-        const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
-        await supabase.from('messages').insert([{
-            chat_id: bidId,
-            sender_id: 'system',
-            text: `${roleName} принял условия комиссии платформы.`
-        }]);
-    };
-
-    const handleStageConfirm = async (bidId, stage) => {
-        if (!sbUser || !userProfile) return;
-        const isShipper = userProfile.role === 'shipper';
-
-        try {
-            // Определяем поле подтверждения для текущего этапа
-            const confirmField = isShipper ? `${stage}_confirmed_shipper` : `${stage}_confirmed_owner`;
-
-            const { data, error } = await supabase
-                .from('bids')
-                .update({ [confirmField]: true })
-                .eq('id', bidId)
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            // Проверяем, подтвердили ли оба
-            const shipperField = `${stage}_confirmed_shipper`;
-            const ownerField = `${stage}_confirmed_owner`;
-            const bothConfirmed = data[shipperField] && data[ownerField];
-
-            const statusTransitions = {
-                'loading': 'in_transit',
-                'transit': 'accepted'
-            };
-
-            let newStatus = null;
-            // Для loading: владелец подтверждает подачу вагонов -> переход в loading
-            if (stage === 'escrow' && !isShipper) {
-                newStatus = 'loading';
-            }
-            // Для transit: грузоотправитель подтверждает погрузку
-            if (stage === 'loading' && isShipper) {
-                newStatus = 'in_transit';
-            }
-            // Для акта: оба должны подтвердить
-            if (stage === 'transit' && bothConfirmed) {
-                newStatus = 'accepted';
-            }
-
-            if (newStatus) {
-                await supabase.from('bids').update({ status: newStatus }).eq('id', bidId);
-                setActiveChat(prev => ({ ...prev, ...data, status: newStatus }));
-            } else {
-                setActiveChat(prev => ({ ...prev, ...data }));
-            }
-
-            // Системное сообщение
             const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
-            const stageNames = { 'escrow': 'подачу вагонов', 'loading': 'погрузку', 'transit': 'акт выполненных работ' };
-            await supabase.from('messages').insert([{
-                chat_id: bidId,
-                sender_id: 'system',
-                text: newStatus
-                    ? `Этап подтверждён! Сделка перешла на следующий этап.`
-                    : `${roleName} подтвердил ${stageNames[stage] || stage}. Ожидаем подтверждение партнёра.`
-            }]);
+            const halfAmount = Math.round(commissionTotal / 2);
+            const msg = willReveal
+                ? 'Комиссия оплачена! Контакты партнёра теперь открыты. Удачной сделки!'
+                : `${roleName} оплатил свою часть комиссии (${halfAmount.toLocaleString()} ₽). Партнёру отправлено уведомление — у него 1 час для оплаты своей части.`;
 
-        } catch (e) {
-            console.error('Stage confirm error:', e);
-            alert('Ошибка при подтверждении этапа');
+            await supabase.from('messages').insert([{ chat_id: bidId, sender_id: 'system', text: msg }]);
         }
     };
 
@@ -995,7 +960,9 @@ export default function App() {
                                     const req = requests.find(r => r.id === chatBid.requestId);
                                     const isMeOwner = chatBid.ownerId === sbUser?.id;
                                     const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
-                                    const partnerName = isMeOwner ? (creatorProfile?.company || req?.stationTo || 'Заявка') : chatBid.ownerName;
+                                    const contactsRevealedForBid = chatBid.contacts_revealed || chatBid.status === 'contacts_revealed' || chatBid.status === 'accepted';
+                                    const realPartnerName = isMeOwner ? (creatorProfile?.company || req?.stationTo || 'Заявка') : chatBid.ownerName;
+                                    const partnerName = contactsRevealedForBid ? realPartnerName : 'Переговоры';
                                     const isActive = activeChat?.id === chatBid.id;
 
                                     return (
@@ -1032,13 +999,9 @@ export default function App() {
                                     userProfile={userProfile}
                                     onSend={(text) => handleSendMessage(activeChat.id, text)}
                                     onAccept={() => handleConfirmDeal(activeChat)}
-                                    onEscrow={() => handleEscrowPayment(activeChat.id)}
-                                    onCommissionAccept={() => handleCommissionAccept(activeChat.id)}
-                                    onStageConfirm={(stage) => handleStageConfirm(activeChat.id, stage)}
-                                    onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
+                                    onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
                                     onDocSign={handleDocumentSign}
                                     onBack={() => setView('catalog')}
-                                    maskContact={maskContact}
                                 />
                             ) : (
                                 <div className="h-full bg-white dark:bg-[#111827] rounded-[3.5rem] border-2 border-dashed dark:border-slate-800 flex flex-col items-center justify-center text-center p-10">
