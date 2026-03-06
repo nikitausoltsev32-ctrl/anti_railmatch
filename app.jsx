@@ -520,6 +520,57 @@ export default function App() {
         }
     };
 
+    const handleProposeCommission = async (bidId, mode) => {
+        if (!sbUser || !userProfile) return;
+        const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
+        const modeText = mode === 'split' ? 'разделить комиссию 50/50' : 'оплатить комиссию полностью';
+        const updates = { commission_mode: mode, commission_proposer_id: sbUser.id, commission_agreed: false };
+        const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
+        if (!error) {
+            setActiveChat(prev => ({ ...prev, ...updates }));
+            setBids(prev => prev.map(b => b.id === bidId ? { ...b, ...updates } : b));
+            await supabase.from('messages').insert([{
+                chat_id: bidId, sender_id: 'system',
+                text: `${roleName} предлагает ${modeText}. Пожалуйста, подтвердите или отклоните предложение.`
+            }]);
+        }
+    };
+
+    const handleApproveCommission = async (bidId) => {
+        if (!sbUser || !userProfile) return;
+        const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
+        const currentBid = bids.find(b => b.id === bidId) || activeChat;
+        const mode = currentBid?.commission_mode;
+        const modeText = mode === 'split' ? 'разделение 50/50' : 'полную оплату';
+        const updates = { commission_agreed: true };
+        const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
+        if (!error) {
+            setActiveChat(prev => ({ ...prev, ...updates }));
+            setBids(prev => prev.map(b => b.id === bidId ? { ...b, ...updates } : b));
+            await supabase.from('messages').insert([{
+                chat_id: bidId, sender_id: 'system',
+                text: `${roleName} подтвердил способ оплаты: ${modeText}. Оба участника теперь могут оплатить комиссию.`
+            }]);
+            showToast('Способ оплаты согласован! Нажмите «Оплатить комиссию».', 'success');
+        }
+    };
+
+    const handleRejectCommission = async (bidId) => {
+        if (!sbUser || !userProfile) return;
+        const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
+        const updates = { commission_mode: null, commission_proposer_id: null, commission_agreed: false };
+        const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
+        if (!error) {
+            setActiveChat(prev => ({ ...prev, ...updates }));
+            setBids(prev => prev.map(b => b.id === bidId ? { ...b, ...updates } : b));
+            await supabase.from('messages').insert([{
+                chat_id: bidId, sender_id: 'system',
+                text: `${roleName} отклонил предложение. Обсудите и предложите другой вариант оплаты.`
+            }]);
+            showToast('Предложение отклонено', 'warning');
+        }
+    };
+
     // mode: 'split' (half) | 'full' (full commission, contacts revealed immediately)
     const handleCommissionPayment = async (bidId, mode, customDealAmount = null) => {
         if (!sbUser || !userProfile) return;
@@ -1007,6 +1058,9 @@ export default function App() {
                                     onSend={(text) => handleSendMessage(activeChat.id, text)}
                                     onAccept={() => handleConfirmDeal(activeChat)}
                                     onPayCommission={(mode, customAmount) => handleCommissionPayment(activeChat.id, mode, customAmount)}
+                                    onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
+                                    onApproveCommission={() => handleApproveCommission(activeChat.id)}
+                                    onRejectCommission={() => handleRejectCommission(activeChat.id)}
                                     onDocSign={handleDocumentSign}
                                     onBack={() => setView('catalog')}
                                 />
@@ -1085,13 +1139,13 @@ export default function App() {
                             userProfile={userProfile}
                             onSend={(text) => handleSendMessage(activeChat.id, text)}
                             onAccept={() => handleConfirmDeal(activeChat)}
-                            onEscrow={() => handleEscrowPayment(activeChat.id)}
-                            onCommissionAccept={() => handleCommissionAccept(activeChat.id)}
-                            onStageConfirm={(stage) => handleStageConfirm(activeChat.id, stage)}
+                            onPayCommission={(mode, customAmount) => handleCommissionPayment(activeChat.id, mode, customAmount)}
+                            onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
+                            onApproveCommission={() => handleApproveCommission(activeChat.id)}
+                            onRejectCommission={() => handleRejectCommission(activeChat.id)}
                             onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
                             onDocSign={handleDocumentSign}
                             onBack={() => setView('messenger')}
-                            maskContact={maskContact}
                         />
                     </div>
                 )}

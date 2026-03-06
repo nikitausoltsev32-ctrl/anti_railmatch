@@ -2,19 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowLeft, ShieldCheck, MoreVertical, MessageSquare, Send, CheckCircle2,
     FileText, Wallet, Phone, Download, Loader2, Clock, Lock, Unlock,
-    Info, PenTool, CreditCard, X, ChevronRight
+    Info, PenTool, CreditCard, X, ChevronRight, ThumbsUp, ThumbsDown, SplitSquareHorizontal
 } from 'lucide-react';
 import { downloadDocument } from './DocumentGenerator';
 import DocumentSigningModal from './DocumentSigningModal';
 
 export default function ChatWindow({
     chat, messages, currentUserId, userRole, userProfile,
-    onSend, onAccept, onPayCommission, onDocSign, onBack
+    onSend, onAccept, onPayCommission, onProposeCommission, onApproveCommission, onRejectCommission, onDocSign, onBack
 }) {
     const [showCommissionModal, setShowCommissionModal] = useState(false);
     const [showTinkoffModal, setShowTinkoffModal] = useState(false);
     const [showDocsModal, setShowDocsModal] = useState(false);
-    const [paymentMode, setPaymentMode] = useState('split'); // 'split' | 'full'
+    const [showProposeModal, setShowProposeModal] = useState(false);
+    const [paymentMode, setPaymentMode] = useState(() => chat.commission_mode || 'split');
     const [selectedDoc, setSelectedDoc] = useState('contract');
     const [inputText, setInputText] = useState('');
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -24,6 +25,11 @@ export default function ChatWindow({
     const [editedDealAmount, setEditedDealAmount] = useState(null);
     const [isEditingAmount, setIsEditingAmount] = useState(false);
     const scrollRef = useRef(null);
+
+    // Sync payment mode from agreed commission mode
+    useEffect(() => {
+        if (chat.commission_mode) setPaymentMode(chat.commission_mode);
+    }, [chat.commission_mode]);
 
     // Countdown timer for split payment deadline
     useEffect(() => {
@@ -100,6 +106,12 @@ export default function ChatWindow({
     // Stage index: 0=переговоры, 1=комиссия, 2=контакты открыты
     const stageIndex = contactsRevealed ? 2 : isCommissionPending ? 1 : 0;
 
+    // Commission proposal state
+    const iProposed = chat.commission_proposer_id === currentUserId;
+    const partnerProposed = !!chat.commission_mode && !!chat.commission_proposer_id && !iProposed;
+    const commissionAgreed = !!chat.commission_agreed;
+    const modeLabel = chat.commission_mode === 'full' ? 'Оплатить полностью' : 'Разделить 50/50';
+
     // Timer display
     const formatTime = (ms) => {
         if (ms === null || ms === undefined) return null;
@@ -172,20 +184,58 @@ export default function ChatWindow({
                             </button>
                         )}
 
-                        {/* Pay commission button */}
+                        {/* Commission flow */}
                         {isCommissionPending && !contactsRevealed && (
-                            <button
-                                onClick={() => setShowCommissionModal(true)}
-                                disabled={myHalfPaid && !partnerHalfPaid && timeLeft > 0}
-                                className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-md ${
-                                    myHalfPaid && !partnerHalfPaid && timeLeft > 0
-                                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default'
-                                        : 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
-                                }`}
-                            >
-                                <Wallet className="w-3.5 h-3.5" />
-                                {myHalfPaid ? `Ожидаем партнёра (${formatTime(timeLeft)})` : 'Оплатить комиссию'}
-                            </button>
+                            <>
+                                {/* No proposal yet — both sides see this */}
+                                {!chat.commission_mode && (
+                                    <button
+                                        onClick={() => setShowProposeModal(true)}
+                                        className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-md bg-amber-500 hover:bg-amber-600 text-white animate-pulse"
+                                    >
+                                        <Wallet className="w-3.5 h-3.5" /> Предложить способ оплаты
+                                    </button>
+                                )}
+
+                                {/* I proposed, waiting for partner */}
+                                {iProposed && !commissionAgreed && (
+                                    <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        <Clock className="w-3.5 h-3.5" />
+                                        Ожидаем согласия партнёра…
+                                    </div>
+                                )}
+
+                                {/* Partner proposed — I need to respond */}
+                                {partnerProposed && !commissionAgreed && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest hidden sm:block">
+                                            {modeLabel}?
+                                        </span>
+                                        <button onClick={onApproveCommission} className="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-black flex items-center gap-1.5 transition-all">
+                                            <ThumbsUp className="w-3 h-3" /> Принять
+                                        </button>
+                                        <button onClick={onRejectCommission} className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black flex items-center gap-1.5 transition-all">
+                                            <ThumbsDown className="w-3 h-3" /> Отклонить
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Agreed — show pay button */}
+                                {commissionAgreed && (
+                                    <button
+                                        onClick={() => setShowCommissionModal(true)}
+                                        disabled={myHalfPaid && !partnerHalfPaid && timeLeft > 0}
+                                        className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-md ${
+                                            myHalfPaid && !partnerHalfPaid && timeLeft > 0
+                                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default'
+                                                : 'bg-emerald-500 hover:bg-emerald-600 text-white animate-pulse'
+                                        }`}
+                                    >
+                                        <Wallet className="w-3.5 h-3.5" />
+                                        {myHalfPaid ? `Ожидаем партнёра (${formatTime(timeLeft)})` : 'Оплатить комиссию'}
+                                    </button>
+                                )}
+                            </>
                         )}
 
                         {/* Documents — always accessible */}
@@ -201,6 +251,58 @@ export default function ChatWindow({
                         </button>
                     </div>
                 </div>
+
+                {/* ===== PROPOSE COMMISSION MODE MODAL ===== */}
+                {showProposeModal && (
+                    <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex p-4 items-center justify-center animate-in fade-in zoom-in-95">
+                        <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-[2rem] shadow-2xl border dark:border-slate-800 overflow-hidden">
+                            <button onClick={() => setShowProposeModal(false)} className="absolute top-5 right-5 p-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-all z-10">
+                                <X className="w-4 h-4" />
+                            </button>
+                            <div className="p-8 pb-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-b border-slate-100 dark:border-slate-800">
+                                <div className="w-14 h-14 bg-amber-100 dark:bg-amber-500/20 text-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/10">
+                                    <SplitSquareHorizontal className="w-7 h-7" />
+                                </div>
+                                <h3 className="text-2xl font-black dark:text-white mb-2">Предложить способ оплаты</h3>
+                                <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                                    Выберите вариант — партнёру придёт уведомление с возможностью подтвердить или отклонить.
+                                </p>
+                            </div>
+                            <div className="p-8 space-y-4">
+                                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Сумма сделки</span>
+                                        <span className="font-bold dark:text-white">{dealAmount.toLocaleString()} ₽</span>
+                                    </div>
+                                    <div className="flex justify-between mt-2">
+                                        <span className="text-slate-500">Комиссия (2.5%)</span>
+                                        <span className="text-rose-500 font-bold">{commissionTotal.toLocaleString()} ₽</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => { onProposeCommission('split'); setShowProposeModal(false); }}
+                                    className="w-full flex items-center justify-between px-6 py-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 rounded-2xl hover:border-blue-400 transition-all"
+                                >
+                                    <div className="text-left">
+                                        <div className="font-black text-sm">Разделить 50/50</div>
+                                        <div className="text-xs text-slate-500 mt-0.5">Каждый платит {commissionHalf.toLocaleString()} ₽</div>
+                                    </div>
+                                    <span className="text-xl font-black">{commissionHalf.toLocaleString()} ₽</span>
+                                </button>
+                                <button
+                                    onClick={() => { onProposeCommission('full'); setShowProposeModal(false); }}
+                                    className="w-full flex items-center justify-between px-6 py-4 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 rounded-2xl hover:border-emerald-400 transition-all"
+                                >
+                                    <div className="text-left">
+                                        <div className="font-black text-sm">Один платит полностью</div>
+                                        <div className="text-xs text-slate-500 mt-0.5">Контакты откроются немедленно</div>
+                                    </div>
+                                    <span className="text-xl font-black">{commissionTotal.toLocaleString()} ₽</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ===== COMMISSION MODAL ===== */}
                 {showCommissionModal && (
@@ -255,27 +357,29 @@ export default function ChatWindow({
                                     </div>
                                 </div>
 
-                                {/* Payment options */}
+                                {/* Agreed payment mode (locked) */}
                                 <div className="space-y-3">
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Вариант оплаты</p>
-
-                                    <label className={`flex items-center gap-4 cursor-pointer p-4 rounded-2xl border-2 transition-all ${paymentMode === 'split' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'}`}>
-                                        <input type="radio" name="payMode" value="split" checked={paymentMode === 'split'} onChange={() => setPaymentMode('split')} className="accent-blue-600" />
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Согласованный способ</p>
+                                    <div className={`flex items-center gap-4 p-4 rounded-2xl border-2 ${
+                                        paymentMode === 'split'
+                                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                            : 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                                    }`}>
+                                        <CheckCircle2 className={`w-5 h-5 shrink-0 ${paymentMode === 'split' ? 'text-blue-600' : 'text-emerald-600'}`} />
                                         <div className="flex-1">
-                                            <div className="font-black text-sm dark:text-white">Разделить 50/50</div>
-                                            <div className="text-xs text-slate-500 mt-0.5">Вы платите {commissionHalf.toLocaleString()} ₽, партнёр — {commissionHalf.toLocaleString()} ₽</div>
+                                            <div className="font-black text-sm dark:text-white">
+                                                {paymentMode === 'split' ? 'Разделить 50/50' : 'Оплатить полностью'}
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-0.5">
+                                                {paymentMode === 'split'
+                                                    ? `Ваша часть: ${commissionHalf.toLocaleString()} ₽`
+                                                    : `Полная сумма: ${commissionTotal.toLocaleString()} ₽`}
+                                            </div>
                                         </div>
-                                        <span className="text-lg font-black text-blue-600">{commissionHalf.toLocaleString()} ₽</span>
-                                    </label>
-
-                                    <label className={`flex items-center gap-4 cursor-pointer p-4 rounded-2xl border-2 transition-all ${paymentMode === 'full' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300'}`}>
-                                        <input type="radio" name="payMode" value="full" checked={paymentMode === 'full'} onChange={() => setPaymentMode('full')} className="accent-emerald-600" />
-                                        <div className="flex-1">
-                                            <div className="font-black text-sm dark:text-white">Оплатить полностью</div>
-                                            <div className="text-xs text-slate-500 mt-0.5">Контакты откроются сразу, без ожидания партнёра</div>
-                                        </div>
-                                        <span className="text-lg font-black text-emerald-600">{commissionTotal.toLocaleString()} ₽</span>
-                                    </label>
+                                        <span className={`text-lg font-black ${paymentMode === 'split' ? 'text-blue-600' : 'text-emerald-600'}`}>
+                                            {paymentMode === 'split' ? commissionHalf.toLocaleString() : commissionTotal.toLocaleString()} ₽
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {/* Partner payment status */}
@@ -298,7 +402,7 @@ export default function ChatWindow({
                                     className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 text-slate-900 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-yellow-400/30 transition-all flex items-center justify-center gap-3"
                                 >
                                     <span className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center text-yellow-400 font-black shrink-0">T</span>
-                                    Оплатить через Тинькофф · {paymentMode === 'split' ? commissionHalf.toLocaleString() : commissionTotal.toLocaleString()} ₽
+                                    Оплатить через Тинькофф · {(paymentMode === 'split' ? commissionHalf : commissionTotal).toLocaleString()} ₽
                                 </button>
                             </div>
                         </div>
