@@ -1019,7 +1019,7 @@ export default function App() {
                                     const isMeOwner = chatBid.ownerId === sbUser?.id;
                                     const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
                                     const contactsRevealedForBid = chatBid.contacts_revealed || chatBid.status === 'contacts_revealed' || chatBid.status === 'accepted';
-                                    const realPartnerName = isMeOwner ? (creatorProfile?.company || req?.stationTo || 'Заявка') : chatBid.ownerName;
+                                    const realPartnerName = isMeOwner ? (creatorProfile?.company || req?.stationTo || 'Заявка') : (chatBid.ownerName || 'Партнёр');
                                     const partnerName = contactsRevealedForBid ? realPartnerName : 'Переговоры';
                                     const isActive = activeChat?.id === chatBid.id;
 
