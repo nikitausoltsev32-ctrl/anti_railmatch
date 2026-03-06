@@ -7,6 +7,10 @@
 -- 1. BIDS: Update status constraint
 -- ============================================
 ALTER TABLE public.bids DROP CONSTRAINT IF EXISTS bids_status_check;
+
+-- First, map any existing 'contacts_unlocked' statuses to the new 'contacts_revealed' status
+UPDATE public.bids SET status = 'contacts_revealed' WHERE status = 'contacts_unlocked';
+
 ALTER TABLE public.bids ADD CONSTRAINT bids_status_check
     CHECK (status IN (
         'pending',              -- Negotiating
