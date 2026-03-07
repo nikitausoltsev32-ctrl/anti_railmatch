@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import OnboardingModal from './components/OnboardingModal.jsx';
+import TermsModal from './components/TermsModal.jsx';
 import {
     TrainFront, MapPin, Package, Calendar,
     Weight, Box, Filter, Search, ChevronDown,
@@ -154,11 +156,23 @@ export default function App() {
     const [quickFilter, setQuickFilter] = useState({ wagonType: null, direction: null });
     const [securityWarning, setSecurityWarning] = useState(null); // { message: string, severity: 'warning' | 'critical' }
     const [toasts, setToasts] = useState([]); // { id, message, type: 'success'|'error'|'warning'|'info' }
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showTerms, setShowTerms] = useState(false);
 
     const showToast = useCallback((message, type = 'success') => {
         const id = Date.now() + Math.random();
         setToasts(prev => [...prev, { id, message, type }]);
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4500);
+    }, []);
+
+    // Email-уведомление партнёру через Edge Function (non-blocking, fire-and-forget)
+    const sendNotification = useCallback(async (toUserId, subject, bodyText) => {
+        if (!toUserId) return;
+        try {
+            await supabase.functions.invoke('notify', { body: { userId: toUserId, subject, bodyText } });
+        } catch (e) {
+            console.warn('Email notification skipped:', e);
+        }
     }, []);
 
     // 1. ШРИФТ И ТЕМА
@@ -192,6 +206,11 @@ export default function App() {
                                     if (savedScreen !== 'app') {
                                         setView('catalog');
                                     }
+                                    // Онбординг для новых пользователей
+                                    const onboardedKey = `rm_onboarded_${userId}`;
+                                    if (!retryData.onboarded && !localStorage.getItem(onboardedKey)) {
+                                        setShowOnboarding(true);
+                                    }
                                 }
                             } else {
                                 showToast("Профиль не найден. Попробуйте войти через минуту.", 'error');
@@ -210,6 +229,11 @@ export default function App() {
                         setScreen('app');
                         if (savedScreen !== 'app') {
                             setView('catalog');
+                        }
+                        // Онбординг для новых пользователей
+                        const onboardedKey = `rm_onboarded_${userId}`;
+                        if (!data.onboarded && !localStorage.getItem(onboardedKey)) {
+                            setShowOnboarding(true);
                         }
                     }
                 }
@@ -307,6 +331,14 @@ export default function App() {
     }, [sbUser]);
 
     // --- ЛОГИКА ---
+
+    const handleOnboardingComplete = useCallback(async () => {
+        setShowOnboarding(false);
+        if (sbUser) {
+            localStorage.setItem(`rm_onboarded_${sbUser.id}`, '1');
+            await supabase.from('profiles').update({ onboarded: true }).eq('id', sbUser.id);
+        }
+    }, [sbUser]);
 
     const handleEnterDemo = () => {
         setUserProfile({ name: 'Гость', company: 'Демо режим', role: 'demo', inn: '000000' });
@@ -419,6 +451,17 @@ export default function App() {
         }
 
         setIsModalOpen(false);
+
+        // Уведомление грузоотправителю о новой ставке
+        const shipperProfile = profiles.find(p => p.inn === selectedRequest.shipperInn);
+        if (shipperProfile?.id) {
+            sendNotification(
+                shipperProfile.id,
+                'Новая ставка на вашу заявку — RailMatch',
+                `Компания «${userProfile.company}» откликнулась на вашу заявку:\n${selectedRequest.stationFrom} → ${selectedRequest.stationTo}, ${selectedRequest.cargoType}.\n\nЦена: ${Number(price).toLocaleString()} ₽ · Вагонов: ${wagons} · Тонн: ${tons}\n\nОткройте платформу, чтобы продолжить переговоры.`
+            );
+        }
+
         // Мгновенный переход в чат — обогащаем данными заявки и ставки
         setActiveChat({
             ...data,
@@ -533,6 +576,16 @@ export default function App() {
                 chat_id: bidId, sender_id: 'system',
                 text: `${roleName} предлагает ${modeText}. Пожалуйста, подтвердите или отклоните предложение.`
             }]);
+            // Уведомление партнёру
+            const bid = bids.find(b => b.id === bidId) || activeChat;
+            const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : profiles.find(p => p.inn === bid?.shipperInn)?.id;
+            if (partnerId) {
+                sendNotification(
+                    partnerId,
+                    'Предложение по оплате комиссии — RailMatch',
+                    `Компания «${userProfile.company}» предлагает ${modeText}.\n\nОткройте платформу, чтобы подтвердить или отклонить предложение.`
+                );
+            }
         }
     };
 
@@ -552,6 +605,14 @@ export default function App() {
                 text: `${roleName} подтвердил способ оплаты: ${modeText}. Оба участника теперь могут оплатить комиссию.`
             }]);
             showToast('Способ оплаты согласован! Нажмите «Оплатить комиссию».', 'success');
+            // Уведомление тому, кто предлагал
+            if (currentBid?.commission_proposer_id && currentBid.commission_proposer_id !== sbUser.id) {
+                sendNotification(
+                    currentBid.commission_proposer_id,
+                    'Партнёр подтвердил способ оплаты — RailMatch',
+                    `Компания «${userProfile.company}» согласовала ${modeText}.\n\nОткройте платформу и оплатите комиссию для раскрытия контактов.`
+                );
+            }
         }
     };
 
@@ -625,6 +686,19 @@ export default function App() {
                 : `${roleName} оплатил свою часть комиссии (${halfAmount.toLocaleString()} ₽). Партнёру отправлено уведомление — у него 1 час для оплаты своей части.`;
 
             await supabase.from('messages').insert([{ chat_id: bidId, sender_id: 'system', text: msg }]);
+
+            // Уведомление партнёру об оплате
+            const partnerId = isShipper ? currentBid.ownerId : profiles.find(p => p.inn === currentBid.shipperInn)?.id;
+            if (partnerId) {
+                const notifText = willReveal
+                    ? `Комиссия полностью оплачена! Контакты партнёра открыты.\n\nОткройте платформу, чтобы увидеть контакты и подписать документы.`
+                    : `Компания «${userProfile.company}» оплатила свою часть комиссии (${Math.round(commissionTotal / 2).toLocaleString()} ₽).\n\nУ вас 1 час, чтобы оплатить вашу часть и раскрыть контакты.`;
+                sendNotification(
+                    partnerId,
+                    willReveal ? 'Контакты открыты — сделка завершена! RailMatch' : 'Партнёр оплатил комиссию — ваша очередь! RailMatch',
+                    notifText
+                );
+            }
         }
     };
 
@@ -839,7 +913,7 @@ export default function App() {
 
     // --- RENDERING ---
 
-    if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} />;
+    if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
     if (screen === 'auth') return <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />;
 
@@ -1178,6 +1252,10 @@ export default function App() {
                     onConfirm={handleBidSubmit}
                 />
             )}{showDemoAlert && <DemoModal onClose={() => setShowDemoAlert(false)} onReg={() => { setShowDemoAlert(false); setScreen('auth'); }} />}
+            {showOnboarding && userProfile && (
+                <OnboardingModal role={userProfile.role} onComplete={handleOnboardingComplete} />
+            )}
+            {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
         </div >
     );
 }

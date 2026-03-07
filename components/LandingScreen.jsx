@@ -1,7 +1,7 @@
 import React from 'react';
 import { TrainFront, Sun, Moon, Sparkles, Package, Zap, Check, ArrowRight, ShieldCheck, Activity, MessageSquare, BarChart3, Search, FileText, Users, Lock } from 'lucide-react';
 
-export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsDark }) {
+export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsDark, onShowTerms }) {
     return (
         <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white overflow-hidden bg-grid-pattern">
             <header className="max-w-7xl mx-auto w-full px-6 h-28 flex items-center justify-between z-50">
@@ -178,6 +178,21 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                     </div>
                 </div>
             </section>
+
+            {/* === FOOTER === */}
+            <footer className="border-t border-slate-200 dark:border-slate-800 py-8">
+                <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+                    <span>© 2026 RailMatch Platform ООО. Все права защищены.</span>
+                    <div className="flex items-center gap-6">
+                        <button onClick={onShowTerms} className="hover:text-blue-600 transition-colors font-medium">
+                            Пользовательское соглашение
+                        </button>
+                        <button onClick={onShowTerms} className="hover:text-blue-600 transition-colors font-medium">
+                            Конфиденциальность
+                        </button>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }
