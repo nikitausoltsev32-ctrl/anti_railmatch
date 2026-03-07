@@ -6,12 +6,12 @@
  */
 
 const WAGON_TYPES = [
-    { type: 'Крытый', synonyms: ['крыт', 'крытые', 'крытых'] },
-    { type: 'Полувагон', synonyms: ['полувагон', 'полувагоны', 'пв'] },
-    { type: 'Платформа', synonyms: ['платформ', 'платформы'] },
-    { type: 'Цистерна', synonyms: ['цистерн', 'цистерны', 'бочк'] },
-    { type: 'Зерновоз', synonyms: ['зерновоз'] },
-    { type: 'Хоппер', synonyms: ['хоппер'] },
+    { type: 'Крытый', synonyms: ['крыт', 'крытые', 'крытых', 'крытый'] },
+    { type: 'Полувагон', synonyms: ['полувагон', 'полувагоны', 'пв', 'полуваг'] },
+    { type: 'Платформа', synonyms: ['платформ', 'платформы', 'плат'] },
+    { type: 'Цистерна', synonyms: ['цистерн', 'цистерны', 'бочк', 'цист'] },
+    { type: 'Зерновоз', synonyms: ['зерновоз', 'зерновоз'] },
+    { type: 'Хоппер', synonyms: ['хоппер', 'хопп'] },
     { type: 'Рефрижератор', synonyms: ['реф', 'рефрижератор'] }
 ];
 const CARGO_TYPES = [
@@ -194,7 +194,7 @@ export const parsePrompt = (prompt) => {
 
     // C. Fallback: Remaining capitalized/unrecognized words
     if (!result.stationFrom || !result.stationTo) {
-        const stopWords = ['хочу', 'отправить', 'по', 'шт', 'т', 'вагон', 'вагонов', 'вагона', 'тонн', 'нужно', 'из', 'в', 'от', 'до', 'мне', 'заявк', 'создать', 'найти', 'ищу'];
+        const stopWords = ['хочу', 'отправить', 'по', 'шт', 'т', 'вагон', 'вагонов', 'вагона', 'вагоны', 'вагонах', 'вагоне', 'ваг', 'тонн', 'нужно', 'из', 'в', 'от', 'до', 'мне', 'заявк', 'создать', 'найти', 'ищу', 'нужны', 'нужен', 'нужна', 'подойдут', 'есть'];
         // Split by space, keeping hyphens intact
         const words = promptForStations.split(/\s+/).map(w => w.replace(/[.,]/g, ''));
 
@@ -216,4 +216,31 @@ export const parsePrompt = (prompt) => {
     }
 
     return result;
+};
+
+/**
+ * Returns missing required fields for 'create' intent.
+ * Minimum required: wagonType + stationFrom
+ */
+export const getMissingFields = (parsed) => {
+    const missing = [];
+    if (!parsed.wagonType) missing.push('wagonType');
+    if (!parsed.stationFrom) missing.push('stationFrom');
+    if (!parsed.stationTo) missing.push('stationTo');
+    return missing;
+};
+
+const CLARIFICATION_QUESTIONS = {
+    wagonType: 'Какой тип вагона нужен? (крытый, полувагон, цистерна, платформа, хоппер, реф)',
+    stationFrom: 'Укажите город отправления:',
+    stationTo: 'Укажите город назначения (необязательно, можно пропустить):',
+};
+
+export const getClarificationQuestion = (missingFields) => {
+    // Ask about most critical missing field first
+    if (missingFields.includes('wagonType') && missingFields.includes('stationFrom')) {
+        return 'Уточните: какой тип вагона и откуда? (например: крытые из Москвы)';
+    }
+    const first = missingFields.find(f => CLARIFICATION_QUESTIONS[f]);
+    return first ? CLARIFICATION_QUESTIONS[first] : null;
 };
