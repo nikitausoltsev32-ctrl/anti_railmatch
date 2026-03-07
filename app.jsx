@@ -76,7 +76,6 @@ import ChatWindow from './components/ChatWindow';
 import CreateRequestForm from './components/CreateRequestForm';
 import AiAgentBar from './components/AiAgentBar';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
-import FleetDislocation from './components/FleetDislocation';
 import { parsePrompt } from './src/aiService';
 
 // --- СУПАБЕЙЗ ИНИЦИАЛИЗАЦИЯ ---
@@ -931,7 +930,6 @@ export default function App() {
                             Мои заявки
                         </button>
                         <button onClick={() => setView('analytics')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'analytics' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Аналитика</button>
-                        <button onClick={() => setView('dislocation')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'dislocation' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Дислокация</button>
                         <button onClick={() => setView('messenger')} className={`text-sm font-black uppercase tracking-widest transition-all flex items-center gap-2 ${view === 'messenger' || view === 'chat' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>
                             Сообщения
                             {hasUnread && (
@@ -1079,7 +1077,6 @@ export default function App() {
 
                 {view === 'analytics' && <AnalyticsDashboard requests={requests} bids={bids} />}
 
-                {view === 'dislocation' && <FleetDislocation />}
 
                 {view === 'messenger' && (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[700px] animate-in fade-in slide-in-from-bottom-4 duration-700">

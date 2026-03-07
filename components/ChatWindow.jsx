@@ -84,9 +84,12 @@ export default function ChatWindow({
     const isMyBid = chat.ownerId === currentUserId;
     const contactsRevealed = chat.contacts_revealed || chat.status === 'contacts_revealed' || chat.status === 'accepted';
 
-    const partnerName = contactsRevealed
-        ? (isMyBid ? chat.shipperName : chat.ownerName) || 'Партнёр'
-        : 'Участник переговоров';
+    // Имя всегда показываем — это название компании партнёра.
+    // После оплаты комиссии дополнительно раскрываем телефон.
+    const partnerRawName = isMyBid ? chat.shipperName : chat.ownerName;
+    const partnerName = partnerRawName || (isMyBid ? 'Грузоотправитель' : 'Владелец вагонов');
+    // Название компании отдельно для subtitle после оплаты
+    const partnerCompany = contactsRevealed ? partnerRawName : null;
     const partnerPhone = contactsRevealed
         ? (isMyBid ? chat.shipperPhone : chat.ownerPhone)
         : null;
@@ -153,14 +156,23 @@ export default function ChatWindow({
                                     <span className="text-[9px] bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded font-black">ОЖИДАНИЕ ОПЛАТЫ</span>
                                 )}
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                {contactsRevealed && partnerPhone ? (
-                                    <span className="text-[9px] text-emerald-600 font-bold flex items-center gap-1">
-                                        <Phone className="w-3 h-3" /> {partnerPhone}
-                                    </span>
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                {contactsRevealed ? (
+                                    <>
+                                        {partnerCompany && (
+                                            <span className="text-[9px] text-slate-500 dark:text-slate-400 font-bold">
+                                                {partnerCompany}
+                                            </span>
+                                        )}
+                                        {partnerPhone && (
+                                            <span className="text-[9px] text-emerald-600 font-bold flex items-center gap-1">
+                                                <Phone className="w-3 h-3" /> {partnerPhone}
+                                            </span>
+                                        )}
+                                    </>
                                 ) : (
                                     <span className="text-[9px] text-slate-400 font-bold flex items-center gap-1">
-                                        <Lock className="w-3 h-3" /> Контакты скрыты до оплаты комиссии
+                                        <Lock className="w-3 h-3" /> Компания раскроется после оплаты комиссии
                                     </span>
                                 )}
                             </div>
