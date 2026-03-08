@@ -11,6 +11,7 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
         totalTons: initialData?.totalTons || '',
         targetPrice: initialData?.targetPrice || ''
     });
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         if (initialData) {
@@ -23,7 +24,43 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
         }
     }, [initialData]);
 
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+    };
+
+    const validate = () => {
+        const errs = {};
+        if (!formData.stationFrom.trim()) errs.stationFrom = 'Укажите станцию отправления';
+        if (!formData.stationTo.trim()) errs.stationTo = 'Укажите станцию назначения';
+        if (!formData.cargoType.trim()) errs.cargoType = 'Укажите груз';
+        if (!formData.totalWagons || Number(formData.totalWagons) <= 0)
+            errs.totalWagons = 'Количество вагонов должно быть больше 0';
+        if (formData.totalTons !== '' && Number(formData.totalTons) < 0)
+            errs.totalTons = 'Тоннаж не может быть отрицательным';
+        if (!formData.targetPrice || Number(formData.targetPrice) <= 0)
+            errs.targetPrice = 'Ставка должна быть больше 0';
+        return errs;
+    };
+
+    const handleSubmit = () => {
+        const errs = validate();
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
+        onPublish({
+            ...formData,
+            stationFrom: formData.stationFrom.trim(),
+            stationTo: formData.stationTo.trim(),
+            cargoType: formData.cargoType.trim(),
+        });
+    };
+
+    const isDisabled = !formData.stationFrom.trim() || !formData.stationTo.trim() ||
+        !formData.cargoType.trim() || !formData.totalWagons || Number(formData.totalWagons) <= 0 ||
+        !formData.targetPrice || Number(formData.targetPrice) <= 0;
 
     return (
         <div className="max-w-3xl mx-auto py-10 animate-in slide-in-from-bottom-4 duration-500">
@@ -46,15 +83,18 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Станция отправления</label>
-                            <input name="stationFrom" value={formData.stationFrom || ''} onChange={handleChange} placeholder="Напр. Екатеринбург" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="stationFrom" value={formData.stationFrom || ''} onChange={handleChange} placeholder="Напр. Екатеринбург" className={`w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 dark:text-white font-bold ${errors.stationFrom ? 'ring-2 ring-red-400 focus:ring-red-400' : 'focus:ring-blue-500'}`} />
+                            {errors.stationFrom && <p className="text-red-500 text-[11px] font-bold ml-4">{errors.stationFrom}</p>}
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Станция назначения</label>
-                            <input name="stationTo" value={formData.stationTo || ''} onChange={handleChange} placeholder="Напр. Москва" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="stationTo" value={formData.stationTo || ''} onChange={handleChange} placeholder="Напр. Москва" className={`w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 dark:text-white font-bold ${errors.stationTo ? 'ring-2 ring-red-400 focus:ring-red-400' : 'focus:ring-blue-500'}`} />
+                            {errors.stationTo && <p className="text-red-500 text-[11px] font-bold ml-4">{errors.stationTo}</p>}
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Груз</label>
-                            <input name="cargoType" value={formData.cargoType || ''} onChange={handleChange} placeholder="Напр. Уголь" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="cargoType" value={formData.cargoType || ''} onChange={handleChange} placeholder="Напр. Уголь" className={`w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 dark:text-white font-bold ${errors.cargoType ? 'ring-2 ring-red-400 focus:ring-red-400' : 'focus:ring-blue-500'}`} />
+                            {errors.cargoType && <p className="text-red-500 text-[11px] font-bold ml-4">{errors.cargoType}</p>}
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Тип вагона</label>
@@ -67,24 +107,24 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Количество вагонов (шт)</label>
-                            <input name="totalWagons" type="number" min="1" value={formData.totalWagons || ''} onChange={handleChange} placeholder="10" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="totalWagons" type="number" min="1" value={formData.totalWagons || ''} onChange={handleChange} placeholder="10" className={`w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 dark:text-white font-bold ${errors.totalWagons ? 'ring-2 ring-red-400 focus:ring-red-400' : 'focus:ring-blue-500'}`} />
+                            {errors.totalWagons && <p className="text-red-500 text-[11px] font-bold ml-4">{errors.totalWagons}</p>}
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Общий тоннаж (тонн)</label>
-                            <input name="totalTons" type="number" min="0" value={formData.totalTons || ''} onChange={handleChange} placeholder="600" className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold" />
+                            <input name="totalTons" type="number" min="0" value={formData.totalTons || ''} onChange={handleChange} placeholder="600" className={`w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 dark:text-white font-bold ${errors.totalTons ? 'ring-2 ring-red-400 focus:ring-red-400' : 'focus:ring-blue-500'}`} />
+                            {errors.totalTons && <p className="text-red-500 text-[11px] font-bold ml-4">{errors.totalTons}</p>}
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4 font-bold flex items-center gap-2">Ставка (₽ / ваг.) <Sparkles className="w-3 h-3 text-blue-500" /></label>
-                            <input name="targetPrice" type="number" min="1" value={formData.targetPrice || ''} onChange={handleChange} placeholder="Напр. 15000" className="w-full px-6 py-4 bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-black" />
+                            <input name="targetPrice" type="number" min="1" value={formData.targetPrice || ''} onChange={handleChange} placeholder="Напр. 15000" className={`w-full px-6 py-4 rounded-2xl outline-none focus:ring-2 dark:text-white font-black ${errors.targetPrice ? 'bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 ring-2 ring-red-400 focus:ring-red-400' : 'bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 focus:ring-blue-500'}`} />
+                            {errors.targetPrice && <p className="text-red-500 text-[11px] font-bold ml-4">{errors.targetPrice}</p>}
                         </div>
                     </div>
 
                     <button
-                        onClick={() => {
-                            if (!formData.stationFrom || !formData.stationTo || !formData.cargoType || !formData.totalWagons) return;
-                            onPublish(formData);
-                        }}
-                        disabled={!formData.stationFrom || !formData.stationTo || !formData.cargoType || !formData.totalWagons}
+                        onClick={handleSubmit}
+                        disabled={isDisabled}
                         className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-lg shadow-blue-500/20 uppercase tracking-widest transition-all hover:shadow-blue-500/40 active:scale-95 flex items-center justify-center gap-2">
                         Опубликовать заявку
                     </button>

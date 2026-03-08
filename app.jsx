@@ -3,6 +3,17 @@ import OnboardingModal from './components/OnboardingModal.jsx';
 import TermsModal from './components/TermsModal.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { PLATFORM_COMMISSION_RATE } from './src/constants.js';
+
+// ─── Sentry (раскомментировать после установки @sentry/react и настройки VITE_SENTRY_DSN) ───
+// import * as Sentry from '@sentry/react';
+// if (import.meta.env.VITE_SENTRY_DSN) {
+//     Sentry.init({
+//         dsn: import.meta.env.VITE_SENTRY_DSN,
+//         environment: import.meta.env.MODE,
+//         tracesSampleRate: 0.2,
+//         replaysOnErrorSampleRate: 1.0,
+//     });
+// }
 import {
     TrainFront, MapPin, Package, Calendar,
     Weight, Box, Filter, Search, ChevronDown,
@@ -189,25 +200,26 @@ export default function App() {
 
     // 2. АВТОРИЗАЦИЯ SUPABASE И ЗАГРУЗКА ПРОФИЛЯ
     useEffect(() => {
+        let mounted = true;
+
         const fetchProfile = async (userId, isInitialLogin = false) => {
             try {
                 const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+                if (!mounted) return;
                 if (error) {
                     console.error("Profile fetch error:", error);
-                    if (error.code === 'PGRST116') { // Not found
-                        // Maybe it's a new registration and the profile insert is still in progress
-                        // We wait a bit and retry once
+                    if (error.code === 'PGRST116') {
+                        // Новая регистрация — профиль ещё не вставлен, ждём и повторяем
                         setTimeout(async () => {
+                            if (!mounted) return;
                             const { data: retryData } = await supabase.from('profiles').select('*').eq('id', userId).single();
+                            if (!mounted) return;
                             if (retryData) {
                                 setUserProfile(retryData);
                                 if (isInitialLogin) {
                                     const savedScreen = localStorage.getItem('rm_screen');
                                     setScreen('app');
-                                    if (savedScreen !== 'app') {
-                                        setView('catalog');
-                                    }
-                                    // Онбординг для новых пользователей
+                                    if (savedScreen !== 'app') setView('catalog');
                                     const onboardedKey = `rm_onboarded_${userId}`;
                                     if (!retryData.onboarded && !localStorage.getItem(onboardedKey)) {
                                         setShowOnboarding(true);
@@ -228,10 +240,7 @@ export default function App() {
                     if (isInitialLogin) {
                         const savedScreen = localStorage.getItem('rm_screen');
                         setScreen('app');
-                        if (savedScreen !== 'app') {
-                            setView('catalog');
-                        }
-                        // Онбординг для новых пользователей
+                        if (savedScreen !== 'app') setView('catalog');
                         const onboardedKey = `rm_onboarded_${userId}`;
                         if (!data.onboarded && !localStorage.getItem(onboardedKey)) {
                             setShowOnboarding(true);
@@ -239,7 +248,7 @@ export default function App() {
                     }
                 }
             } catch (err) {
-                console.error("fetchProfile failed:", err);
+                if (mounted) console.error("fetchProfile failed:", err);
             }
         };
 
@@ -263,7 +272,10 @@ export default function App() {
             }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     // 3. СИНХРОНИЗАЦИЯ С БД (Supabase Realtime)
@@ -524,6 +536,29 @@ export default function App() {
             console.error("Error sending message:", err);
             // setSecurityWarning({ message: "Ошибка при отправке сообщения", severity: 'warning' });
         }
+    };
+
+    const handleCancelRequest = async (reqId) => {
+        if (!sbUser || !userProfile) return;
+        const req = requests.find(r => r.id === reqId);
+        if (!req || req.shipperInn !== userProfile.inn) return;
+
+        // Нельзя отменить заявку с принятыми сделками
+        const hasAccepted = bids.some(b => b.requestId === reqId && b.status === 'accepted');
+        if (hasAccepted) {
+            showToast('Нельзя отменить заявку — по ней уже есть принятая сделка.', 'warning');
+            return;
+        }
+
+        if (!window.confirm('Отменить заявку? Все входящие отклики будут закрыты.')) return;
+
+        const { error } = await supabase.from('requests').update({ status: 'cancelled' }).eq('id', reqId);
+        if (error) {
+            showToast('Ошибка при отмене заявки', 'error');
+            return;
+        }
+        setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'cancelled' } : r));
+        showToast('Заявка отменена и снята с биржи', 'info');
     };
 
     const handleConfirmDeal = async (bid) => {
@@ -890,8 +925,8 @@ export default function App() {
 
     // Filter requests for catalog — memoized to prevent re-filtering on every render
     const filteredCatalogRequests = useMemo(() => requests.filter(req => {
-        // Скрываем закрытые/завершённые заявки с биржи
-        if (req.status === 'completed' || req.status === 'closed') return false;
+        // Скрываем закрытые/завершённые/отменённые заявки с биржи
+        if (req.status === 'completed' || req.status === 'closed' || req.status === 'cancelled') return false;
 
         // Проверка ролей: владельцы видят заявки отправителей, а отправители — предложения владельцев
         if (userProfile && userProfile.role !== 'demo') {
@@ -1097,7 +1132,16 @@ export default function App() {
                                 <MessageSquare className="w-5 h-5 text-blue-600" /> Диалоги
                             </h2>
                             <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar">
-                                {(bids || []).filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn)).map(chatBid => {
+                                {(bids || [])
+                                    .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
+                                    .slice()
+                                    .sort((a, b) => {
+                                        // Сортировка по последнему сообщению или дате создания — новые вверху
+                                        const lastA = messages.filter(m => m.chat_id === a.id).at(-1)?.created_at ?? a.created_at;
+                                        const lastB = messages.filter(m => m.chat_id === b.id).at(-1)?.created_at ?? b.created_at;
+                                        return new Date(lastB) - new Date(lastA);
+                                    })
+                                    .map(chatBid => {
                                     const req = requests.find(r => r.id === chatBid.requestId);
                                     const isMeOwner = chatBid.ownerId === sbUser?.id;
                                     const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
@@ -1180,6 +1224,7 @@ export default function App() {
                             setView('chat');
                         }}
                         onAiCreate={handleAiCreate}
+                        onCancelRequest={handleCancelRequest}
                     />
                 )}
 

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowRight, Plus, Check, CheckCircle, Sparkles, TrendingUp, Package, Clock, ShieldCheck, MapPin, Truck, AlertCircle, Activity, Award, MessageSquare, Briefcase, BarChart2 } from 'lucide-react';
+import { ArrowRight, Plus, Check, CheckCircle, Sparkles, TrendingUp, Package, Clock, ShieldCheck, MapPin, Truck, AlertCircle, Activity, Award, MessageSquare, Briefcase, BarChart2, XCircle } from 'lucide-react';
 import { parsePrompt } from '../src/aiService';
 
-export default function MyRequestsView({ requests, bids, userInn, userRole, userId, profiles, setView, onAccept, onChat, onAiCreate }) {
+export default function MyRequestsView({ requests, bids, userInn, userRole, userId, profiles, setView, onAccept, onChat, onAiCreate, onCancelRequest }) {
     const myReqs = requests.filter(r => r.shipperInn === userInn);
     const myBids = bids.filter(b => b.ownerId === userId);
     const [aiPrompt, setAiPrompt] = useState("");
@@ -230,10 +230,18 @@ export default function MyRequestsView({ requests, bids, userInn, userRole, user
                                 <div key={req.id} className="bg-white dark:bg-[#111827] rounded-[2.5rem] border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden animate-in zoom-in-95 duration-500 hover:shadow-xl transition-shadow">
                                     <div className="p-8 flex flex-col md:flex-row justify-between gap-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-transparent">
                                         <div>
-                                            <div className="flex items-center gap-3 mb-4">
+                                            <div className="flex items-center gap-3 mb-4 flex-wrap">
                                                 <span className="text-[11px] font-bold text-slate-400">ID-{req.id.substring(0, 8)}</span>
                                                 <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${req.status === 'completed' ? 'bg-slate-200 text-slate-600' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>{req.status === 'open' ? 'Идет поиск' : 'Завершена'}</span>
                                                 <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">{req.wagonType}</span>
+                                                {onCancelRequest && (
+                                                    <button
+                                                        onClick={() => onCancelRequest(req.id)}
+                                                        className="ml-auto flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800/40"
+                                                    >
+                                                        <XCircle className="w-3.5 h-3.5" /> Отменить
+                                                    </button>
+                                                )}
                                             </div>
                                             <div className="text-2xl font-black dark:text-white flex items-center gap-4 mb-2">
                                                 <MapPin className="w-5 h-5 text-slate-400" /> {req.stationFrom} <ArrowRight className="w-5 h-5 text-blue-300" /> <MapPin className="w-5 h-5 text-slate-400" /> {req.stationTo}
