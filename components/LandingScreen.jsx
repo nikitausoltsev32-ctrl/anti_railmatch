@@ -84,7 +84,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                     {[
                         { value: '2.5%', label: 'Комиссия платформы', sub: 'vs. 15–20% у брокеров', color: 'text-blue-600 dark:text-blue-400' },
                         { value: '60 сек', label: 'Создание заявки', sub: 'с помощью AI-агента', color: 'text-indigo-600 dark:text-indigo-400' },
-                        { value: '100%', label: 'Защита оплаты', sub: 'через эскроу-счёт', color: 'text-emerald-600 dark:text-emerald-400' },
+                        { value: '100%', label: 'Прямые контакты', sub: 'партнёра после оплаты', color: 'text-emerald-600 dark:text-emerald-400' },
                         { value: '0 ₽', label: 'Абонентская плата', sub: 'платите только за результат', color: 'text-amber-600 dark:text-amber-400' },
                     ].map((stat, idx) => (
                         <div key={idx} className="group cursor-default">
@@ -110,7 +110,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                     <ul className="space-y-5 text-base font-bold text-slate-700 dark:text-slate-300">
                         <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><Check className="text-emerald-600 w-5 h-5" /></div> AI заполнит заявку за вас — достаточно одной фразы</li>
                         <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><Check className="text-emerald-600 w-5 h-5" /></div> Несколько ставок сразу — выбирайте лучшее предложение</li>
-                        <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><ShieldCheck className="text-emerald-600 w-5 h-5" /></div> Эскроу: деньги списываются только по факту выполнения</li>
+                        <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><ShieldCheck className="text-emerald-600 w-5 h-5" /></div> Комиссия 2.5% — и контакты партнёра открыты для расчётов</li>
                     </ul>
                 </div>
 
@@ -162,8 +162,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         },
                         {
                             step: '03',
-                            title: 'Закройте сделку через эскроу',
-                            desc: 'Обсудите детали в защищённом чате. Деньги замораживаются на эскроу-счёте и переходят владельцу только после подписания акта.',
+                            title: 'Оплатите комиссию — получите прямые контакты',
+                            desc: 'Согласуйте условия в защищённом чате. Оплатите комиссию 2.5% — и платформа раскроет телефон, ИНН и реквизиты партнёра. Расчёт — напрямую.',
                             icon: <ShieldCheck className="w-7 h-7" />,
                             color: 'emerald'
                         }
@@ -207,8 +207,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         },
                         {
                             icon: <Lock className="w-6 h-6" />,
-                            title: 'Эскроу-защита',
-                            desc: 'Деньги заморожены до подписания акта. Ни грузоотправитель, ни владелец не рискуют ни рублём.',
+                            title: 'Безопасный платёж',
+                            desc: 'Комиссия 2.5% подтверждает серьёзность обеих сторон и открывает прямые контакты партнёра. Никаких анонимных сделок.',
                             bg: 'bg-emerald-50 dark:bg-emerald-900/30',
                             text: 'text-emerald-600 dark:text-emerald-400'
                         },
@@ -255,8 +255,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         {
                             icon: <ShieldCheck className="w-8 h-8 text-blue-600 dark:text-blue-400" />,
                             bg: 'bg-blue-50 dark:bg-blue-900/30',
-                            title: 'Гарантия оплаты',
-                            desc: 'Средства замораживаются на эскроу-счёте до выполнения перевозки. Владелец вагонов получает деньги только после подписания акта.',
+                            title: 'Только реальные сделки',
+                            desc: 'Комиссия 2.5% отсеивает нецелевые запросы. Контакты раскрываются только тем, кто готов к сделке — платформа гарантирует серьёзность обеих сторон.',
                         },
                         {
                             icon: <UserCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />,
