@@ -632,14 +632,17 @@ export default function App() {
     };
 
     // mode: 'split' (half) | 'full' (full commission, contacts revealed immediately)
-    const handleCommissionPayment = async (bidId, mode, customDealAmount = null) => {
+    const handleCommissionPayment = async (bidId, mode) => {
         if (!sbUser || !userProfile) return;
         const isShipper = userProfile.role === 'shipper';
 
         const currentBid = bids.find(b => b.id === bidId) || activeChat;
         if (!currentBid) return;
 
-        const dealAmount = customDealAmount || currentBid.deal_amount || (currentBid.price * currentBid.wagons) || 0;
+        // Сумма сделки вычисляется только из канонических данных ставки.
+        // Никакие клиентские значения не принимаются — защита от занижения комиссии.
+        const dealAmount = (currentBid.price * currentBid.wagons) || currentBid.deal_amount || 0;
+        if (dealAmount <= 0) return;
         const commissionTotal = Math.round(dealAmount * 0.025);
         const now = new Date().toISOString();
 
@@ -1128,7 +1131,7 @@ export default function App() {
                                     userProfile={userProfile}
                                     onSend={(text) => handleSendMessage(activeChat.id, text)}
                                     onAccept={() => handleConfirmDeal(activeChat)}
-                                    onPayCommission={(mode, customAmount) => handleCommissionPayment(activeChat.id, mode, customAmount)}
+                                    onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
                                     onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
                                     onApproveCommission={() => handleApproveCommission(activeChat.id)}
                                     onRejectCommission={() => handleRejectCommission(activeChat.id)}
@@ -1210,7 +1213,7 @@ export default function App() {
                             userProfile={userProfile}
                             onSend={(text) => handleSendMessage(activeChat.id, text)}
                             onAccept={() => handleConfirmDeal(activeChat)}
-                            onPayCommission={(mode, customAmount) => handleCommissionPayment(activeChat.id, mode, customAmount)}
+                            onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
                             onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
                             onApproveCommission={() => handleApproveCommission(activeChat.id)}
                             onRejectCommission={() => handleRejectCommission(activeChat.id)}

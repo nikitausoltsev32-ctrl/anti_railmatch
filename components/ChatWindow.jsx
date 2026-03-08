@@ -22,8 +22,6 @@ export default function ChatWindow({
     const [isProcessingPayment, setIsProcessingPayment] = useState(false);
     const [docSigningType, setDocSigningType] = useState(null);
     const [timeLeft, setTimeLeft] = useState(null);
-    const [editedDealAmount, setEditedDealAmount] = useState(null);
-    const [isEditingAmount, setIsEditingAmount] = useState(false);
     const scrollRef = useRef(null);
 
     // Sync payment mode from agreed commission mode
@@ -94,7 +92,7 @@ export default function ChatWindow({
         ? (isMyBid ? chat.shipperPhone : chat.ownerPhone)
         : null;
 
-    const dealAmount = editedDealAmount ?? chat.deal_amount ?? ((chat.price * chat.wagons) || 0);
+    const dealAmount = chat.deal_amount ?? ((chat.price * chat.wagons) || 0);
     const commissionTotal = Math.round(dealAmount * 0.025);
     const commissionHalf = Math.round(commissionTotal / 2);
 
@@ -339,29 +337,7 @@ export default function ChatWindow({
                                 <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-5 space-y-3 border border-slate-100 dark:border-slate-800">
                                     <div className="flex justify-between items-center text-sm font-medium">
                                         <span className="text-slate-500">Сумма сделки</span>
-                                        {isEditingAmount ? (
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    value={editedDealAmount ?? dealAmount}
-                                                    onChange={e => setEditedDealAmount(Number(e.target.value))}
-                                                    className="w-36 px-3 py-1.5 bg-white dark:bg-slate-800 border border-blue-400 rounded-xl text-sm font-bold dark:text-white outline-none text-right"
-                                                    autoFocus
-                                                />
-                                                <button
-                                                    onClick={() => setIsEditingAmount(false)}
-                                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-black"
-                                                >OK</button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3">
-                                                <span className="dark:text-white font-bold">{dealAmount.toLocaleString()} ₽</span>
-                                                <button
-                                                    onClick={() => { setEditedDealAmount(dealAmount); setIsEditingAmount(true); }}
-                                                    className="text-[10px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-widest border border-blue-200 dark:border-blue-800 px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
-                                                >Изменить</button>
-                                            </div>
-                                        )}
+                                        <span className="dark:text-white font-bold">{dealAmount.toLocaleString()} ₽</span>
                                     </div>
                                     <div className="flex justify-between text-sm font-medium">
                                         <span className="text-slate-500">Комиссия платформы (2.5%)</span>
@@ -462,7 +438,7 @@ export default function ChatWindow({
                                         await new Promise(r => setTimeout(r, 2000));
                                         setIsProcessingPayment(false);
                                         setShowTinkoffModal(false);
-                                        await onPayCommission(paymentMode, editedDealAmount);
+                                        await onPayCommission(paymentMode);
                                     }}
                                     disabled={isProcessingPayment}
                                     className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-70 text-slate-900 rounded-xl font-black transition-all flex items-center justify-center gap-2"
