@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { downloadDocument } from './DocumentGenerator';
 import DocumentSigningModal from './DocumentSigningModal';
+import { PLATFORM_COMMISSION_RATE } from '../src/constants.js';
 
 export default function ChatWindow({
     chat, messages, currentUserId, userRole, userProfile,
@@ -93,7 +94,7 @@ export default function ChatWindow({
         : null;
 
     const dealAmount = chat.deal_amount ?? ((chat.price * chat.wagons) || 0);
-    const commissionTotal = Math.round(dealAmount * 0.025);
+    const commissionTotal = Math.round(dealAmount * PLATFORM_COMMISSION_RATE);
     const commissionHalf = Math.round(commissionTotal / 2);
 
     const myHalfPaid = isShipper ? chat.shipper_paid : chat.owner_paid;

@@ -1,3 +1,4 @@
+import { PLATFORM_COMMISSION_RATE } from '../src/constants.js';
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, FileText, Check, AlertCircle, ShieldCheck, Eye, Loader2, Sparkles } from 'lucide-react';
 import { downloadDocument, getDocumentBlob } from './DocumentGenerator';
@@ -57,7 +58,7 @@ const VALIDATORS = {
 // ============================================
 function getStageConfig(docType, deal) {
     const baseAmount = (deal.price || 0) * (deal.wagons || 0);
-    const commission = Math.round(baseAmount * 0.025);
+    const commission = Math.round(baseAmount * PLATFORM_COMMISSION_RATE);
 
     const configs = {
         contract: {

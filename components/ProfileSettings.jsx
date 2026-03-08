@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ShieldCheck, Settings, Bot, Users, FileText, Upload, Check, X, Mail, Phone, Building2, User, History, ArrowRight, Clock, TrendingUp, Wallet, Pencil, Save } from 'lucide-react';
 import { supabase } from '../src/supabaseClient';
+import { PLATFORM_COMMISSION_RATE, ALLOWED_DOC_TYPES, MAX_DOC_SIZE_BYTES } from '../src/constants.js';
 
 export default function ProfileSettings({ user, onLogout, bids = [], requests = [], showToast = () => {}, onProfileUpdate = () => {} }) {
     const [activeTab, setActiveTab] = useState('general');
@@ -35,19 +36,34 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
 
     const handleUpload = async () => {
         if (files.length === 0) return;
+
+        // Валидация перед загрузкой
+        for (const file of files) {
+            if (!ALLOWED_DOC_TYPES.includes(file.type)) {
+                showToast(`Недопустимый тип файла: ${file.name}. Разрешены PDF, JPG, PNG.`, 'error');
+                return;
+            }
+            if (file.size > MAX_DOC_SIZE_BYTES) {
+                showToast(`Файл ${file.name} превышает 10 МБ.`, 'error');
+                return;
+            }
+        }
+
         setUploading(true);
         try {
             const uploadedUrls = [];
 
             // Загружаем каждый файл в бакет 'Documents'
             for (const file of files) {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${user.id}_verification_${Date.now()}.${fileExt}`;
+                // Используем только расширение из разрешённого списка — не доверяем оригинальному имени
+                const mimeToExt = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+                const safeExt = mimeToExt[file.type] || 'bin';
+                const fileName = `${user.id}_verification_${Date.now()}.${safeExt}`;
                 const filePath = `verification/${fileName}`;
 
                 const { data, error: uploadError } = await supabase.storage
                     .from('Documents')
-                    .upload(filePath, file);
+                    .upload(filePath, file, { contentType: file.type });
 
                 if (uploadError) {
                     console.error("Ошибка загрузки файла в Storage:", uploadError);
@@ -303,7 +319,7 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                         const activeDeals = userDeals.filter(b => ['escrow_held', 'loading', 'in_transit', 'pending_payment'].includes(b.status));
 
                         const totalVolume = completedDeals.reduce((sum, b) => sum + (b.price * b.wagons), 0);
-                        const totalCommission = Math.round(totalVolume * 0.025);
+                        const totalCommission = Math.round(totalVolume * PLATFORM_COMMISSION_RATE);
 
                         const statusLabels = {
                             'pending': 'Ожидает',
@@ -370,7 +386,7 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                                             {activeDeals.map(deal => {
                                                 const relatedReq = requests.find(r => r.id === deal.requestId);
                                                 const amount = deal.price * deal.wagons;
-                                                const commission = Math.round(amount * 0.025);
+                                                const commission = Math.round(amount * PLATFORM_COMMISSION_RATE);
                                                 return (
                                                     <div key={deal.id} className="p-5 bg-slate-50 dark:bg-[#0B1120] rounded-[1.5rem] border dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-blue-200 dark:hover:border-blue-800 transition-all">
                                                         <div className="flex-1 min-w-0">
@@ -404,7 +420,7 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                                             {completedDeals.map(deal => {
                                                 const relatedReq = requests.find(r => r.id === deal.requestId);
                                                 const amount = deal.price * deal.wagons;
-                                                const commission = Math.round(amount * 0.025);
+                                                const commission = Math.round(amount * PLATFORM_COMMISSION_RATE);
                                                 return (
                                                     <div key={deal.id} className="p-5 bg-slate-50 dark:bg-[#0B1120] rounded-[1.5rem] border dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                                         <div className="flex-1 min-w-0">

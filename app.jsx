@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import OnboardingModal from './components/OnboardingModal.jsx';
 import TermsModal from './components/TermsModal.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import { PLATFORM_COMMISSION_RATE } from './src/constants.js';
 import {
     TrainFront, MapPin, Package, Calendar,
     Weight, Box, Filter, Search, ChevronDown,
@@ -397,6 +399,26 @@ export default function App() {
         localStorage.removeItem('rm_view');
     };
 
+    /**
+     * Строит нормализованный объект чата из ставки + заявки + профилей.
+     * Единственная точка сборки — гарантирует одинаковую форму везде.
+     */
+    const buildChatObject = useCallback((bid, req, profilesList) => {
+        const shipperProfile = (profilesList || profiles).find(p => p.inn === req?.shipperInn);
+        return {
+            ...bid,
+            stationFrom:  req?.stationFrom  ?? bid.stationFrom  ?? null,
+            stationTo:    req?.stationTo    ?? bid.stationTo    ?? null,
+            cargoType:    req?.cargoType    ?? bid.cargoType    ?? null,
+            wagonType:    req?.wagonType    ?? bid.wagonType    ?? null,
+            totalWagons:  req?.totalWagons  ?? bid.totalWagons  ?? null,
+            totalTons:    req?.totalTons    ?? bid.totalTons    ?? null,
+            shipperInn:   req?.shipperInn   ?? bid.shipperInn   ?? null,
+            shipperName:  shipperProfile?.company ?? bid.shipperName ?? 'Грузоотправитель',
+            shipperPhone: shipperProfile?.phone   ?? bid.shipperPhone ?? null,
+        };
+    }, [profiles]);
+
     const requireAuth = (callback) => {
         if (!sbUser || userProfile?.role === 'demo') {
             setShowDemoAlert(true);
@@ -408,22 +430,24 @@ export default function App() {
     const handleBidSubmit = async (price, wagons, tons) => {
         if (!sbUser || !userProfile) return;
 
+        // Проверка: владелец уже откликался на эту заявку
+        const alreadyBid = bids.find(
+            b => b.requestId === selectedRequest.id && b.ownerId === sbUser.id
+        );
+        if (alreadyBid) {
+            showToast("Вы уже откликнулись на эту заявку. Откройте чат для продолжения.", 'warning');
+            setIsModalOpen(false);
+            setActiveChat(buildChatObject(alreadyBid, selectedRequest, profiles));
+            setView('chat');
+            return;
+        }
+
         // Проверка лимита в 15 откликов на заявку
         const reqBids = bids.filter(b => b.requestId === selectedRequest.id);
         if (reqBids.length >= 15) {
             showToast("Лимит откликов на эту заявку (15) исчерпан.", 'warning');
             return;
         }
-
-        // Проверка глобального лимита пользователя (SaaS) - ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ MVP
-        /*
-        if (userProfile.role === 'owner' && (userProfile.bids_limit === undefined || userProfile.bids_limit <= 0)) {
-            alert("У вас исчерпан лимит откликов. Пополните баланс в профиле (Вкладка 'Биллинг').");
-            setView('profile');
-            setIsModalOpen(false);
-            return;
-        }
-        */
 
         const bidData = {
             requestId: selectedRequest.id,
@@ -443,12 +467,6 @@ export default function App() {
             return;
         }
 
-        if (userProfile.role === 'owner') {
-            const newLimit = (userProfile.bids_limit || 0) - 1;
-            await supabase.from('profiles').update({ bids_limit: newLimit }).eq('id', sbUser.id);
-            setUserProfile(prev => ({ ...prev, bids_limit: newLimit }));
-        }
-
         setIsModalOpen(false);
 
         // Уведомление грузоотправителю о новой ставке
@@ -461,18 +479,8 @@ export default function App() {
             );
         }
 
-        // Мгновенный переход в чат — обогащаем данными заявки и ставки
-        setActiveChat({
-            ...data,
-            stationFrom: selectedRequest.stationFrom,
-            stationTo: selectedRequest.stationTo,
-            cargoType: selectedRequest.cargoType,
-            wagonType: selectedRequest.wagonType,
-            totalWagons: selectedRequest.totalWagons,
-            totalTons: selectedRequest.totalTons,
-            shipperInn: selectedRequest.shipperInn,
-            shipperName: selectedRequest.shipperName || 'Загрузка...',
-        });
+        // Мгновенный переход в чат
+        setActiveChat(buildChatObject(data, selectedRequest, profiles));
         setView('chat');
     };
 
@@ -643,7 +651,7 @@ export default function App() {
         // Никакие клиентские значения не принимаются — защита от занижения комиссии.
         const dealAmount = (currentBid.price * currentBid.wagons) || currentBid.deal_amount || 0;
         if (dealAmount <= 0) return;
-        const commissionTotal = Math.round(dealAmount * 0.025);
+        const commissionTotal = Math.round(dealAmount * PLATFORM_COMMISSION_RATE);
         const now = new Date().toISOString();
 
         const myPaidField = isShipper ? 'shipper_paid' : 'owner_paid';
@@ -920,6 +928,7 @@ export default function App() {
     if (screen === 'auth') return <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />;
 
     return (
+        <ErrorBoundary>
         <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top">
             <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -1100,7 +1109,7 @@ export default function App() {
                                     return (
                                         <div
                                             key={chatBid.id}
-                                            onClick={() => setActiveChat({ ...chatBid, stationFrom: req?.stationFrom, stationTo: req?.stationTo, cargoType: req?.cargoType, wagonType: req?.wagonType || chatBid.wagonType, shipperInn: req?.shipperInn, shipperName: creatorProfile?.company || 'Неизвестно', shipperPhone: creatorProfile?.phone || 'Неизвестно' })}
+                                            onClick={() => setActiveChat(buildChatObject(chatBid, req, profiles))}
                                             className={`p-4 rounded-2xl cursor-pointer transition-all border ${isActive
                                                 ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20'
                                                 : 'bg-slate-50 dark:bg-slate-800/50 border-transparent hover:border-blue-300 dark:hover:border-slate-600'
@@ -1167,17 +1176,7 @@ export default function App() {
                         onAccept={handleConfirmDeal}
                         onChat={(b) => {
                             const req = requests.find(r => r.id === b.requestId);
-                            const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
-                            setActiveChat({
-                                ...b,
-                                stationFrom: req?.stationFrom,
-                                stationTo: req?.stationTo,
-                                cargoType: req?.cargoType,
-                                wagonType: req?.wagonType,
-                                shipperInn: req?.shipperInn,
-                                shipperName: creatorProfile?.company || userProfile?.company || 'Неизвестно',
-                                shipperPhone: creatorProfile?.phone || userProfile?.phone || 'Неизвестно'
-                            });
+                            setActiveChat(buildChatObject(b, req, profiles));
                             setView('chat');
                         }}
                         onAiCreate={handleAiCreate}
@@ -1256,6 +1255,7 @@ export default function App() {
                 <OnboardingModal role={userProfile.role} onComplete={handleOnboardingComplete} />
             )}
             {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
-        </div >
+        </div>
+        </ErrorBoundary>
     );
 }
