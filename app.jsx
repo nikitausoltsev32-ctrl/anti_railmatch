@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
     TrainFront, ArrowRight, AlertCircle, User,
-    MessageSquare, Sparkles, Moon, Sun, Ban
+    MessageSquare, Sparkles, Moon, Sun, Ban, Menu, X as XIcon
 } from 'lucide-react';
 
 import LandingScreen from './components/LandingScreen';
@@ -46,6 +46,7 @@ export default function App() {
     const [userProfile, setUserProfile] = useState(null);
     const [authMode, setAuthMode] = useState('login');
     const [authLoading, setAuthLoading] = useState(false);
+    const [authError, setAuthError] = useState(null);
     const [regRole, setRegRole] = useState('owner');
 
     // UI стейты
@@ -61,6 +62,8 @@ export default function App() {
     const [toasts, setToasts] = useState([]); // { id, message, type: 'success'|'error'|'warning'|'info' }
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [messengerMobileView, setMessengerMobileView] = useState('list'); // 'list' | 'chat'
 
     const showToast = useCallback((message, type = 'success') => {
         const id = Date.now() + Math.random();
@@ -186,7 +189,7 @@ export default function App() {
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
                 supabase.from('bids').select('*').order('created_at', { ascending: false }),
                 supabase.from('messages').select('*').order('created_at', { ascending: true }),
-                supabase.from('profiles').select('id, inn, role, company, phone'),
+                supabase.from('profiles').select('id, inn, role, company, name, phone'),
             ]);
             if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
@@ -256,10 +259,11 @@ export default function App() {
         const { company, inn, phone } = formData;
 
         if (!email || !password) {
-            showToast("Пожалуйста, заполните все поля", 'warning');
+            setAuthError("Пожалуйста, заполните все поля");
             return;
         }
 
+        setAuthError(null);
         setAuthLoading(true);
 
         try {
@@ -267,7 +271,8 @@ export default function App() {
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) {
                     console.error("Registration failed:", error);
-                    showToast("Ошибка регистрации: " + (error.message || "Проверьте данные"), 'error');
+                    const msg = error.message?.includes('already registered') ? "Такой аккаунт уже существует" : (error.message || "Проверьте данные");
+                    setAuthError(msg);
                     setAuthLoading(false);
                     return;
                 }
@@ -283,12 +288,12 @@ export default function App() {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     console.error("Login failed:", error);
-                    showToast("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message), 'error');
+                    setAuthError(error.status === 400 ? "Неверный email или пароль" : (error.message || "Ошибка входа"));
                 }
             }
         } catch (e) {
             console.error("Auth submit catch:", e);
-            showToast("Произошла непредвиденная ошибка", 'error');
+            setAuthError("Произошла непредвиденная ошибка");
         } finally {
             setAuthLoading(false);
         }
@@ -358,7 +363,6 @@ export default function App() {
             ownerId: sbUser.id,
             ownerName: userProfile.company,
             ownerPhone: userProfile.phone,
-            ownerInn: userProfile.inn,
             price: Number(price),
             wagons: Number(wagons),
             tons: Number(tons),
@@ -838,8 +842,16 @@ export default function App() {
         }
 
         if (!aiFilters) return true;
-        if (aiFilters.stationFrom && !req.stationFrom.toLowerCase().includes(aiFilters.stationFrom.toLowerCase())) return false;
-        if (aiFilters.stationTo && !req.stationTo.toLowerCase().includes(aiFilters.stationTo.toLowerCase())) return false;
+        // Bidirectional city matching: "Москва Челябинск" finds routes in both directions
+        if (aiFilters.stationFrom || aiFilters.stationTo) {
+            const sf = req.stationFrom.toLowerCase();
+            const st = req.stationTo.toLowerCase();
+            const af = aiFilters.stationFrom?.toLowerCase();
+            const at = aiFilters.stationTo?.toLowerCase();
+            const matchForward = (!af || sf.includes(af)) && (!at || st.includes(at));
+            const matchReverse = (!af || st.includes(af)) && (!at || sf.includes(at));
+            if (!matchForward && !matchReverse) return false;
+        }
         if (aiFilters.wagonType && !req.wagonType.toLowerCase().includes(aiFilters.wagonType.toLowerCase())) return false;
         if (aiFilters.cargoType && !req.cargoType.toLowerCase().includes(aiFilters.cargoType.toLowerCase())) return false;
         return true;
@@ -876,16 +888,16 @@ export default function App() {
 
     if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
-    if (screen === 'auth') return <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />;
+    if (screen === 'auth') return <AuthScreen mode={authMode} setMode={(m) => { setAuthMode(m); setAuthError(null); }} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); setAuthError(null); }} isDark={isDark} loading={authLoading} authError={authError} />;
 
     return (
         <ErrorBoundary>
         <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top">
             <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('catalog')}>
-                        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform"><TrainFront className="text-white w-5 h-5" /></div>
-                        <span className="text-2xl font-black tracking-tight dark:text-white hidden sm:block">RailMatch</span>
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform"><TrainFront className="text-white w-4 h-4 sm:w-5 sm:h-5" /></div>
+                        <span className="text-xl sm:text-2xl font-black tracking-tight dark:text-white">RailMatch</span>
                     </div>
                     <nav className="hidden md:flex items-center gap-8">
                         <button onClick={() => setView('catalog')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'catalog' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Биржа</button>
@@ -900,25 +912,43 @@ export default function App() {
                             )}
                         </button>
                     </nav>
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setIsDark(!isDark)} className="p-3 text-slate-400 hover:text-blue-600 hover:rotate-[360deg] hover:scale-110 active:scale-95 transition-all duration-700 ease-out rounded-2xl bg-slate-100 dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-blue-900/40 border border-transparent dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800 shadow-sm">
-                            {isDark ? <Sun className="w-5 h-5 text-orange-400" /> : <Moon className="w-5 h-5 text-indigo-500" />}
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <button onClick={() => setIsDark(!isDark)} className="p-2.5 sm:p-3 text-slate-400 hover:text-blue-600 active:scale-95 transition-all rounded-2xl bg-slate-100 dark:bg-slate-800/80 shadow-sm">
+                            {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />}
                         </button>
-
-                        {/* Removed Отклики Counter */}
-
-                        <div onClick={() => requireAuth(() => setView('profile'))} className="flex items-center gap-3 cursor-pointer pl-6 border-l dark:border-slate-800 group">
-                            <div className="text-right hidden sm:block">
+                        <div onClick={() => requireAuth(() => setView('profile'))} className="hidden sm:flex items-center gap-3 cursor-pointer pl-4 sm:pl-6 border-l dark:border-slate-800 group">
+                            <div className="text-right">
                                 <div className="text-sm font-bold group-hover:text-blue-600 transition-colors dark:text-white">{userProfile?.company || "Аноним"}</div>
                                 <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{userProfile?.role === 'shipper' ? 'Отправитель' : userProfile?.role === 'owner' ? 'Владелец' : 'Гость'}</div>
                             </div>
-                            <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-full flex items-center justify-center font-bold border border-slate-300 dark:border-slate-600 dark:text-white shadow-sm"><User className="w-5 h-5 text-slate-400" /></div>
+                            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-full flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-sm"><User className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" /></div>
                         </div>
+                        <button onClick={() => setMobileMenuOpen(o => !o)} className="md:hidden p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                            {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                        </button>
                     </div>
                 </div>
+                {/* Mobile dropdown menu */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden border-t border-slate-200/60 dark:border-slate-800/60 bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-xl px-4 py-4 flex flex-col gap-1">
+                        {[
+                            { label: 'Биржа', v: 'catalog' },
+                            { label: 'Мои заявки', v: 'my-requests' },
+                            { label: 'Аналитика', v: 'analytics' },
+                            { label: 'Сообщения', v: 'messenger', badge: hasUnread },
+                            { label: 'Профиль', v: 'profile' },
+                        ].map(item => (
+                            <button key={item.v} onClick={() => { setView(item.v === 'profile' ? 'profile' : item.v); if (item.v === 'profile') requireAuth(() => {}); setMobileMenuOpen(false); }}
+                                className={`flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest transition-all ${view === item.v ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                                {item.label}
+                                {item.badge && <span className="w-2 h-2 bg-red-500 rounded-full"></span>}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-10 relative">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 relative">
                 {/* SECURITY WARNING BANNER */}
                 {securityWarning && (
                     <div className={`mb-8 p-6 rounded-[2rem] border animate-in fade-in slide-in-from-top-4 duration-500 z-40 shadow-xl flex items-center gap-6 ${securityWarning.severity === 'critical'
@@ -1008,6 +1038,9 @@ export default function App() {
                                         </div>
                                     ) : sortedCatalogRequests.map((req, idx) => {
                                         const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
+                                        const hasMyBid = userProfile?.role === 'owner'
+                                            ? bids.some(b => b.requestId === req.id && b.ownerId === sbUser?.id)
+                                            : bids.some(b => b.requestId === req.id);
                                         return (
                                             <div key={req.id} className={idx < 3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
                                                 <RequestCard
@@ -1020,6 +1053,8 @@ export default function App() {
                                                     rank={idx}
                                                     creatorRole={creatorProfile?.role}
                                                     creatorCompany={creatorProfile?.company}
+                                                    creatorName={creatorProfile?.name}
+                                                    hasMyBid={hasMyBid}
                                                 />
                                             </div>
                                         );
@@ -1035,7 +1070,7 @@ export default function App() {
 
                 {view === 'messenger' && (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[700px] animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <div className="lg:col-span-1 bg-white dark:bg-[#111827] rounded-[2.5rem] border dark:border-slate-800 p-6 shadow-xl overflow-hidden flex flex-col">
+                        <div className={`lg:col-span-1 bg-white dark:bg-[#111827] rounded-[2.5rem] border dark:border-slate-800 p-6 shadow-xl overflow-hidden flex flex-col ${messengerMobileView === 'chat' ? 'hidden lg:flex' : ''}`}>
                             <h2 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tight flex items-center gap-2">
                                 <MessageSquare className="w-5 h-5 text-blue-600" /> Диалоги
                             </h2>
@@ -1060,7 +1095,7 @@ export default function App() {
                                     return (
                                         <div
                                             key={chatBid.id}
-                                            onClick={() => setActiveChat(buildChatObject(chatBid, req, profiles))}
+                                            onClick={() => { setActiveChat(buildChatObject(chatBid, req, profiles)); setMessengerMobileView('chat'); }}
                                             className={`p-4 rounded-2xl cursor-pointer transition-all border ${isActive
                                                 ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20'
                                                 : 'bg-slate-50 dark:bg-slate-800/50 border-transparent hover:border-blue-300 dark:hover:border-slate-600'
@@ -1081,24 +1116,29 @@ export default function App() {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-3">
+                        <div className={`lg:col-span-3 ${messengerMobileView === 'list' ? 'hidden lg:block' : ''}`}>
                             {activeChat ? (
-                                <ChatWindow
-                                    chat={activeChat}
-                                    messages={(messages || []).filter(m => m.chat_id === activeChat.id)}
-                                    currentUserId={sbUser?.id}
-                                    userRole={userProfile?.role}
-                                    userProfile={userProfile}
-                                    onSend={(text) => handleSendMessage(activeChat.id, text)}
-                                    onAccept={() => handleConfirmDeal(activeChat)}
-                                    onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
-                                    onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
-                                    onApproveCommission={() => handleApproveCommission(activeChat.id)}
-                                    onRejectCommission={() => handleRejectCommission(activeChat.id)}
-                                    onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
-                                    onDocSign={handleDocumentSign}
-                                    onBack={() => setActiveChat(null)}
-                                />
+                                <>
+                                    <button onClick={() => setMessengerMobileView('list')} className="lg:hidden mb-4 flex items-center gap-2 text-sm font-black text-slate-500 hover:text-blue-600 transition-colors">
+                                        <ArrowRight className="w-4 h-4 rotate-180" /> К диалогам
+                                    </button>
+                                    <ChatWindow
+                                        chat={activeChat}
+                                        messages={(messages || []).filter(m => m.chat_id === activeChat.id)}
+                                        currentUserId={sbUser?.id}
+                                        userRole={userProfile?.role}
+                                        userProfile={userProfile}
+                                        onSend={(text) => handleSendMessage(activeChat.id, text)}
+                                        onAccept={() => handleConfirmDeal(activeChat)}
+                                        onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
+                                        onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
+                                        onApproveCommission={() => handleApproveCommission(activeChat.id)}
+                                        onRejectCommission={() => handleRejectCommission(activeChat.id)}
+                                        onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
+                                        onDocSign={handleDocumentSign}
+                                        onBack={() => setActiveChat(null)}
+                                    />
+                                </>
                             ) : (
                                 <div className="h-full bg-white dark:bg-[#111827] rounded-[3.5rem] border-2 border-dashed dark:border-slate-800 flex flex-col items-center justify-center text-center p-10">
                                     <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 mb-6">

@@ -9,7 +9,7 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
     const [uploading, setUploading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [editData, setEditData] = useState({ company: user.company || '', phone: user.phone || '' });
+    const [editData, setEditData] = useState({ company: user.company || '', phone: user.phone || '', name: user.name || '' });
 
     const handleFileDrop = (e) => {
         e.preventDefault();
@@ -21,9 +21,9 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
         if (!editData.company.trim()) { showToast('Название компании не может быть пустым', 'warning'); return; }
         setSaving(true);
         try {
-            const { error } = await supabase.from('profiles').update({ company: editData.company.trim(), phone: editData.phone.trim() }).eq('id', user.id);
+            const { error } = await supabase.from('profiles').update({ company: editData.company.trim(), phone: editData.phone.trim(), name: editData.name.trim() }).eq('id', user.id);
             if (error) throw error;
-            onProfileUpdate({ company: editData.company.trim(), phone: editData.phone.trim() });
+            onProfileUpdate({ company: editData.company.trim(), phone: editData.phone.trim(), name: editData.name.trim() });
             showToast('Профиль обновлён', 'success');
             setIsEditing(false);
         } catch (err) {
@@ -155,7 +155,7 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                                         <div className="px-5 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-widest border border-blue-100 dark:border-blue-800">Тариф: {user.plan}</div>
                                     )}
                                     {!isEditing ? (
-                                        <button onClick={() => { setEditData({ company: user.company || '', phone: user.phone || '' }); setIsEditing(true); }} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 transition-all">
+                                        <button onClick={() => { setEditData({ company: user.company || '', phone: user.phone || '', name: user.name || '' }); setIsEditing(true); }} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 transition-all">
                                             <Pencil className="w-3.5 h-3.5" /> Редактировать
                                         </button>
                                     ) : (
@@ -189,6 +189,14 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                                         <input value={editData.phone} onChange={e => setEditData(p => ({ ...p, phone: e.target.value }))} placeholder="+7 (___) ___-__-__" className="w-full text-xl font-black bg-white dark:bg-slate-800 dark:text-white px-3 py-2 rounded-xl border border-blue-400 outline-none focus:ring-2 focus:ring-blue-500" />
                                     ) : (
                                         <p className="text-xl font-black dark:text-white">{user.phone || 'Не указан'}</p>
+                                    )}
+                                </div>
+                                <div className="space-y-2 p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Имя контактного лица</p>
+                                    {isEditing ? (
+                                        <input value={editData.name} onChange={e => setEditData(p => ({ ...p, name: e.target.value }))} placeholder="Иванов Иван Иванович" className="w-full text-xl font-black bg-white dark:bg-slate-800 dark:text-white px-3 py-2 rounded-xl border border-blue-400 outline-none focus:ring-2 focus:ring-blue-500" />
+                                    ) : (
+                                        <p className="text-xl font-black dark:text-white">{user.name || 'Не указано'}</p>
                                     )}
                                 </div>
                             </div>

@@ -11,7 +11,7 @@ const validatePhone = (phone) => {
     return digits.length >= 10 && digits.length <= 12;
 };
 
-export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading }) {
+export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading, authError }) {
     const [formData, setFormData] = useState({
         email: '', password: '', company: '', inn: '', phone: ''
     });
@@ -63,6 +63,12 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                                 <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.phone ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
                                 {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}
                             </div>
+                        </div>
+                    )}
+
+                    {authError && (
+                        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-red-600 dark:text-red-400 text-sm font-bold text-center">
+                            {authError}
                         </div>
                     )}
 
