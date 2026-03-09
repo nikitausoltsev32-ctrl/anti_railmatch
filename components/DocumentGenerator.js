@@ -1,3 +1,5 @@
+// Constants
+const PLATFORM_COMMISSION_RATE = 0.025;
 /**
  * DocumentGenerator.js
  * Генерация юридически корректных PDF-документов для RailMatch
@@ -284,7 +286,7 @@ function renderContract(doc, d) {
     doc.setFontSize(8.5);
 
     const baseAmount = (d.price || 0) * (d.wagons || 0);
-    const commission = Math.round(baseAmount * 0.025);
+    const commission = Math.round(baseAmount * PLATFORM_COMMISSION_RATE);
     const nds = Math.round(baseAmount * 0.2);
 
     const cost = [
@@ -582,7 +584,7 @@ function renderUPD(doc, d) {
     doc.text(`Договор: № ${d.contractNumber || d.docNumber} от ${fmtDate(d.contractDate || d.date)}`, MARGIN, y); y += 8;
 
     // Комиссия платформы
-    const commission = Math.round(baseAmount * 0.025);
+    const commission = Math.round(baseAmount * PLATFORM_COMMISSION_RATE);
     doc.setDrawColor(226, 232, 240);
     doc.line(MARGIN, y, PAGE_W - MARGIN, y); y += 5;
     doc.setFontSize(7.5);

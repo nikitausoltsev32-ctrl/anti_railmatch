@@ -1,60 +1,12 @@
-import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
-    TrainFront, MapPin, Package, Calendar,
-    Weight, Box, Filter, Search, ChevronDown,
-    ArrowRight, ShieldCheck, Zap,
-    Clock, CheckCircle, PieChart, Wallet, TrendingUp,
-    X, AlertCircle, Info, Lock, Mail, User, Building2,
-    MessageSquare, Send, Phone, Paperclip, MoreVertical,
-    Settings, CreditCard, Share2, Award, History, Copy,
-    Sparkles, Bot, Plus, Moon, Sun, ArrowUpRight, Check,
-    Briefcase, Activity, FileText, Handshake, Eye, Shield, AlertTriangle, Ban
+    TrainFront, ArrowRight, AlertCircle, User,
+    MessageSquare, Sparkles, Moon, Sun, Ban
 } from 'lucide-react';
 
-// --- БИЗНЕС-ЛОГИКА БЕЗОПАСНОСТИ ---
-const STOP_WORDS = [
-    'давайте в обход', 'скину в телегу', 'оплата на карту', 'наберите мне напрямую',
-    'мой номер', 'мой телефон', 'пишите в вотсап', 'связаться в телеграме',
-    'перезвоните на', 'мои реквизиты', 'оплатить на карту',
-    'контакты', 'телефон', 'email', 'почта', 'whatsapp', 'telegram', 'viber', 'личку', 'в личку',
-    'direct', 'директ', 'мобильный', 'сотовый', 'созвонимся', '@', '.ru', '.com', '.net'
-];
-
-const MAX_PROFILE_VIEWS_PER_DAY = 50;
-
-const AI_PRICING_BASE_RATES = {
-    'уголь': 15000, 'нефтепродукты': 18000, 'металл': 12000,
-    'зерно': 8000, 'цемент': 10000, 'соль': 7000,
-    'цветные металлы': 14000, 'минеральные удобрения': 13000,
-    'лес': 9000, 'строительные материалы': 11000
-};
-
-const SEASONAL_MULTIPLIERS = {
-    'winter': 1.15, 'summer': 1.10, 'autumn': 1.05, 'spring': 1.00
-};
-
-const calculateAiPrice = (req) => {
-    if (!req) return 0;
-    const cargoKey = req.cargoType?.toLowerCase() || '';
-    const base = AI_PRICING_BASE_RATES[cargoKey] || 12000;
-    let multiplier = 1.0;
-
-    // 1. Коэффициент объема (Volume Discount)
-    if (req.totalWagons >= 50) multiplier *= 0.95;
-    else if (req.totalWagons >= 10) multiplier *= 0.97;
-
-    // 2. Сезонный множитель (Seasonal Multiplier: +15% в Март/Октябрь)
-    const month = new Date().getMonth();
-    if ([2, 9].includes(month)) multiplier *= 1.15;
-
-    return Math.round(base * multiplier);
-};
-
-// --- ИМПОРТЫ КОМПОНЕНТОВ ---
 import LandingScreen from './components/LandingScreen';
 import AuthScreen from './components/AuthScreen';
 import RequestCard from './components/RequestCard';
-import MyBidsView from './components/MyBidsView';
 import MyRequestsView from './components/MyRequestsView';
 import BidModal from './components/BidModal';
 import DemoModal from './components/DemoModal';
@@ -63,49 +15,13 @@ import ChatWindow from './components/ChatWindow';
 import CreateRequestForm from './components/CreateRequestForm';
 import AiAgentBar from './components/AiAgentBar';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
-import FleetDislocation from './components/FleetDislocation';
-import { parsePrompt } from './src/aiService';
+import OnboardingModal from './components/OnboardingModal.jsx';
+import TermsModal from './components/TermsModal.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
-// --- СУПАБЕЙЗ ИНИЦИАЛИЗАЦИЯ ---
 import { supabase } from './src/supabaseClient';
-
-// --- УТИЛИТЫ ЗАЩИТЫ (ANTI-LEAKAGE) ---
-const maskContact = (text, isSecured) => {
-    if (!text) return '';
-    if (isSecured) return text;
-    // Маскируем телефон или email
-    if (text.includes('@')) {
-        const [name, domain] = text.split('@');
-        return `${name[0]}***@${domain}`;
-    }
-    return text.replace(/(\+?\d)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 ($2) ***-**-$5');
-};
-
-const validateMessageIntent = (text) => {
-    const lower = text.toLowerCase();
-    // 1. Улучшенная регулярка для телефонов (ловит +7, 8900..., а также варианты с пробелами и точками)
-    const normalized = text.replace(/[\s-().]/g, '');
-    const hasPhone = /(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}/.test(text) || /(\d{7,})/.test(normalized);
-
-    // 2. Проверка стоп-слов
-    const hasStopWord = STOP_WORDS.some(sw => lower.includes(sw));
-
-    // 3. Проверка на "хитрые" попытки (т.е.л.е.ф.о.н или похожие)
-    const isObfuscated = STOP_WORDS.some(sw => {
-        if (sw.length < 3) return false;
-        const pattern = sw.split('').join('\\s*[-._]*\\s*');
-        return new RegExp(pattern, 'i').test(lower);
-    });
-
-    if (hasPhone || hasStopWord || isObfuscated) {
-        return {
-            valid: false,
-            cleaned: '[КОНТАКТЫ СКРЫТЫ СИСТЕМОЙ БЕЗОПАСНОСТИ - Оплата в обход платформы ведет к блокировке аккаунта]',
-            isViolation: true
-        };
-    }
-    return { valid: true, cleaned: text, isViolation: false };
-};
+import { PLATFORM_COMMISSION_RATE } from './src/constants.js';
+import { validateMessageIntent } from './src/security.js';
 
 // --- ГЛАВНЫЙ КОМПОНЕНТ ---
 export default function App() {
@@ -142,41 +58,69 @@ export default function App() {
     const [isAiSearching, setIsAiSearching] = useState(false);
     const [quickFilter, setQuickFilter] = useState({ wagonType: null, direction: null });
     const [securityWarning, setSecurityWarning] = useState(null); // { message: string, severity: 'warning' | 'critical' }
+    const [toasts, setToasts] = useState([]); // { id, message, type: 'success'|'error'|'warning'|'info' }
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showTerms, setShowTerms] = useState(false);
 
-    // 1. ШРИФТ И ТЕМА
+    const showToast = useCallback((message, type = 'success') => {
+        const id = Date.now() + Math.random();
+        setToasts(prev => [...prev, { id, message, type }]);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4500);
+    }, []);
+
+    // Email-уведомление партнёру через Edge Function (non-blocking, fire-and-forget)
+    const sendNotification = useCallback(async (toUserId, subject, bodyText) => {
+        if (!toUserId) return;
+        try {
+            await supabase.functions.invoke('notify', { body: { userId: toUserId, subject, bodyText } });
+        } catch (e) {
+            console.warn('Email notification skipped:', e);
+        }
+    }, []);
+
+    // 1a. ШРИФТ — загружается один раз при монтировании
     useEffect(() => {
         const link = document.createElement('link');
         link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap';
         link.rel = 'stylesheet';
         document.head.appendChild(link);
-        if (isDark) document.documentElement.classList.add('dark');
-        else document.documentElement.classList.remove('dark');
         return () => document.head.removeChild(link);
+    }, []);
+
+    // 1b. ТЕМА — реагирует на isDark
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', isDark);
     }, [isDark]);
 
     // 2. АВТОРИЗАЦИЯ SUPABASE И ЗАГРУЗКА ПРОФИЛЯ
     useEffect(() => {
+        let mounted = true;
+
         const fetchProfile = async (userId, isInitialLogin = false) => {
             try {
                 const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+                if (!mounted) return;
                 if (error) {
                     console.error("Profile fetch error:", error);
-                    if (error.code === 'PGRST116') { // Not found
-                        // Maybe it's a new registration and the profile insert is still in progress
-                        // We wait a bit and retry once
+                    if (error.code === 'PGRST116') {
+                        // Новая регистрация — профиль ещё не вставлен, ждём и повторяем
                         setTimeout(async () => {
+                            if (!mounted) return;
                             const { data: retryData } = await supabase.from('profiles').select('*').eq('id', userId).single();
+                            if (!mounted) return;
                             if (retryData) {
                                 setUserProfile(retryData);
                                 if (isInitialLogin) {
                                     const savedScreen = localStorage.getItem('rm_screen');
                                     setScreen('app');
-                                    if (savedScreen !== 'app') {
-                                        setView('catalog');
+                                    if (savedScreen !== 'app') setView('catalog');
+                                    const onboardedKey = `rm_onboarded_${userId}`;
+                                    if (!retryData.onboarded && !localStorage.getItem(onboardedKey)) {
+                                        setShowOnboarding(true);
                                     }
                                 }
                             } else {
-                                alert("Профиль не найден. Если вы только что зарегистрировались, попробуйте войти через минуту.");
+                                showToast("Профиль не найден. Попробуйте войти через минуту.", 'error');
                                 await supabase.auth.signOut();
                             }
                         }, 1500);
@@ -190,13 +134,15 @@ export default function App() {
                     if (isInitialLogin) {
                         const savedScreen = localStorage.getItem('rm_screen');
                         setScreen('app');
-                        if (savedScreen !== 'app') {
-                            setView('catalog');
+                        if (savedScreen !== 'app') setView('catalog');
+                        const onboardedKey = `rm_onboarded_${userId}`;
+                        if (!data.onboarded && !localStorage.getItem(onboardedKey)) {
+                            setShowOnboarding(true);
                         }
                     }
                 }
             } catch (err) {
-                console.error("fetchProfile failed:", err);
+                if (mounted) console.error("fetchProfile failed:", err);
             }
         };
 
@@ -220,7 +166,10 @@ export default function App() {
             }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     // 3. СИНХРОНИЗАЦИЯ С БД (Supabase Realtime)
@@ -228,33 +177,29 @@ export default function App() {
         if (!sbUser) return;
 
         const fetchInitialData = async () => {
-            const { data: initialRequests, error: reqError } = await supabase.from('requests').select('*').order('created_at', { ascending: false });
+            const [
+                { data: initialRequests, error: reqError },
+                { data: initialBids },
+                { data: initialMessages },
+                { data: initialProfiles },
+            ] = await Promise.all([
+                supabase.from('requests').select('*').order('created_at', { ascending: false }),
+                supabase.from('bids').select('*').order('created_at', { ascending: false }),
+                supabase.from('messages').select('*').order('created_at', { ascending: true }),
+                supabase.from('profiles').select('id, inn, role, company, phone'),
+            ]);
             if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
-
-
-            const { data: initialBids } = await supabase.from('bids').select('*').order('created_at', { ascending: false });
             if (initialBids) setBids(initialBids);
-
-            const { data: initialMessages } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
             if (initialMessages) setMessages(initialMessages);
-
-            const { data: initialProfiles } = await supabase.from('profiles').select('inn, role, company');
             if (initialProfiles) setProfiles(initialProfiles);
         };
         fetchInitialData();
 
         const requestChannel = supabase.channel('public:requests')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, async (payload) => {
-                if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                    // Fetch full data with join for the new/updated record
-                    const { data, error } = await supabase.from('requests').select('*').eq('id', payload.new.id).single();
-                    if (error) console.error("Realtime request fetch error:", error);
-                    if (data) {
-                        if (payload.eventType === 'INSERT') setRequests(prev => [data, ...prev]);
-                        else setRequests(prev => prev.map(r => r.id === data.id ? data : r));
-                    }
-                }
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, (payload) => {
+                if (payload.eventType === 'INSERT') setRequests(prev => [payload.new, ...prev]);
+                else if (payload.eventType === 'UPDATE') setRequests(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
                 else if (payload.eventType === 'DELETE') setRequests(prev => prev.filter(r => r.id !== payload.old.id));
             }).subscribe();
 
@@ -290,6 +235,14 @@ export default function App() {
 
     // --- ЛОГИКА ---
 
+    const handleOnboardingComplete = useCallback(async () => {
+        setShowOnboarding(false);
+        if (sbUser) {
+            localStorage.setItem(`rm_onboarded_${sbUser.id}`, '1');
+            await supabase.from('profiles').update({ onboarded: true }).eq('id', sbUser.id);
+        }
+    }, [sbUser]);
+
     const handleEnterDemo = () => {
         setUserProfile({ name: 'Гость', company: 'Демо режим', role: 'demo', inn: '000000' });
         setScreen('app');
@@ -303,7 +256,7 @@ export default function App() {
         const { company, inn, phone } = formData;
 
         if (!email || !password) {
-            alert("Пожалуйста, заполните все поля");
+            showToast("Пожалуйста, заполните все поля", 'warning');
             return;
         }
 
@@ -314,7 +267,7 @@ export default function App() {
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) {
                     console.error("Registration failed:", error);
-                    alert("Ошибка регистрации: " + (error.message || "Проверьте данные"));
+                    showToast("Ошибка регистрации: " + (error.message || "Проверьте данные"), 'error');
                     setAuthLoading(false);
                     return;
                 }
@@ -330,12 +283,12 @@ export default function App() {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     console.error("Login failed:", error);
-                    alert("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message));
+                    showToast("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message), 'error');
                 }
             }
         } catch (e) {
             console.error("Auth submit catch:", e);
-            alert("Произошла непредвиденная ошибка");
+            showToast("Произошла непредвиденная ошибка", 'error');
         } finally {
             setAuthLoading(false);
         }
@@ -348,33 +301,57 @@ export default function App() {
         localStorage.removeItem('rm_view');
     };
 
-    const requireAuth = (callback) => {
+    /**
+     * Строит нормализованный объект чата из ставки + заявки + профилей.
+     * Единственная точка сборки — гарантирует одинаковую форму везде.
+     */
+    const buildChatObject = useCallback((bid, req, profilesList) => {
+        const shipperProfile = (profilesList || profiles).find(p => p.inn === req?.shipperInn);
+        return {
+            ...bid,
+            stationFrom:  req?.stationFrom  ?? bid.stationFrom  ?? null,
+            stationTo:    req?.stationTo    ?? bid.stationTo    ?? null,
+            cargoType:    req?.cargoType    ?? bid.cargoType    ?? null,
+            wagonType:    req?.wagonType    ?? bid.wagonType    ?? null,
+            totalWagons:  req?.totalWagons  ?? bid.totalWagons  ?? null,
+            totalTons:    req?.totalTons    ?? bid.totalTons    ?? null,
+            shipperInn:   req?.shipperInn   ?? bid.shipperInn   ?? null,
+            shipperName:  shipperProfile?.company ?? bid.shipperName ?? 'Грузоотправитель',
+            shipperPhone: shipperProfile?.phone   ?? bid.shipperPhone ?? null,
+        };
+    }, [profiles]);
+
+    const securityWarningTimerRef = useRef(null);
+
+    const requireAuth = useCallback((callback) => {
         if (!sbUser || userProfile?.role === 'demo') {
             setShowDemoAlert(true);
             return false;
         }
         callback();
-    };
+    }, [sbUser, userProfile?.role]);
 
     const handleBidSubmit = async (price, wagons, tons) => {
         if (!sbUser || !userProfile) return;
 
-        // Проверка лимита в 15 откликов на заявку
-        const reqBids = bids.filter(b => b.requestId === selectedRequest.id);
-        if (reqBids.length >= 15) {
-            alert("Лимит откликов на эту заявку (15) исчерпан.");
+        // Проверка: владелец уже откликался на эту заявку
+        const alreadyBid = bids.find(
+            b => b.requestId === selectedRequest.id && b.ownerId === sbUser.id
+        );
+        if (alreadyBid) {
+            showToast("Вы уже откликнулись на эту заявку. Откройте чат для продолжения.", 'warning');
+            setIsModalOpen(false);
+            setActiveChat(buildChatObject(alreadyBid, selectedRequest, profiles));
+            setView('chat');
             return;
         }
 
-        // Проверка глобального лимита пользователя (SaaS) - ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ MVP
-        /*
-        if (userProfile.role === 'owner' && (userProfile.bids_limit === undefined || userProfile.bids_limit <= 0)) {
-            alert("У вас исчерпан лимит откликов. Пополните баланс в профиле (Вкладка 'Биллинг').");
-            setView('profile');
-            setIsModalOpen(false);
+        // Проверка лимита в 15 откликов на заявку
+        const reqBids = bids.filter(b => b.requestId === selectedRequest.id);
+        if (reqBids.length >= 15) {
+            showToast("Лимит откликов на эту заявку (15) исчерпан.", 'warning');
             return;
         }
-        */
 
         const bidData = {
             requestId: selectedRequest.id,
@@ -394,25 +371,20 @@ export default function App() {
             return;
         }
 
-        if (userProfile.role === 'owner') {
-            const newLimit = (userProfile.bids_limit || 0) - 1;
-            await supabase.from('profiles').update({ bids_limit: newLimit }).eq('id', sbUser.id);
-            setUserProfile(prev => ({ ...prev, bids_limit: newLimit }));
+        setIsModalOpen(false);
+
+        // Уведомление грузоотправителю о новой ставке
+        const shipperProfile = profiles.find(p => p.inn === selectedRequest.shipperInn);
+        if (shipperProfile?.id) {
+            sendNotification(
+                shipperProfile.id,
+                'Новая ставка на вашу заявку — RailMatch',
+                `Компания «${userProfile.company}» откликнулась на вашу заявку:\n${selectedRequest.stationFrom} → ${selectedRequest.stationTo}, ${selectedRequest.cargoType}.\n\nЦена: ${Number(price).toLocaleString()} ₽ · Вагонов: ${wagons} · Тонн: ${tons}\n\nОткройте платформу, чтобы продолжить переговоры.`
+            );
         }
 
-        setIsModalOpen(false);
-        // Мгновенный переход в чат — обогащаем данными заявки и ставки
-        setActiveChat({
-            ...data,
-            stationFrom: selectedRequest.stationFrom,
-            stationTo: selectedRequest.stationTo,
-            cargoType: selectedRequest.cargoType,
-            wagonType: selectedRequest.wagonType,
-            totalWagons: selectedRequest.totalWagons,
-            totalTons: selectedRequest.totalTons,
-            shipperInn: selectedRequest.shipperInn,
-            shipperName: selectedRequest.shipperName || 'Загрузка...',
-        });
+        // Мгновенный переход в чат
+        setActiveChat(buildChatObject(data, selectedRequest, profiles));
         setView('chat');
     };
 
@@ -442,8 +414,8 @@ export default function App() {
                     });
                 }
 
-                // Скрываем предупреждение через 5 секунд
-                setTimeout(() => setSecurityWarning(null), 5000);
+                clearTimeout(securityWarningTimerRef.current);
+                securityWarningTimerRef.current = setTimeout(() => setSecurityWarning(null), 5000);
             }
 
             const { error } = await supabase.from('messages').insert([{
@@ -456,6 +428,29 @@ export default function App() {
             console.error("Error sending message:", err);
             // setSecurityWarning({ message: "Ошибка при отправке сообщения", severity: 'warning' });
         }
+    };
+
+    const handleCancelRequest = async (reqId) => {
+        if (!sbUser || !userProfile) return;
+        const req = requests.find(r => r.id === reqId);
+        if (!req || req.shipperInn !== userProfile.inn) return;
+
+        // Нельзя отменить заявку с принятыми сделками
+        const hasAccepted = bids.some(b => b.requestId === reqId && b.status === 'accepted');
+        if (hasAccepted) {
+            showToast('Нельзя отменить заявку — по ней уже есть принятая сделка.', 'warning');
+            return;
+        }
+
+        if (!window.confirm('Отменить заявку? Все входящие отклики будут закрыты.')) return;
+
+        const { error } = await supabase.from('requests').update({ status: 'cancelled' }).eq('id', reqId);
+        if (error) {
+            showToast('Ошибка при отмене заявки', 'error');
+            return;
+        }
+        setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'cancelled' } : r));
+        showToast('Заявка отменена и снята с биржи', 'info');
     };
 
     const handleConfirmDeal = async (bid) => {
@@ -474,134 +469,173 @@ export default function App() {
 
             if (error) throw error;
 
-            // Если оба подтвердили -> переходим в статус ожидания оплаты
             const fullyConfirmed = updatedBid.shipper_confirmed && updatedBid.owner_confirmed;
 
             if (fullyConfirmed && updatedBid.status === 'pending') {
-                await supabase.from('bids').update({ status: 'pending_payment' }).eq('id', bid.id);
-                setActiveChat(prev => ({ ...prev, ...updateField, status: 'pending_payment' }));
-                // Системное уведомление
+                await supabase.from('bids').update({ status: 'commission_pending' }).eq('id', bid.id);
+                setActiveChat(prev => ({ ...prev, ...updateField, status: 'commission_pending' }));
+                setBids(prev => prev.map(b => b.id === bid.id ? { ...b, ...updateField, status: 'commission_pending' } : b));
                 await supabase.from('messages').insert([{
                     chat_id: bid.id,
                     sender_id: 'system',
-                    text: 'Обе стороны подтвердили сделку! Переход к этапу оплаты. Примите условия комиссии для продолжения.'
+                    text: 'Условия согласованы обеими сторонами! Следующий шаг — оплата комиссии платформы (2.5%) для раскрытия контактов партнёра.'
                 }]);
             } else {
                 setActiveChat(prev => ({ ...prev, ...updateField }));
+                setBids(prev => prev.map(b => b.id === bid.id ? { ...b, ...updateField } : b));
                 const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
                 await supabase.from('messages').insert([{
                     chat_id: bid.id,
                     sender_id: 'system',
-                    text: `${roleName} подтвердил сделку. Ожидаем подтверждение второй стороны.`
+                    text: `${roleName} подтвердил условия. Ожидаем подтверждение второй стороны.`
                 }]);
             }
 
         } catch (e) {
             console.error("Deal confirmation error:", e);
-            alert("Ошибка при подтверждении сделки");
+            showToast("Ошибка при подтверждении условий", 'error');
         }
     };
 
-    const handleEscrowPayment = async (bidId) => {
-        // Имитация оплаты и депонирования
-        const { error } = await supabase.from('bids').update({ status: 'escrow_held', payment_doc_uploaded: true }).eq('id', bidId);
+    const handleProposeCommission = async (bidId, mode) => {
+        if (!sbUser || !userProfile) return;
+        const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
+        const modeText = mode === 'split' ? 'разделить комиссию 50/50' : 'оплатить комиссию полностью';
+        const updates = { commission_mode: mode, commission_proposer_id: sbUser.id, commission_agreed: false };
+        const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
         if (!error) {
-            setActiveChat(prev => ({ ...prev, status: 'escrow_held', payment_doc_uploaded: true }));
-            // Системное сообщение в чат
+            setActiveChat(prev => ({ ...prev, ...updates }));
+            setBids(prev => prev.map(b => b.id === bidId ? { ...b, ...updates } : b));
             await supabase.from('messages').insert([{
-                chat_id: bidId,
-                sender_id: 'system',
-                text: 'Гарантийный платёж внесён. Средства заморожены до подписания акта приёмки. Контакты партнёра теперь доступны.'
+                chat_id: bidId, sender_id: 'system',
+                text: `${roleName} предлагает ${modeText}. Пожалуйста, подтвердите или отклоните предложение.`
             }]);
+            // Уведомление партнёру
+            const bid = bids.find(b => b.id === bidId) || activeChat;
+            const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : profiles.find(p => p.inn === bid?.shipperInn)?.id;
+            if (partnerId) {
+                sendNotification(
+                    partnerId,
+                    'Предложение по оплате комиссии — RailMatch',
+                    `Компания «${userProfile.company}» предлагает ${modeText}.\n\nОткройте платформу, чтобы подтвердить или отклонить предложение.`
+                );
+            }
         }
     };
 
-    const handleCommissionAccept = async (bidId) => {
+    const handleApproveCommission = async (bidId) => {
         if (!sbUser || !userProfile) return;
-        const isShipper = userProfile.role === 'shipper';
-        const field = isShipper ? 'commission_accepted_shipper' : 'commission_accepted_owner';
-
-        const { data, error } = await supabase
-            .from('bids')
-            .update({ [field]: true })
-            .eq('id', bidId)
-            .select()
-            .single();
-
-        if (error) { console.error('Commission accept error:', error); return; }
-
-        setActiveChat(prev => ({ ...prev, [field]: true }));
-
-        const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
-        await supabase.from('messages').insert([{
-            chat_id: bidId,
-            sender_id: 'system',
-            text: `${roleName} принял условия комиссии платформы.`
-        }]);
+        const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
+        const currentBid = bids.find(b => b.id === bidId) || activeChat;
+        const mode = currentBid?.commission_mode;
+        const modeText = mode === 'split' ? 'разделение 50/50' : 'полную оплату';
+        const updates = { commission_agreed: true };
+        const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
+        if (!error) {
+            setActiveChat(prev => ({ ...prev, ...updates }));
+            setBids(prev => prev.map(b => b.id === bidId ? { ...b, ...updates } : b));
+            await supabase.from('messages').insert([{
+                chat_id: bidId, sender_id: 'system',
+                text: `${roleName} подтвердил способ оплаты: ${modeText}. Оба участника теперь могут оплатить комиссию.`
+            }]);
+            showToast('Способ оплаты согласован! Нажмите «Оплатить комиссию».', 'success');
+            // Уведомление тому, кто предлагал
+            if (currentBid?.commission_proposer_id && currentBid.commission_proposer_id !== sbUser.id) {
+                sendNotification(
+                    currentBid.commission_proposer_id,
+                    'Партнёр подтвердил способ оплаты — RailMatch',
+                    `Компания «${userProfile.company}» согласовала ${modeText}.\n\nОткройте платформу и оплатите комиссию для раскрытия контактов.`
+                );
+            }
+        }
     };
 
-    const handleStageConfirm = async (bidId, stage) => {
+    const handleRejectCommission = async (bidId) => {
+        if (!sbUser || !userProfile) return;
+        const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
+        const updates = { commission_mode: null, commission_proposer_id: null, commission_agreed: false };
+        const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
+        if (!error) {
+            setActiveChat(prev => ({ ...prev, ...updates }));
+            setBids(prev => prev.map(b => b.id === bidId ? { ...b, ...updates } : b));
+            await supabase.from('messages').insert([{
+                chat_id: bidId, sender_id: 'system',
+                text: `${roleName} отклонил предложение. Обсудите и предложите другой вариант оплаты.`
+            }]);
+            showToast('Предложение отклонено', 'warning');
+        }
+    };
+
+    // mode: 'split' (half) | 'full' (full commission, contacts revealed immediately)
+    const handleCommissionPayment = async (bidId, mode) => {
         if (!sbUser || !userProfile) return;
         const isShipper = userProfile.role === 'shipper';
 
-        try {
-            // Определяем поле подтверждения для текущего этапа
-            const confirmField = isShipper ? `${stage}_confirmed_shipper` : `${stage}_confirmed_owner`;
+        const currentBid = bids.find(b => b.id === bidId) || activeChat;
+        if (!currentBid) return;
 
-            const { data, error } = await supabase
-                .from('bids')
-                .update({ [confirmField]: true })
-                .eq('id', bidId)
-                .select()
-                .single();
+        // Сумма сделки вычисляется только из канонических данных ставки.
+        // Никакие клиентские значения не принимаются — защита от занижения комиссии.
+        const dealAmount = (currentBid.price * currentBid.wagons) || currentBid.deal_amount || 0;
+        if (dealAmount <= 0) return;
+        const commissionTotal = Math.round(dealAmount * PLATFORM_COMMISSION_RATE);
+        const now = new Date().toISOString();
 
-            if (error) throw error;
+        const myPaidField = isShipper ? 'shipper_paid' : 'owner_paid';
+        const myPaidAtField = isShipper ? 'shipper_paid_at' : 'owner_paid_at';
+        const otherPaidField = isShipper ? 'owner_paid' : 'shipper_paid';
+        const otherPaidAtField = isShipper ? 'owner_paid_at' : 'shipper_paid_at';
+        const otherAlreadyPaid = isShipper ? currentBid.owner_paid : currentBid.shipper_paid;
 
-            // Проверяем, подтвердили ли оба
-            const shipperField = `${stage}_confirmed_shipper`;
-            const ownerField = `${stage}_confirmed_owner`;
-            const bothConfirmed = data[shipperField] && data[ownerField];
+        let updates = {
+            commission_amount: commissionTotal,
+            deal_amount: dealAmount,
+            [myPaidField]: true,
+            [myPaidAtField]: now,
+        };
 
-            const statusTransitions = {
-                'loading': 'in_transit',
-                'transit': 'accepted'
-            };
+        const willReveal = mode === 'full' || otherAlreadyPaid;
 
-            let newStatus = null;
-            // Для loading: владелец подтверждает подачу вагонов -> переход в loading
-            if (stage === 'escrow' && !isShipper) {
-                newStatus = 'loading';
-            }
-            // Для transit: грузоотправитель подтверждает погрузку
-            if (stage === 'loading' && isShipper) {
-                newStatus = 'in_transit';
-            }
-            // Для акта: оба должны подтвердить
-            if (stage === 'transit' && bothConfirmed) {
-                newStatus = 'accepted';
-            }
+        if (mode === 'full') {
+            // Paying full commission upfront — mark other side as paid too
+            updates[otherPaidField] = true;
+            updates[otherPaidAtField] = now;
+        }
 
-            if (newStatus) {
-                await supabase.from('bids').update({ status: newStatus }).eq('id', bidId);
-                setActiveChat(prev => ({ ...prev, ...data, status: newStatus }));
-            } else {
-                setActiveChat(prev => ({ ...prev, ...data }));
-            }
+        if (willReveal) {
+            updates.contacts_revealed = true;
+            updates.status = 'contacts_revealed';
+        } else {
+            // First payer — set 1-hour deadline for the other side
+            updates.split_deadline = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        }
 
-            // Системное сообщение
+        const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
+
+        if (!error) {
+            setActiveChat(prev => ({ ...prev, ...updates }));
+            setBids(prev => prev.map(b => b.id === bidId ? { ...b, ...updates } : b));
+
             const roleName = isShipper ? 'Грузоотправитель' : 'Владелец';
-            const stageNames = { 'escrow': 'подачу вагонов', 'loading': 'погрузку', 'transit': 'акт выполненных работ' };
-            await supabase.from('messages').insert([{
-                chat_id: bidId,
-                sender_id: 'system',
-                text: newStatus
-                    ? `Этап подтверждён! Сделка перешла на следующий этап.`
-                    : `${roleName} подтвердил ${stageNames[stage] || stage}. Ожидаем подтверждение партнёра.`
-            }]);
+            const halfAmount = Math.round(commissionTotal / 2);
+            const msg = willReveal
+                ? 'Комиссия оплачена! Контакты партнёра теперь открыты. Удачной сделки!'
+                : `${roleName} оплатил свою часть комиссии (${halfAmount.toLocaleString()} ₽). Партнёру отправлено уведомление — у него 1 час для оплаты своей части.`;
 
-        } catch (e) {
-            console.error('Stage confirm error:', e);
-            alert('Ошибка при подтверждении этапа');
+            await supabase.from('messages').insert([{ chat_id: bidId, sender_id: 'system', text: msg }]);
+
+            // Уведомление партнёру об оплате
+            const partnerId = isShipper ? currentBid.ownerId : profiles.find(p => p.inn === currentBid.shipperInn)?.id;
+            if (partnerId) {
+                const notifText = willReveal
+                    ? `Комиссия полностью оплачена! Контакты партнёра открыты.\n\nОткройте платформу, чтобы увидеть контакты и подписать документы.`
+                    : `Компания «${userProfile.company}» оплатила свою часть комиссии (${Math.round(commissionTotal / 2).toLocaleString()} ₽).\n\nУ вас 1 час, чтобы оплатить вашу часть и раскрыть контакты.`;
+                sendNotification(
+                    partnerId,
+                    willReveal ? 'Контакты открыты — сделка завершена! RailMatch' : 'Партнёр оплатил комиссию — ваша очередь! RailMatch',
+                    notifText
+                );
+            }
         }
     };
 
@@ -684,7 +718,7 @@ export default function App() {
 
         } catch (e) {
             console.error('Document sign error:', e);
-            alert('Ошибка при подписании документа');
+            showToast('Ошибка при подписании документа', 'error');
         }
     };
     const handleCreateRequest = async (data) => {
@@ -705,9 +739,9 @@ export default function App() {
         const { error, data: insertedReq } = await supabase.from('requests').insert([reqData]);
         if (error) {
             console.error("Error creating request", error);
-            alert("Ошибка при сохранении заявки: " + (error.message || JSON.stringify(error)));
+            showToast("Ошибка при сохранении заявки: " + (error.message || JSON.stringify(error)), 'error');
         } else {
-            alert("Заявка успешно опубликована на бирже!");
+            showToast("Заявка успешно опубликована на бирже!", 'success');
             setView('my-requests');
         }
     };
@@ -750,7 +784,7 @@ export default function App() {
         const { error } = await supabase.from('requests').insert(allRequests);
         if (error) {
             console.error("Error seeding data:", error);
-            alert("Ошибка при добавлении демо-данных: " + JSON.stringify(error));
+            showToast("Ошибка при добавлении демо-данных", 'error');
         }
     };
 
@@ -783,8 +817,8 @@ export default function App() {
 
     // Filter requests for catalog — memoized to prevent re-filtering on every render
     const filteredCatalogRequests = useMemo(() => requests.filter(req => {
-        // Скрываем закрытые/завершённые заявки с биржи
-        if (req.status === 'completed' || req.status === 'closed') return false;
+        // Скрываем закрытые/завершённые/отменённые заявки с биржи
+        if (req.status === 'completed' || req.status === 'closed' || req.status === 'cancelled') return false;
 
         // Проверка ролей: владельцы видят заявки отправителей, а отправители — предложения владельцев
         if (userProfile && userProfile.role !== 'demo') {
@@ -811,16 +845,41 @@ export default function App() {
         return true;
     }), [requests, userProfile, profiles, quickFilter, aiFilters]);
 
-    // Memoize unread indicator
-    const hasUnread = useMemo(() => messages.some(m => m.sender_id !== sbUser?.id), [messages, sbUser]);
+    // Memoize unread indicator — only chats this user participates in, excluding system messages
+    const myBidIds = useMemo(() => new Set(
+        bids
+            .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
+            .map(b => b.id)
+    ), [bids, sbUser, requests, userProfile?.inn]);
+
+    const hasUnread = useMemo(() =>
+        messages.some(m => myBidIds.has(m.chat_id) && m.sender_id !== sbUser?.id && m.sender_id !== 'system'),
+        [messages, myBidIds, sbUser]
+    );
+
+    // Precompute last message time per chat — avoids O(n*m) sort in messenger list
+    const lastMsgTimeByChatId = useMemo(() => {
+        const map = {};
+        for (const m of messages) {
+            if (!map[m.chat_id] || m.created_at > map[m.chat_id]) map[m.chat_id] = m.created_at;
+        }
+        return map;
+    }, [messages]);
+
+    // Sorted catalog requests — memoized outside JSX
+    const sortedCatalogRequests = useMemo(
+        () => [...filteredCatalogRequests].sort((a, b) => (b.target_price || 0) - (a.target_price || 0)),
+        [filteredCatalogRequests]
+    );
 
     // --- RENDERING ---
 
-    if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} />;
+    if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
     if (screen === 'auth') return <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />;
 
     return (
+        <ErrorBoundary>
         <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top">
             <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -834,7 +893,6 @@ export default function App() {
                             Мои заявки
                         </button>
                         <button onClick={() => setView('analytics')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'analytics' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Аналитика</button>
-                        <button onClick={() => setView('dislocation')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'dislocation' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Дислокация</button>
                         <button onClick={() => setView('messenger')} className={`text-sm font-black uppercase tracking-widest transition-all flex items-center gap-2 ${view === 'messenger' || view === 'chat' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>
                             Сообщения
                             {hasUnread && (
@@ -941,39 +999,31 @@ export default function App() {
                                 )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-6">
-                                    {(() => {
-                                        // Aviasales Sorting: AI Best Choice + Sorted by price
-                                        const sorted = [...filteredCatalogRequests].sort((a, b) => (b.target_price || 0) - (a.target_price || 0));
-                                        if (sorted.length === 0) return (
-                                            <div className="col-span-full py-20 text-center text-slate-400 font-bold bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center gap-4">
-                                                <p>Ничего не найдено по вашему запросу.</p>
-                                                <button onClick={handleSeedDemoData} className="px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2">
-                                                    <Sparkles className="w-4 h-4" /> Сгенерировать демо-заявки
-                                                </button>
+                                    {sortedCatalogRequests.length === 0 ? (
+                                        <div className="col-span-full py-20 text-center text-slate-400 font-bold bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center gap-4">
+                                            <p>Ничего не найдено по вашему запросу.</p>
+                                            <button onClick={handleSeedDemoData} className="px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4" /> Сгенерировать демо-заявки
+                                            </button>
+                                        </div>
+                                    ) : sortedCatalogRequests.map((req, idx) => {
+                                        const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
+                                        return (
+                                            <div key={req.id} className={idx < 3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
+                                                <RequestCard
+                                                    req={req}
+                                                    bidCount={bids.filter(b => b.requestId === req.id).length}
+                                                    onBid={() => requireAuth(() => {
+                                                        setSelectedRequest(req);
+                                                        setIsModalOpen(true);
+                                                    })}
+                                                    rank={idx}
+                                                    creatorRole={creatorProfile?.role}
+                                                    creatorCompany={creatorProfile?.company}
+                                                />
                                             </div>
                                         );
-
-                                        return sorted.map((req, idx) => {
-                                            const isTop3 = idx < 3;
-                                            const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
-                                            return (
-                                                <div key={req.id} className={isTop3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
-
-                                                    <RequestCard
-                                                        req={req}
-                                                        bidCount={bids.filter(b => b.requestId === req.id).length}
-                                                        onBid={() => requireAuth(() => {
-                                                            setSelectedRequest(req);
-                                                            setIsModalOpen(true);
-                                                        })}
-                                                        rank={idx}
-                                                        creatorRole={creatorProfile?.role}
-                                                        creatorCompany={creatorProfile?.company}
-                                                    />
-                                                </div>
-                                            );
-                                        });
-                                    })()}
+                                    })}
                                 </div>
                             </>
                         )}
@@ -982,7 +1032,6 @@ export default function App() {
 
                 {view === 'analytics' && <AnalyticsDashboard requests={requests} bids={bids} />}
 
-                {view === 'dislocation' && <FleetDislocation />}
 
                 {view === 'messenger' && (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[700px] animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -991,17 +1040,27 @@ export default function App() {
                                 <MessageSquare className="w-5 h-5 text-blue-600" /> Диалоги
                             </h2>
                             <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar">
-                                {(bids || []).filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn)).map(chatBid => {
+                                {(bids || [])
+                                    .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
+                                    .slice()
+                                    .sort((a, b) => {
+                                        const lastA = lastMsgTimeByChatId[a.id] ?? a.created_at;
+                                        const lastB = lastMsgTimeByChatId[b.id] ?? b.created_at;
+                                        return new Date(lastB) - new Date(lastA);
+                                    })
+                                    .map(chatBid => {
                                     const req = requests.find(r => r.id === chatBid.requestId);
                                     const isMeOwner = chatBid.ownerId === sbUser?.id;
                                     const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
-                                    const partnerName = isMeOwner ? (creatorProfile?.company || req?.stationTo || 'Заявка') : chatBid.ownerName;
+                                    const contactsRevealedForBid = chatBid.contacts_revealed || chatBid.status === 'contacts_revealed' || chatBid.status === 'accepted';
+                                    const realPartnerName = isMeOwner ? (creatorProfile?.company || req?.stationTo || 'Заявка') : (chatBid.ownerName || 'Партнёр');
+                                    const partnerName = contactsRevealedForBid ? realPartnerName : 'Переговоры';
                                     const isActive = activeChat?.id === chatBid.id;
 
                                     return (
                                         <div
                                             key={chatBid.id}
-                                            onClick={() => setActiveChat({ ...chatBid, stationFrom: req?.stationFrom, stationTo: req?.stationTo, cargoType: req?.cargoType, wagonType: req?.wagonType || chatBid.wagonType, shipperInn: req?.shipperInn, shipperName: creatorProfile?.company || 'Неизвестно', shipperPhone: creatorProfile?.phone || 'Неизвестно' })}
+                                            onClick={() => setActiveChat(buildChatObject(chatBid, req, profiles))}
                                             className={`p-4 rounded-2xl cursor-pointer transition-all border ${isActive
                                                 ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20'
                                                 : 'bg-slate-50 dark:bg-slate-800/50 border-transparent hover:border-blue-300 dark:hover:border-slate-600'
@@ -1032,13 +1091,13 @@ export default function App() {
                                     userProfile={userProfile}
                                     onSend={(text) => handleSendMessage(activeChat.id, text)}
                                     onAccept={() => handleConfirmDeal(activeChat)}
-                                    onEscrow={() => handleEscrowPayment(activeChat.id)}
-                                    onCommissionAccept={() => handleCommissionAccept(activeChat.id)}
-                                    onStageConfirm={(stage) => handleStageConfirm(activeChat.id, stage)}
+                                    onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
+                                    onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
+                                    onApproveCommission={() => handleApproveCommission(activeChat.id)}
+                                    onRejectCommission={() => handleRejectCommission(activeChat.id)}
                                     onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
                                     onDocSign={handleDocumentSign}
-                                    onBack={() => setView('catalog')}
-                                    maskContact={maskContact}
+                                    onBack={() => setActiveChat(null)}
                                 />
                             ) : (
                                 <div className="h-full bg-white dark:bg-[#111827] rounded-[3.5rem] border-2 border-dashed dark:border-slate-800 flex flex-col items-center justify-center text-center p-10">
@@ -1069,20 +1128,11 @@ export default function App() {
                         onAccept={handleConfirmDeal}
                         onChat={(b) => {
                             const req = requests.find(r => r.id === b.requestId);
-                            const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
-                            setActiveChat({
-                                ...b,
-                                stationFrom: req?.stationFrom,
-                                stationTo: req?.stationTo,
-                                cargoType: req?.cargoType,
-                                wagonType: req?.wagonType,
-                                shipperInn: req?.shipperInn,
-                                shipperName: creatorProfile?.company || userProfile?.company || 'Неизвестно',
-                                shipperPhone: creatorProfile?.phone || userProfile?.phone || 'Неизвестно'
-                            });
+                            setActiveChat(buildChatObject(b, req, profiles));
                             setView('chat');
                         }}
                         onAiCreate={handleAiCreate}
+                        onCancelRequest={handleCancelRequest}
                     />
                 )}
 
@@ -1100,6 +1150,8 @@ export default function App() {
                         onLogout={handleLogout}
                         bids={bids}
                         requests={requests}
+                        showToast={showToast}
+                        onProfileUpdate={(updated) => setUserProfile(prev => ({ ...prev, ...updated }))}
                     />
                 )}
 
@@ -1113,19 +1165,38 @@ export default function App() {
                             userProfile={userProfile}
                             onSend={(text) => handleSendMessage(activeChat.id, text)}
                             onAccept={() => handleConfirmDeal(activeChat)}
-                            onEscrow={() => handleEscrowPayment(activeChat.id)}
-                            onCommissionAccept={() => handleCommissionAccept(activeChat.id)}
-                            onStageConfirm={(stage) => handleStageConfirm(activeChat.id, stage)}
+                            onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
+                            onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
+                            onApproveCommission={() => handleApproveCommission(activeChat.id)}
+                            onRejectCommission={() => handleRejectCommission(activeChat.id)}
                             onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
                             onDocSign={handleDocumentSign}
                             onBack={() => setView('messenger')}
-                            maskContact={maskContact}
                         />
                     </div>
                 )}
             </main>
 
-            {isModalOpen && selectedRequest && (
+                    {/* ===== TOAST NOTIFICATIONS ===== */}
+            <div className="fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none max-w-sm w-full">
+                {toasts.map(toast => (
+                    <div key={toast.id} className={`flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border pointer-events-auto animate-in slide-in-from-right-4 fade-in duration-300 ${
+                        toast.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200' :
+                        toast.type === 'error'   ? 'bg-red-50 dark:bg-red-900/40 border-red-200 dark:border-red-700 text-red-800 dark:text-red-200' :
+                        toast.type === 'warning' ? 'bg-amber-50 dark:bg-amber-900/40 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200' :
+                                                   'bg-blue-50 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200'
+                    }`}>
+                        <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                            toast.type === 'success' ? 'bg-emerald-500' :
+                            toast.type === 'error'   ? 'bg-red-500' :
+                            toast.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
+                        }`} />
+                        <span className="text-sm font-bold leading-relaxed">{toast.message}</span>
+                    </div>
+                ))}
+            </div>
+
+    {isModalOpen && selectedRequest && (
                 <BidModal
                     request={selectedRequest}
                     userLimit={userProfile?.role === 'owner' ? userProfile?.bids_limit : null}
@@ -1133,6 +1204,11 @@ export default function App() {
                     onConfirm={handleBidSubmit}
                 />
             )}{showDemoAlert && <DemoModal onClose={() => setShowDemoAlert(false)} onReg={() => { setShowDemoAlert(false); setScreen('auth'); }} />}
-        </div >
+            {showOnboarding && userProfile && (
+                <OnboardingModal role={userProfile.role} onComplete={handleOnboardingComplete} />
+            )}
+            {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+        </div>
+        </ErrorBoundary>
     );
 }
