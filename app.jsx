@@ -1,86 +1,12 @@
-import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
-import OnboardingModal from './components/OnboardingModal.jsx';
-import TermsModal from './components/TermsModal.jsx';
-import ErrorBoundary from './components/ErrorBoundary.jsx';
-import { PLATFORM_COMMISSION_RATE } from './src/constants.js';
-
-// ─── Sentry (раскомментировать после установки @sentry/react и настройки VITE_SENTRY_DSN) ───
-// import * as Sentry from '@sentry/react';
-// if (import.meta.env.VITE_SENTRY_DSN) {
-//     Sentry.init({
-//         dsn: import.meta.env.VITE_SENTRY_DSN,
-//         environment: import.meta.env.MODE,
-//         tracesSampleRate: 0.2,
-//         replaysOnErrorSampleRate: 1.0,
-//     });
-// }
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
-    TrainFront, MapPin, Package, Calendar,
-    Weight, Box, Filter, Search, ChevronDown,
-    ArrowRight, ShieldCheck, Zap,
-    Clock, CheckCircle, PieChart, Wallet, TrendingUp,
-    X, AlertCircle, Info, Lock, Mail, User, Building2,
-    MessageSquare, Send, Phone, Paperclip, MoreVertical,
-    Settings, CreditCard, Share2, Award, History, Copy,
-    Sparkles, Bot, Plus, Moon, Sun, ArrowUpRight, Check,
-    Briefcase, Activity, FileText, Handshake, Eye, Shield, AlertTriangle, Ban
+    TrainFront, ArrowRight, AlertCircle, User,
+    MessageSquare, Sparkles, Moon, Sun, Ban
 } from 'lucide-react';
 
-// --- БИЗНЕС-ЛОГИКА БЕЗОПАСНОСТИ ---
-const STOP_WORDS = [
-    // Прямые попытки обхода
-    'давайте в обход', 'скину в телегу', 'оплата на карту', 'наберите мне напрямую',
-    'мой номер', 'мой телефон', 'пишите в вотсап', 'связаться в телеграме',
-    'перезвоните на', 'мои реквизиты', 'оплатить на карту',
-    'контакты', 'телефон', 'email', 'почта', 'whatsapp', 'telegram', 'viber', 'личку', 'в личку',
-    'direct', 'директ', 'мобильный', 'сотовый', 'созвонимся', '@', '.ru', '.com', '.net',
-    // Глаголы и фразы поиска контактов
-    'набери меня', 'набери мне', 'наберите меня', 'наберите мне',
-    'позвони мне', 'позвоните мне', 'позвони на', 'позвоните на',
-    'звони мне', 'звоните мне', 'перезвони',
-    'найди меня', 'найдите меня', 'найди в', 'найдите в',
-    'пиши мне', 'пишите мне', 'написать мне',
-    'свяжись', 'свяжитесь', 'свяжись со мной', 'свяжитесь со мной',
-    'отправлю реквизиты', 'скину реквизиты', 'дам номер', 'дам контакт', 'скину номер',
-    'в обход платформы', 'без платформы', 'напрямую', 'вне платформы', 'минуя платформу',
-    'вконтакте', 'одноклассники', 'ok.ru', 'вк ',
-];
-
-const MAX_PROFILE_VIEWS_PER_DAY = 50;
-
-const AI_PRICING_BASE_RATES = {
-    'уголь': 15000, 'нефтепродукты': 18000, 'металл': 12000,
-    'зерно': 8000, 'цемент': 10000, 'соль': 7000,
-    'цветные металлы': 14000, 'минеральные удобрения': 13000,
-    'лес': 9000, 'строительные материалы': 11000
-};
-
-const SEASONAL_MULTIPLIERS = {
-    'winter': 1.15, 'summer': 1.10, 'autumn': 1.05, 'spring': 1.00
-};
-
-const calculateAiPrice = (req) => {
-    if (!req) return 0;
-    const cargoKey = req.cargoType?.toLowerCase() || '';
-    const base = AI_PRICING_BASE_RATES[cargoKey] || 12000;
-    let multiplier = 1.0;
-
-    // 1. Коэффициент объема (Volume Discount)
-    if (req.totalWagons >= 50) multiplier *= 0.95;
-    else if (req.totalWagons >= 10) multiplier *= 0.97;
-
-    // 2. Сезонный множитель (Seasonal Multiplier: +15% в Март/Октябрь)
-    const month = new Date().getMonth();
-    if ([2, 9].includes(month)) multiplier *= 1.15;
-
-    return Math.round(base * multiplier);
-};
-
-// --- ИМПОРТЫ КОМПОНЕНТОВ ---
 import LandingScreen from './components/LandingScreen';
 import AuthScreen from './components/AuthScreen';
 import RequestCard from './components/RequestCard';
-import MyBidsView from './components/MyBidsView';
 import MyRequestsView from './components/MyRequestsView';
 import BidModal from './components/BidModal';
 import DemoModal from './components/DemoModal';
@@ -89,48 +15,13 @@ import ChatWindow from './components/ChatWindow';
 import CreateRequestForm from './components/CreateRequestForm';
 import AiAgentBar from './components/AiAgentBar';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
-import { parsePrompt } from './src/aiService';
+import OnboardingModal from './components/OnboardingModal.jsx';
+import TermsModal from './components/TermsModal.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
-// --- СУПАБЕЙЗ ИНИЦИАЛИЗАЦИЯ ---
 import { supabase } from './src/supabaseClient';
-
-// --- УТИЛИТЫ ЗАЩИТЫ (ANTI-LEAKAGE) ---
-const maskContact = (text, isSecured) => {
-    if (!text) return '';
-    if (isSecured) return text;
-    // Маскируем телефон или email
-    if (text.includes('@')) {
-        const [name, domain] = text.split('@');
-        return `${name[0]}***@${domain}`;
-    }
-    return text.replace(/(\+?\d)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 ($2) ***-**-$5');
-};
-
-const validateMessageIntent = (text) => {
-    const lower = text.toLowerCase();
-    // 1. Улучшенная регулярка для телефонов (ловит +7, 8900..., а также варианты с пробелами и точками)
-    const normalized = text.replace(/[\s-().]/g, '');
-    const hasPhone = /(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}/.test(text) || /(\d{7,})/.test(normalized);
-
-    // 2. Проверка стоп-слов
-    const hasStopWord = STOP_WORDS.some(sw => lower.includes(sw));
-
-    // 3. Проверка на "хитрые" попытки (т.е.л.е.ф.о.н или похожие)
-    const isObfuscated = STOP_WORDS.some(sw => {
-        if (sw.length < 3) return false;
-        const pattern = sw.split('').join('\\s*[-._]*\\s*');
-        return new RegExp(pattern, 'i').test(lower);
-    });
-
-    if (hasPhone || hasStopWord || isObfuscated) {
-        return {
-            valid: false,
-            cleaned: '[КОНТАКТЫ СКРЫТЫ СИСТЕМОЙ БЕЗОПАСНОСТИ - Оплата в обход платформы ведет к блокировке аккаунта]',
-            isViolation: true
-        };
-    }
-    return { valid: true, cleaned: text, isViolation: false };
-};
+import { PLATFORM_COMMISSION_RATE } from './src/constants.js';
+import { validateMessageIntent } from './src/security.js';
 
 // --- ГЛАВНЫЙ КОМПОНЕНТ ---
 export default function App() {
@@ -187,15 +78,18 @@ export default function App() {
         }
     }, []);
 
-    // 1. ШРИФТ И ТЕМА
+    // 1a. ШРИФТ — загружается один раз при монтировании
     useEffect(() => {
         const link = document.createElement('link');
         link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap';
         link.rel = 'stylesheet';
         document.head.appendChild(link);
-        if (isDark) document.documentElement.classList.add('dark');
-        else document.documentElement.classList.remove('dark');
         return () => document.head.removeChild(link);
+    }, []);
+
+    // 1b. ТЕМА — реагирует на isDark
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', isDark);
     }, [isDark]);
 
     // 2. АВТОРИЗАЦИЯ SUPABASE И ЗАГРУЗКА ПРОФИЛЯ
@@ -283,33 +177,29 @@ export default function App() {
         if (!sbUser) return;
 
         const fetchInitialData = async () => {
-            const { data: initialRequests, error: reqError } = await supabase.from('requests').select('*').order('created_at', { ascending: false });
+            const [
+                { data: initialRequests, error: reqError },
+                { data: initialBids },
+                { data: initialMessages },
+                { data: initialProfiles },
+            ] = await Promise.all([
+                supabase.from('requests').select('*').order('created_at', { ascending: false }),
+                supabase.from('bids').select('*').order('created_at', { ascending: false }),
+                supabase.from('messages').select('*').order('created_at', { ascending: true }),
+                supabase.from('profiles').select('id, inn, role, company, phone'),
+            ]);
             if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
-
-
-            const { data: initialBids } = await supabase.from('bids').select('*').order('created_at', { ascending: false });
             if (initialBids) setBids(initialBids);
-
-            const { data: initialMessages } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
             if (initialMessages) setMessages(initialMessages);
-
-            const { data: initialProfiles } = await supabase.from('profiles').select('inn, role, company');
             if (initialProfiles) setProfiles(initialProfiles);
         };
         fetchInitialData();
 
         const requestChannel = supabase.channel('public:requests')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, async (payload) => {
-                if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                    // Fetch full data with join for the new/updated record
-                    const { data, error } = await supabase.from('requests').select('*').eq('id', payload.new.id).single();
-                    if (error) console.error("Realtime request fetch error:", error);
-                    if (data) {
-                        if (payload.eventType === 'INSERT') setRequests(prev => [data, ...prev]);
-                        else setRequests(prev => prev.map(r => r.id === data.id ? data : r));
-                    }
-                }
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, (payload) => {
+                if (payload.eventType === 'INSERT') setRequests(prev => [payload.new, ...prev]);
+                else if (payload.eventType === 'UPDATE') setRequests(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
                 else if (payload.eventType === 'DELETE') setRequests(prev => prev.filter(r => r.id !== payload.old.id));
             }).subscribe();
 
@@ -431,13 +321,15 @@ export default function App() {
         };
     }, [profiles]);
 
-    const requireAuth = (callback) => {
+    const securityWarningTimerRef = useRef(null);
+
+    const requireAuth = useCallback((callback) => {
         if (!sbUser || userProfile?.role === 'demo') {
             setShowDemoAlert(true);
             return false;
         }
         callback();
-    };
+    }, [sbUser, userProfile?.role]);
 
     const handleBidSubmit = async (price, wagons, tons) => {
         if (!sbUser || !userProfile) return;
@@ -522,8 +414,8 @@ export default function App() {
                     });
                 }
 
-                // Скрываем предупреждение через 5 секунд
-                setTimeout(() => setSecurityWarning(null), 5000);
+                clearTimeout(securityWarningTimerRef.current);
+                securityWarningTimerRef.current = setTimeout(() => setSecurityWarning(null), 5000);
             }
 
             const { error } = await supabase.from('messages').insert([{
@@ -953,8 +845,32 @@ export default function App() {
         return true;
     }), [requests, userProfile, profiles, quickFilter, aiFilters]);
 
-    // Memoize unread indicator
-    const hasUnread = useMemo(() => messages.some(m => m.sender_id !== sbUser?.id), [messages, sbUser]);
+    // Memoize unread indicator — only chats this user participates in, excluding system messages
+    const myBidIds = useMemo(() => new Set(
+        bids
+            .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
+            .map(b => b.id)
+    ), [bids, sbUser, requests, userProfile?.inn]);
+
+    const hasUnread = useMemo(() =>
+        messages.some(m => myBidIds.has(m.chat_id) && m.sender_id !== sbUser?.id && m.sender_id !== 'system'),
+        [messages, myBidIds, sbUser]
+    );
+
+    // Precompute last message time per chat — avoids O(n*m) sort in messenger list
+    const lastMsgTimeByChatId = useMemo(() => {
+        const map = {};
+        for (const m of messages) {
+            if (!map[m.chat_id] || m.created_at > map[m.chat_id]) map[m.chat_id] = m.created_at;
+        }
+        return map;
+    }, [messages]);
+
+    // Sorted catalog requests — memoized outside JSX
+    const sortedCatalogRequests = useMemo(
+        () => [...filteredCatalogRequests].sort((a, b) => (b.target_price || 0) - (a.target_price || 0)),
+        [filteredCatalogRequests]
+    );
 
     // --- RENDERING ---
 
@@ -1083,39 +999,31 @@ export default function App() {
                                 )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-6">
-                                    {(() => {
-                                        // Aviasales Sorting: AI Best Choice + Sorted by price
-                                        const sorted = [...filteredCatalogRequests].sort((a, b) => (b.target_price || 0) - (a.target_price || 0));
-                                        if (sorted.length === 0) return (
-                                            <div className="col-span-full py-20 text-center text-slate-400 font-bold bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center gap-4">
-                                                <p>Ничего не найдено по вашему запросу.</p>
-                                                <button onClick={handleSeedDemoData} className="px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2">
-                                                    <Sparkles className="w-4 h-4" /> Сгенерировать демо-заявки
-                                                </button>
+                                    {sortedCatalogRequests.length === 0 ? (
+                                        <div className="col-span-full py-20 text-center text-slate-400 font-bold bg-white dark:bg-[#111827] rounded-[3rem] border border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center gap-4">
+                                            <p>Ничего не найдено по вашему запросу.</p>
+                                            <button onClick={handleSeedDemoData} className="px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4" /> Сгенерировать демо-заявки
+                                            </button>
+                                        </div>
+                                    ) : sortedCatalogRequests.map((req, idx) => {
+                                        const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
+                                        return (
+                                            <div key={req.id} className={idx < 3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
+                                                <RequestCard
+                                                    req={req}
+                                                    bidCount={bids.filter(b => b.requestId === req.id).length}
+                                                    onBid={() => requireAuth(() => {
+                                                        setSelectedRequest(req);
+                                                        setIsModalOpen(true);
+                                                    })}
+                                                    rank={idx}
+                                                    creatorRole={creatorProfile?.role}
+                                                    creatorCompany={creatorProfile?.company}
+                                                />
                                             </div>
                                         );
-
-                                        return sorted.map((req, idx) => {
-                                            const isTop3 = idx < 3;
-                                            const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
-                                            return (
-                                                <div key={req.id} className={isTop3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
-
-                                                    <RequestCard
-                                                        req={req}
-                                                        bidCount={bids.filter(b => b.requestId === req.id).length}
-                                                        onBid={() => requireAuth(() => {
-                                                            setSelectedRequest(req);
-                                                            setIsModalOpen(true);
-                                                        })}
-                                                        rank={idx}
-                                                        creatorRole={creatorProfile?.role}
-                                                        creatorCompany={creatorProfile?.company}
-                                                    />
-                                                </div>
-                                            );
-                                        });
-                                    })()}
+                                    })}
                                 </div>
                             </>
                         )}
@@ -1136,9 +1044,8 @@ export default function App() {
                                     .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
                                     .slice()
                                     .sort((a, b) => {
-                                        // Сортировка по последнему сообщению или дате создания — новые вверху
-                                        const lastA = messages.filter(m => m.chat_id === a.id).at(-1)?.created_at ?? a.created_at;
-                                        const lastB = messages.filter(m => m.chat_id === b.id).at(-1)?.created_at ?? b.created_at;
+                                        const lastA = lastMsgTimeByChatId[a.id] ?? a.created_at;
+                                        const lastB = lastMsgTimeByChatId[b.id] ?? b.created_at;
                                         return new Date(lastB) - new Date(lastA);
                                     })
                                     .map(chatBid => {
@@ -1188,8 +1095,9 @@ export default function App() {
                                     onProposeCommission={(mode) => handleProposeCommission(activeChat.id, mode)}
                                     onApproveCommission={() => handleApproveCommission(activeChat.id)}
                                     onRejectCommission={() => handleRejectCommission(activeChat.id)}
+                                    onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
                                     onDocSign={handleDocumentSign}
-                                    onBack={() => setView('catalog')}
+                                    onBack={() => setActiveChat(null)}
                                 />
                             ) : (
                                 <div className="h-full bg-white dark:bg-[#111827] rounded-[3.5rem] border-2 border-dashed dark:border-slate-800 flex flex-col items-center justify-center text-center p-10">
