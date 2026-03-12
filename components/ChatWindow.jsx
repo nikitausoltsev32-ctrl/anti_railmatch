@@ -131,11 +131,11 @@ export default function ChatWindow({
 
     return (
         <div className="min-h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="bg-white dark:bg-[#111827] h-[800px] rounded-[2.5rem] border dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="bg-white dark:bg-[#111827] h-[calc(100vh-10rem)] sm:h-[800px] rounded-2xl sm:rounded-[2.5rem] border dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
 
                 {/* ===== HEADER ===== */}
-                <div className="px-6 py-4 border-b dark:border-slate-800 flex justify-between items-center bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl z-20">
-                    <div className="flex items-center gap-4">
+                <div className="px-3 sm:px-6 py-3 sm:py-4 border-b dark:border-slate-800 flex justify-between items-start sm:items-center bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl z-20">
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
                         <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
@@ -175,20 +175,21 @@ export default function ChatWindow({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                         {/* Confirm terms button (negotiations stage) */}
                         {isNegotiating && (
                             <button
                                 onClick={onAccept}
                                 disabled={myConfirmed}
-                                className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                                className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 sm:gap-2 ${
                                     myConfirmed
                                         ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default'
                                         : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md active:scale-95'
                                 }`}
                             >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                {myConfirmed ? 'Ждём партнёра...' : 'Подтвердить условия'}
+                                <span className="hidden sm:inline">{myConfirmed ? 'Ждём партнёра...' : 'Подтвердить условия'}</span>
+                                <span className="sm:hidden">{myConfirmed ? 'Ждём...' : 'Условия'}</span>
                             </button>
                         )}
 

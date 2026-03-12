@@ -6,24 +6,24 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
         <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white overflow-hidden bg-grid-pattern">
 
             {/* ═══════════════════════════════ HEADER ═══════════════════════════════ */}
-            <header className="max-w-7xl mx-auto w-full px-6 h-28 flex items-center justify-between z-50">
-                <div className="flex items-center gap-3 group cursor-pointer">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                        <TrainFront className="text-white w-7 h-7" />
+            <header className="max-w-7xl mx-auto w-full px-4 sm:px-6 h-20 sm:h-28 flex items-center justify-between z-50">
+                <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                        <TrainFront className="text-white w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
-                    <span className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">RailMatch</span>
+                    <span className="text-2xl sm:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">RailMatch</span>
                 </div>
-                <div className="flex items-center gap-6">
-                    <button onClick={() => setIsDark(!isDark)} className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm hover:rotate-180 hover:shadow-lg transition-all duration-500 text-slate-400">
+                <div className="flex items-center gap-3 sm:gap-6">
+                    <button onClick={() => setIsDark(!isDark)} className="p-2.5 sm:p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm hover:rotate-180 hover:shadow-lg transition-all duration-500 text-slate-400">
                         {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
                     </button>
                     <button onClick={onLogin} className="hidden sm:block text-sm font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Войти</button>
-                    <button onClick={onStart} className="px-8 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300">Регистрация</button>
+                    <button onClick={onStart} className="px-4 py-2.5 sm:px-8 sm:py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs sm:text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300">Регистрация</button>
                 </div>
             </header>
 
             {/* ═══════════════════════════════ HERO ═══════════════════════════════ */}
-            <section className="flex-1 flex flex-col items-center justify-center px-6 text-center relative mt-10 lg:mt-0 pb-16">
+            <section className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center relative mt-6 sm:mt-10 lg:mt-0 pb-10 sm:pb-16">
                 {/* Background glows */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-blue-600/10 dark:bg-blue-600/20 blur-[120px] rounded-full -z-10 animate-pulse"></div>
                 <div className="absolute top-20 right-20 w-[400px] h-[400px] bg-indigo-500/10 blur-[100px] rounded-full -z-10 animate-float-delayed"></div>
@@ -79,8 +79,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
             </section>
 
             {/* ═══════════════════════════════ STATS BAR ═══════════════════════════════ */}
-            <section className="max-w-7xl mx-auto w-full px-6 py-16">
-                <div className="glass-card rounded-[2.5rem] p-8 md:p-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-16">
+                <div className="glass-card rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-8 md:p-12 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 text-center">
                     {[
                         { value: '2.5%', label: 'Комиссия платформы', sub: 'vs. 15–20% у брокеров', color: 'text-blue-600 dark:text-blue-400' },
                         { value: '60 сек', label: 'Создание заявки', sub: 'с помощью AI-агента', color: 'text-indigo-600 dark:text-indigo-400' },
@@ -88,7 +88,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         { value: '0 ₽', label: 'Абонентская плата', sub: 'платите только за результат', color: 'text-amber-600 dark:text-amber-400' },
                     ].map((stat, idx) => (
                         <div key={idx} className="group cursor-default">
-                            <div className={`text-4xl md:text-5xl font-black mb-2 ${stat.color} group-hover:scale-110 transition-transform inline-block`}>{stat.value}</div>
+                            <div className={`text-2xl sm:text-4xl md:text-5xl font-black mb-1 sm:mb-2 ${stat.color} group-hover:scale-110 transition-transform inline-block`}>{stat.value}</div>
                             <div className="text-sm font-extrabold text-slate-700 dark:text-slate-200 mb-1">{stat.label}</div>
                             <div className="text-xs text-slate-400 font-medium">{stat.sub}</div>
                         </div>
@@ -97,14 +97,14 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
             </section>
 
             {/* ═══════════════════════════════ FOR WHOM ═══════════════════════════════ */}
-            <section className="max-w-7xl mx-auto w-full px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-10">
+            <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-16 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
                 {/* Shippers */}
-                <div className="glass-card p-12 rounded-[3rem] hover:-translate-y-2 transition-transform duration-500 group">
+                <div className="glass-card p-6 sm:p-10 md:p-12 rounded-3xl sm:rounded-[3rem] hover:-translate-y-2 transition-transform duration-500 group">
                     <div className="w-20 h-20 rounded-[2rem] bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center mb-10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                         <Package className="w-10 h-10 text-blue-600" />
                     </div>
-                    <h3 className="text-4xl font-extrabold mb-4 dark:text-white">Грузоотправителям</h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-lg font-medium mb-10 leading-relaxed">
+                    <h3 className="text-2xl sm:text-4xl font-extrabold mb-3 sm:mb-4 dark:text-white">Грузоотправителям</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-base sm:text-lg font-medium mb-6 sm:mb-10 leading-relaxed">
                         Публикуйте заявку — и получайте прямые ставки от владельцев вагонов. Никаких посредников, скрытых наценок и бесконечных звонков диспетчерам.
                     </p>
                     <ul className="space-y-5 text-base font-bold text-slate-700 dark:text-slate-300">
@@ -115,15 +115,15 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                 </div>
 
                 {/* Owners */}
-                <div className="bg-slate-900 dark:bg-[#080D1A] p-12 rounded-[3rem] border border-slate-800 shadow-2xl text-white hover:-translate-y-2 transition-transform duration-500 group relative overflow-hidden">
+                <div className="bg-slate-900 dark:bg-[#080D1A] p-6 sm:p-10 md:p-12 rounded-3xl sm:rounded-[3rem] border border-slate-800 shadow-2xl text-white hover:-translate-y-2 transition-transform duration-500 group relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700">
                         <Zap className="w-64 h-64 text-blue-500" />
                     </div>
                     <div className="relative z-10 w-20 h-20 rounded-[2rem] bg-slate-800 flex items-center justify-center mb-10 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 border border-slate-700">
                         <TrainFront className="w-10 h-10 text-blue-400" />
                     </div>
-                    <h3 className="text-4xl font-extrabold mb-4 relative z-10">Владельцам вагонов</h3>
-                    <p className="text-slate-400 text-lg font-medium mb-10 leading-relaxed relative z-10">
+                    <h3 className="text-2xl sm:text-4xl font-extrabold mb-3 sm:mb-4 relative z-10">Владельцам вагонов</h3>
+                    <p className="text-slate-400 text-base sm:text-lg font-medium mb-6 sm:mb-10 leading-relaxed relative z-10">
                         Найдите груз под ваш парк быстрее, чем через диспетчера. Умный подбор по маршруту и типу вагона. Комиссия — только с закрытой сделки.
                     </p>
                     <ul className="space-y-5 text-base font-bold relative z-10">
@@ -135,16 +135,16 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
             </section>
 
             {/* ═══════════════════════════════ HOW IT WORKS ═══════════════════════════════ */}
-            <section className="max-w-7xl mx-auto w-full px-6 py-24">
-                <div className="text-center mb-20">
+            <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-14 sm:py-24">
+                <div className="text-center mb-10 sm:mb-20">
                     <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold text-xs mb-6 border border-blue-100 dark:border-blue-800">
                         <Sparkles className="w-3.5 h-3.5" /> Три шага до сделки
                     </div>
-                    <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 dark:text-white">Как это работает?</h2>
+                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight mb-4 sm:mb-6 dark:text-white">Как это работает?</h2>
                     <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium">От регистрации до закрытой сделки — за считанные минуты</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
                     {[
                         {
                             step: '01',
@@ -168,8 +168,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                             color: 'emerald'
                         }
                     ].map((item, idx) => (
-                        <div key={idx} className="glass-card p-10 rounded-[2.5rem] hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
-                            <div className="absolute top-6 right-8 text-8xl font-black text-slate-100 dark:text-slate-800/50 select-none">{item.step}</div>
+                        <div key={idx} className="glass-card p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+                            <div className="absolute top-4 right-6 sm:top-6 sm:right-8 text-6xl sm:text-8xl font-black text-slate-100 dark:text-slate-800/50 select-none">{item.step}</div>
                             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 ${
                                 item.color === 'blue' ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600' :
                                 item.color === 'indigo' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600' :
@@ -183,9 +183,9 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
             </section>
 
             {/* ═══════════════════════════════ PLATFORM FEATURES ═══════════════════════════════ */}
-            <section className="max-w-7xl mx-auto w-full px-6 py-24">
-                <div className="text-center mb-20">
-                    <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 dark:text-white">Всё для эффективной работы</h2>
+            <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-14 sm:py-24">
+                <div className="text-center mb-10 sm:mb-20">
+                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight mb-4 sm:mb-6 dark:text-white">Всё для эффективной работы</h2>
                     <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium">Инструменты, которые делают ж/д логистику быстрой, прозрачной и безопасной</p>
                 </div>
 
@@ -244,13 +244,13 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
             </section>
 
             {/* ═══════════════════════════════ TRUST SECTION ═══════════════════════════════ */}
-            <section className="max-w-7xl mx-auto w-full px-6 py-24">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4 dark:text-white">Безопасность —<br className="hidden md:block" /> в основе каждой сделки</h2>
+            <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-14 sm:py-24">
+                <div className="text-center mb-10 sm:mb-16">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-4 dark:text-white">Безопасность —<br className="hidden md:block" /> в основе каждой сделки</h2>
                     <p className="text-lg text-slate-500 dark:text-slate-400 font-medium max-w-xl mx-auto">RailMatch создан так, чтобы обе стороны были защищены на каждом этапе</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
                     {[
                         {
                             icon: <ShieldCheck className="w-8 h-8 text-blue-600 dark:text-blue-400" />,
@@ -271,7 +271,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                             desc: 'Телефоны и реквизиты раскрываются только после заключения сделки. Платформа автоматически блокирует попытки обхода.',
                         },
                     ].map((item, idx) => (
-                        <div key={idx} className="glass-card p-10 rounded-[2.5rem] hover:-translate-y-2 transition-all duration-500 group text-center">
+                        <div key={idx} className="glass-card p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] hover:-translate-y-2 transition-all duration-500 group text-center">
                             <div className={`w-20 h-20 rounded-[1.5rem] ${item.bg} flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
                                 {item.icon}
                             </div>
@@ -283,8 +283,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
             </section>
 
             {/* ═══════════════════════════════ CTA BANNER ═══════════════════════════════ */}
-            <section className="max-w-7xl mx-auto w-full px-6 pb-32">
-                <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[3rem] p-16 text-center text-white shadow-2xl shadow-blue-500/20 overflow-hidden">
+            <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 sm:pb-32">
+                <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl sm:rounded-[3rem] p-8 sm:p-16 text-center text-white shadow-2xl shadow-blue-500/20 overflow-hidden">
                     {/* Decorative rings */}
                     <div className="absolute top-0 left-0 w-full h-full opacity-10">
                         <div className="absolute top-10 left-20 w-40 h-40 border-2 border-white rounded-full"></div>
@@ -295,13 +295,13 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/15 border border-white/25 text-white font-bold text-xs mb-8">
                             <Sparkles className="w-3.5 h-3.5" /> Регистрация занимает 2 минуты
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black mb-6">Сократите расходы на логистику<br className="hidden md:block" /> прямо сейчас</h2>
-                        <p className="text-lg text-blue-100 max-w-xl mx-auto mb-10 font-medium">Тысячи заявок на перевозку. Прямые контакты. Комиссия 2.5%. Первые ставки — бесплатно.</p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <button onClick={onStart} className="px-12 py-5 bg-white text-blue-600 font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all flex items-center justify-center gap-3 group">
+                        <h2 className="text-2xl sm:text-4xl md:text-5xl font-black mb-4 sm:mb-6">Сократите расходы<br className="sm:hidden" /> на логистику<br className="hidden md:block" /> прямо сейчас</h2>
+                        <p className="text-sm sm:text-lg text-blue-100 max-w-xl mx-auto mb-8 sm:mb-10 font-medium">Тысячи заявок на перевозку. Прямые контакты. Комиссия 2.5%. Первые ставки — бесплатно.</p>
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                            <button onClick={onStart} className="px-8 sm:px-12 py-4 sm:py-5 bg-white text-blue-600 font-black uppercase tracking-widest text-xs sm:text-sm rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all flex items-center justify-center gap-3 group">
                                 Зарегистрироваться <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>
-                            <button onClick={onDemo} className="px-12 py-5 bg-white/10 backdrop-blur text-white font-black uppercase tracking-widest text-sm rounded-2xl border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-3">
+                            <button onClick={onDemo} className="px-8 sm:px-12 py-4 sm:py-5 bg-white/10 backdrop-blur text-white font-black uppercase tracking-widest text-xs sm:text-sm rounded-2xl border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-3">
                                 Демо-режим <Zap className="w-5 h-5 text-amber-300" />
                             </button>
                         </div>
@@ -310,8 +310,8 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
             </section>
 
             {/* ═══════════════════════════════ FOOTER ═══════════════════════════════ */}
-            <footer className="border-t border-slate-200 dark:border-slate-800 py-8">
-                <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+            <footer className="border-t border-slate-200 dark:border-slate-800 py-6 sm:py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs sm:text-sm text-slate-400">
                     <span>© 2026 RailMatch Platform ООО. Все права защищены.</span>
                     <div className="flex items-center gap-6">
                         <button onClick={onShowTerms} className="hover:text-blue-600 transition-colors font-medium">
