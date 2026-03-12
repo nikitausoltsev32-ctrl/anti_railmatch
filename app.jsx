@@ -233,6 +233,20 @@ export default function App() {
         };
     }, [sbUser]);
 
+    // 4. ЗАГРУЗКА ДАННЫХ ДЛЯ ДЕМО-РЕЖИМА
+    useEffect(() => {
+        if (userProfile?.role !== 'demo') return;
+        const fetchDemoData = async () => {
+            const [{ data: demoRequests }, { data: demoProfiles }] = await Promise.all([
+                supabase.from('requests').select('*').order('created_at', { ascending: false }),
+                supabase.from('profiles').select('id, inn, role, company, phone'),
+            ]);
+            if (demoRequests) setRequests(demoRequests);
+            if (demoProfiles) setProfiles(demoProfiles);
+        };
+        fetchDemoData();
+    }, [userProfile?.role]);
+
     // --- ЛОГИКА ---
 
     const handleOnboardingComplete = useCallback(async () => {
