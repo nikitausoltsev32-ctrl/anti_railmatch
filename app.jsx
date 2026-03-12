@@ -387,8 +387,10 @@ export default function App() {
         const { data, error } = await supabase.from('bids').insert([bidData]).select().single();
         if (error) {
             console.error("Error inserting bid", error);
+            showToast("Ошибка при отправке отклика. Попробуйте ещё раз.", 'error');
             return;
         }
+        showToast("Отклик успешно отправлен!", 'success');
 
         setIsModalOpen(false);
 
@@ -904,7 +906,7 @@ export default function App() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('catalog')}>
                         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform"><TrainFront className="text-white w-5 h-5" /></div>
-                        <span className="text-2xl font-black tracking-tight dark:text-white hidden sm:block">RailMatch</span>
+                        <span className="text-lg sm:text-2xl font-black tracking-tight dark:text-white">RailMatch</span>
                     </div>
                     <nav className="hidden md:flex items-center gap-8">
                         <button onClick={() => setView('catalog')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'catalog' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Биржа</button>

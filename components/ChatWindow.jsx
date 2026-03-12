@@ -131,32 +131,33 @@ export default function ChatWindow({
 
     return (
         <div className="min-h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="bg-white dark:bg-[#111827] h-[calc(100vh-10rem)] sm:h-[800px] rounded-2xl sm:rounded-[2.5rem] border dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="bg-white dark:bg-[#111827] h-[calc(100vh-8rem)] sm:h-[800px] rounded-2xl sm:rounded-[2.5rem] border dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
 
                 {/* ===== HEADER ===== */}
-                <div className="px-3 sm:px-6 py-3 sm:py-4 border-b dark:border-slate-800 flex justify-between items-start sm:items-center bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl z-20">
-                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
+                <div className="px-3 sm:px-6 py-3 sm:py-4 border-b dark:border-slate-800 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl z-20">
+                    {/* Top row: back + partner info + docs/menu */}
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 shrink-0">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-md ${contactsRevealed ? 'bg-gradient-to-br from-emerald-500 to-green-600' : 'bg-gradient-to-br from-blue-600 to-indigo-600'}`}>
-                            {contactsRevealed ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                        <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-white shadow-md shrink-0 ${contactsRevealed ? 'bg-gradient-to-br from-emerald-500 to-green-600' : 'bg-gradient-to-br from-blue-600 to-indigo-600'}`}>
+                            {contactsRevealed ? <Unlock className="w-4 h-4 sm:w-5 sm:h-5" /> : <Lock className="w-4 h-4 sm:w-5 sm:h-5" />}
                         </div>
-                        <div>
-                            <div className="font-black dark:text-white text-base flex items-center gap-2">
-                                {partnerName}
+                        <div className="min-w-0 flex-1">
+                            <div className="font-black dark:text-white text-sm sm:text-base flex items-center gap-1.5 sm:gap-2 truncate">
+                                <span className="truncate">{partnerName}</span>
                                 {contactsRevealed && (
-                                    <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded font-black">КОНТАКТЫ ОТКРЫТЫ</span>
+                                    <span className="text-[8px] sm:text-[9px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 px-1 sm:px-1.5 py-0.5 rounded font-black shrink-0 whitespace-nowrap">ОТКРЫТЫ</span>
                                 )}
                                 {isCommissionPending && !contactsRevealed && (
-                                    <span className="text-[9px] bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded font-black">ОЖИДАНИЕ ОПЛАТЫ</span>
+                                    <span className="text-[8px] sm:text-[9px] bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 px-1 sm:px-1.5 py-0.5 rounded font-black shrink-0 whitespace-nowrap">ОПЛАТА</span>
                                 )}
                             </div>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                 {contactsRevealed ? (
                                     <>
                                         {partnerCompany && (
-                                            <span className="text-[9px] text-slate-500 dark:text-slate-400 font-bold">
+                                            <span className="text-[9px] text-slate-500 dark:text-slate-400 font-bold truncate">
                                                 {partnerCompany}
                                             </span>
                                         )}
@@ -168,116 +169,112 @@ export default function ChatWindow({
                                     </>
                                 ) : (
                                     <span className="text-[9px] text-slate-400 font-bold flex items-center gap-1">
-                                        <Lock className="w-3 h-3" /> Компания раскроется после оплаты комиссии
+                                        <Lock className="w-3 h-3" /> <span className="hidden sm:inline">Компания раскроется после оплаты комиссии</span><span className="sm:hidden">Скрыто до оплаты</span>
                                     </span>
                                 )}
                             </div>
                         </div>
+
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                            <button
+                                onClick={() => setShowDocsModal(true)}
+                                className="p-2 sm:px-4 sm:py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 transition-all"
+                            >
+                                <FileText className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Документы</span>
+                            </button>
+                            <button className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
+                                <MoreVertical className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    {/* Action buttons row - separate line on mobile */}
+                    <div className="flex items-center gap-2 mt-2 overflow-x-auto no-scrollbar">
                         {/* Confirm terms button (negotiations stage) */}
                         {isNegotiating && (
                             <button
                                 onClick={onAccept}
                                 disabled={myConfirmed}
-                                className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 sm:gap-2 ${
+                                className={`px-3 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                                     myConfirmed
                                         ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default'
                                         : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md active:scale-95'
                                 }`}
                             >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">{myConfirmed ? 'Ждём партнёра...' : 'Подтвердить условия'}</span>
-                                <span className="sm:hidden">{myConfirmed ? 'Ждём...' : 'Условия'}</span>
+                                {myConfirmed ? 'Ждём партнёра...' : 'Подтвердить условия'}
                             </button>
                         )}
 
                         {/* Commission flow */}
                         {isCommissionPending && !contactsRevealed && (
                             <>
-                                {/* No proposal yet — both sides see this */}
                                 {!chat.commission_mode && (
                                     <button
                                         onClick={() => setShowProposeModal(true)}
-                                        className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-md bg-amber-500 hover:bg-amber-600 text-white animate-pulse"
+                                        className="px-3 sm:px-5 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-md bg-amber-500 hover:bg-amber-600 text-white animate-pulse whitespace-nowrap shrink-0"
                                     >
-                                        <Wallet className="w-3.5 h-3.5" /> Предложить способ оплаты
+                                        <Wallet className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Предложить способ оплаты</span><span className="sm:hidden">Способ оплаты</span>
                                     </button>
                                 )}
 
-                                {/* I proposed, waiting for partner */}
                                 {iProposed && !commissionAgreed && (
-                                    <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap shrink-0">
                                         <Clock className="w-3.5 h-3.5" />
-                                        Ожидаем согласия партнёра…
+                                        <span className="hidden sm:inline">Ожидаем согласия партнёра…</span><span className="sm:hidden">Ожидаем партнёра…</span>
                                     </div>
                                 )}
 
-                                {/* Partner proposed — I need to respond */}
                                 {partnerProposed && !commissionAgreed && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest hidden sm:block">
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <span className="text-[9px] sm:text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest hidden sm:block whitespace-nowrap">
                                             {modeLabel}?
                                         </span>
-                                        <button onClick={onApproveCommission} className="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-black flex items-center gap-1.5 transition-all">
+                                        <button onClick={onApproveCommission} className="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[9px] sm:text-[10px] font-black flex items-center gap-1.5 transition-all whitespace-nowrap">
                                             <ThumbsUp className="w-3 h-3" /> Принять
                                         </button>
-                                        <button onClick={onRejectCommission} className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black flex items-center gap-1.5 transition-all">
+                                        <button onClick={onRejectCommission} className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[9px] sm:text-[10px] font-black flex items-center gap-1.5 transition-all whitespace-nowrap">
                                             <ThumbsDown className="w-3 h-3" /> Отклонить
                                         </button>
                                     </div>
                                 )}
 
-                                {/* Agreed — show pay button */}
                                 {commissionAgreed && (
                                     <button
                                         onClick={() => setShowCommissionModal(true)}
                                         disabled={myHalfPaid && !partnerHalfPaid && timeLeft > 0}
-                                        className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-md ${
+                                        className={`px-3 sm:px-5 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-md whitespace-nowrap shrink-0 ${
                                             myHalfPaid && !partnerHalfPaid && timeLeft > 0
                                                 ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default'
                                                 : 'bg-emerald-500 hover:bg-emerald-600 text-white animate-pulse'
                                         }`}
                                     >
                                         <Wallet className="w-3.5 h-3.5" />
-                                        {myHalfPaid ? `Ожидаем партнёра (${formatTime(timeLeft)})` : 'Оплатить комиссию'}
+                                        {myHalfPaid ? `Ожидаем (${formatTime(timeLeft)})` : 'Оплатить'}
                                     </button>
                                 )}
                             </>
                         )}
-
-                        {/* Documents — always accessible */}
-                        <button
-                            onClick={() => setShowDocsModal(true)}
-                            className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 transition-all"
-                        >
-                            <FileText className="w-3.5 h-3.5" /> Документы
-                        </button>
-
-                        <button className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
-                            <MoreVertical className="w-4 h-4" />
-                        </button>
                     </div>
                 </div>
 
                 {/* ===== PROPOSE COMMISSION MODE MODAL ===== */}
                 {showProposeModal && (
-                    <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex p-4 items-center justify-center animate-in fade-in zoom-in-95">
-                        <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-[2rem] shadow-2xl border dark:border-slate-800 overflow-hidden">
-                            <button onClick={() => setShowProposeModal(false)} className="absolute top-5 right-5 p-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-all z-10">
+                    <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex p-3 sm:p-4 items-end sm:items-center justify-center animate-in fade-in zoom-in-95">
+                        <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border dark:border-slate-800 overflow-hidden max-h-[90vh] overflow-y-auto">
+                            <button onClick={() => setShowProposeModal(false)} className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-all z-10">
                                 <X className="w-4 h-4" />
                             </button>
-                            <div className="p-8 pb-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-b border-slate-100 dark:border-slate-800">
-                                <div className="w-14 h-14 bg-amber-100 dark:bg-amber-500/20 text-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/10">
-                                    <SplitSquareHorizontal className="w-7 h-7" />
+                            <div className="p-5 sm:p-8 pb-4 sm:pb-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-b border-slate-100 dark:border-slate-800">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-amber-100 dark:bg-amber-500/20 text-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/10">
+                                    <SplitSquareHorizontal className="w-6 h-6 sm:w-7 sm:h-7" />
                                 </div>
-                                <h3 className="text-2xl font-black dark:text-white mb-2">Предложить способ оплаты</h3>
+                                <h3 className="text-xl sm:text-2xl font-black dark:text-white mb-2">Предложить способ оплаты</h3>
                                 <p className="text-sm text-slate-500 font-medium leading-relaxed">
                                     Выберите вариант — партнёру придёт уведомление с возможностью подтвердить или отклонить.
                                 </p>
                             </div>
-                            <div className="p-8 space-y-4">
+                            <div className="p-5 sm:p-8 space-y-4">
                                 <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-slate-500">Сумма сделки</span>
@@ -290,7 +287,7 @@ export default function ChatWindow({
                                 </div>
                                 <button
                                     onClick={() => { onProposeCommission('split'); setShowProposeModal(false); }}
-                                    className="w-full flex items-center justify-between px-6 py-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 rounded-2xl hover:border-blue-400 transition-all"
+                                    className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 rounded-2xl hover:border-blue-400 transition-all"
                                 >
                                     <div className="text-left">
                                         <div className="font-black text-sm">Разделить 50/50</div>
@@ -315,25 +312,25 @@ export default function ChatWindow({
 
                 {/* ===== COMMISSION MODAL ===== */}
                 {showCommissionModal && (
-                    <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex p-4 items-center justify-center animate-in fade-in zoom-in-95">
-                        <div className="w-full max-w-lg bg-white dark:bg-[#111827] rounded-[2rem] shadow-2xl border dark:border-slate-800 overflow-hidden">
-                            <button onClick={() => setShowCommissionModal(false)} className="absolute top-6 right-6 p-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-all z-10">
+                    <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex p-3 sm:p-4 items-end sm:items-center justify-center animate-in fade-in zoom-in-95">
+                        <div className="w-full max-w-lg bg-white dark:bg-[#111827] rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border dark:border-slate-800 overflow-hidden max-h-[90vh] overflow-y-auto">
+                            <button onClick={() => setShowCommissionModal(false)} className="absolute top-3 right-3 sm:top-6 sm:right-6 p-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-all z-10">
                                 <X className="w-4 h-4" />
                             </button>
 
-                            <div className="p-8 pb-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-b border-slate-100 dark:border-slate-800">
-                                <div className="w-14 h-14 bg-amber-100 dark:bg-amber-500/20 text-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/10">
-                                    <CreditCard className="w-7 h-7" />
+                            <div className="p-5 sm:p-8 pb-4 sm:pb-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-b border-slate-100 dark:border-slate-800">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-amber-100 dark:bg-amber-500/20 text-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/10">
+                                    <CreditCard className="w-6 h-6 sm:w-7 sm:h-7" />
                                 </div>
-                                <h3 className="text-2xl font-black dark:text-white mb-2">Оплата комиссии</h3>
+                                <h3 className="text-xl sm:text-2xl font-black dark:text-white mb-2">Оплата комиссии</h3>
                                 <p className="text-sm text-slate-500 font-medium leading-relaxed">
                                     После оплаты комиссии вы получите контакты партнёра и сможете завершить сделку напрямую.
                                 </p>
                             </div>
 
-                            <div className="p-8 space-y-5">
+                            <div className="p-5 sm:p-8 space-y-4 sm:space-y-5">
                                 {/* Deal amount breakdown */}
-                                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-5 space-y-3 border border-slate-100 dark:border-slate-800">
+                                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 sm:p-5 space-y-3 border border-slate-100 dark:border-slate-800">
                                     <div className="flex justify-between items-center text-sm font-medium">
                                         <span className="text-slate-500">Сумма сделки</span>
                                         <span className="dark:text-white font-bold">{dealAmount.toLocaleString()} ₽</span>
@@ -600,28 +597,28 @@ export default function ChatWindow({
                 )}
 
                 {/* ===== DEAL PIPELINE STEPPER ===== */}
-                <div className="px-6 py-3 bg-slate-50/80 dark:bg-slate-900/30 border-b dark:border-slate-800 z-10">
-                    <div className="flex items-center justify-between gap-4">
+                <div className="px-3 sm:px-6 py-2 sm:py-3 bg-slate-50/80 dark:bg-slate-900/30 border-b dark:border-slate-800 z-10">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
                         {/* Route + info */}
-                        <div className="flex items-center gap-3 text-xs font-bold flex-wrap">
-                            <span className="dark:text-white flex items-center gap-1.5">
-                                {chat.stationFrom} <ChevronRight className="w-3 h-3 text-blue-500" /> {chat.stationTo}
+                        <div className="flex items-center gap-1.5 sm:gap-3 text-[10px] sm:text-xs font-bold flex-wrap min-w-0">
+                            <span className="dark:text-white flex items-center gap-1 sm:gap-1.5 truncate">
+                                <span className="truncate">{chat.stationFrom}</span> <ChevronRight className="w-3 h-3 text-blue-500 shrink-0" /> <span className="truncate">{chat.stationTo}</span>
                             </span>
-                            <span className="w-px h-4 bg-slate-200 dark:bg-slate-700"></span>
-                            <span className="text-slate-500">{chat.wagons} ваг.</span>
+                            <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0"></span>
+                            <span className="text-slate-500 shrink-0">{chat.wagons} ваг.</span>
                             <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 hidden sm:block"></span>
                             <span className="text-blue-600 dark:text-blue-400 hidden sm:block">{chat.price?.toLocaleString()} ₽/шт</span>
                         </div>
 
                         {/* 3-stage stepper */}
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar">
                             {[
                                 { label: 'Переговоры', icon: <MessageSquare className="w-3.5 h-3.5" /> },
                                 { label: 'Комиссия', icon: <Wallet className="w-3.5 h-3.5" /> },
                                 { label: 'Контакты', icon: <Unlock className="w-3.5 h-3.5" /> },
                             ].map((s, i) => (
                                 <React.Fragment key={i}>
-                                    <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                                    <div className={`px-1.5 sm:px-2.5 py-1 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 whitespace-nowrap ${
                                         i < stageIndex ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' :
                                         i === stageIndex ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200 dark:ring-blue-800' :
                                         'text-slate-400'
@@ -658,7 +655,7 @@ export default function ChatWindow({
                 </div>
 
                 {/* ===== MESSAGES AREA ===== */}
-                <div ref={scrollRef} className="flex-1 p-8 overflow-y-auto space-y-4 bg-[#fafafa] dark:bg-transparent custom-scrollbar">
+                <div ref={scrollRef} className="flex-1 p-3 sm:p-8 overflow-y-auto space-y-3 sm:space-y-4 bg-[#fafafa] dark:bg-transparent custom-scrollbar">
                     {(!messages || messages.length === 0) ? (
                         <div className="h-full flex flex-col justify-center items-center text-center opacity-40">
                             <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 mb-6">
@@ -706,7 +703,7 @@ export default function ChatWindow({
                 </div>
 
                 {/* ===== INPUT AREA ===== */}
-                <div className="px-6 py-4 bg-white dark:bg-[#111827] border-t dark:border-slate-800">
+                <div className="px-3 sm:px-6 py-3 sm:py-4 bg-white dark:bg-[#111827] border-t dark:border-slate-800">
                     {/* Status banners */}
                     {isCommissionPending && !myHalfPaid && !contactsRevealed && (
                         <div className="mb-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 rounded-2xl flex items-center gap-3">

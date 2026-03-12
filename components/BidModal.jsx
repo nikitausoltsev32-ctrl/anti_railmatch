@@ -11,11 +11,11 @@ export default function BidModal({ request, userLimit, onClose, onConfirm }) {
     const totalSum = Number(price) * Number(wagons) || 0;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative bg-white dark:bg-[#111827] w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in-95 border border-white dark:border-slate-800">
-                <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-black dark:text-white">Подача ставки</h2><button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors dark:text-white"><X /></button></div>
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl mb-8 font-bold text-blue-700 dark:text-blue-300 text-center">{request.stationFrom} → {request.stationTo}</div>
+            <div className="relative bg-white dark:bg-[#111827] w-full max-w-lg rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 border border-white dark:border-slate-800 max-h-[90vh] overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-10">
+                <div className="flex justify-between items-center mb-5 sm:mb-8"><h2 className="text-2xl sm:text-3xl font-black dark:text-white">Подача ставки</h2><button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors dark:text-white"><X /></button></div>
+                <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl mb-5 sm:mb-8 font-bold text-blue-700 dark:text-blue-300 text-center text-sm sm:text-base">{request.stationFrom} → {request.stationTo}</div>
 
                 {userLimit !== undefined && userLimit !== null && (
                     <div className="mb-6 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 bg-white dark:bg-[#0B1120] text-center shadow-inner">
@@ -27,17 +27,17 @@ export default function BidModal({ request, userLimit, onClose, onConfirm }) {
                 <div className="space-y-6">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Цена за 1 вагон (₽)</label>
-                        <input type="number" min="1" value={price} onChange={e => setPrice(e.target.value)} placeholder="Введите цену" className={`w-full px-8 py-5 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-black text-2xl text-center ${price !== '' && Number(price) <= 0 ? 'ring-2 ring-red-400' : ''}`} />
+                        <input type="number" min="1" value={price} onChange={e => setPrice(e.target.value)} placeholder="Введите цену" className={`w-full px-6 sm:px-8 py-4 sm:py-5 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-black text-xl sm:text-2xl text-center ${price !== '' && Number(price) <= 0 ? 'ring-2 ring-red-400' : ''}`} />
                         {price !== '' && Number(price) <= 0 && <p className="text-xs text-red-500 font-bold ml-4">Укажите цену больше 0</p>}
                     </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Количество вагонов (макс. {maxWagons})</label>
-                        <input type="number" min="1" max={maxWagons} value={wagons} onChange={e => setWagons(e.target.value)} className={`w-full px-8 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-center ${Number(wagons) > maxWagons ? 'ring-2 ring-red-400' : ''}`} />
+                        <input type="number" min="1" max={maxWagons} value={wagons} onChange={e => setWagons(e.target.value)} className={`w-full px-6 sm:px-8 py-3 sm:py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-center ${Number(wagons) > maxWagons ? 'ring-2 ring-red-400' : ''}`} />
                         {Number(wagons) > maxWagons && <p className="text-xs text-red-500 font-bold ml-4">Максимум {maxWagons} вагонов</p>}
                     </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Вес (тонн)</label>
-                        <input type="number" min="0" value={tons} onChange={e => setTons(e.target.value)} className="w-full px-8 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-center" />
+                        <input type="number" min="0" value={tons} onChange={e => setTons(e.target.value)} className="w-full px-6 sm:px-8 py-3 sm:py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-center" />
                     </div>
 
                     {totalSum > 0 && (
@@ -50,7 +50,7 @@ export default function BidModal({ request, userLimit, onClose, onConfirm }) {
                     <button
                         onClick={() => { if (isValid) onConfirm(price, wagons, tons); }}
                         disabled={!isValid}
-                        className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-500/20 uppercase tracking-widest text-xs hover:-translate-y-0.5 active:scale-95 transition-all mt-4 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                        className="w-full py-4 sm:py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-500/20 uppercase tracking-widest text-xs hover:-translate-y-0.5 active:scale-95 transition-all mt-4 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                     >Отправить предложение</button>
                 </div>
             </div>
