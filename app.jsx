@@ -186,7 +186,7 @@ export default function App() {
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
                 supabase.from('bids').select('*').order('created_at', { ascending: false }),
                 supabase.from('messages').select('*').order('created_at', { ascending: true }),
-                supabase.from('profiles').select('id, inn, role, company, phone'),
+                supabase.from('profiles').select('id, inn, role, company, name, phone'),
             ]);
             if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
@@ -239,7 +239,7 @@ export default function App() {
         const fetchDemoData = async () => {
             const [{ data: demoRequests }, { data: demoProfiles }] = await Promise.all([
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
-                supabase.from('profiles').select('id, inn, role, company, phone'),
+                supabase.from('profiles').select('id, inn, role, company, name, phone'),
             ]);
             if (demoRequests) setRequests(demoRequests);
             if (demoProfiles) setProfiles(demoProfiles);
@@ -267,7 +267,7 @@ export default function App() {
         if (authLoading) return;
         const email = formData.email?.trim();
         const password = formData.password?.trim();
-        const { company, inn, phone } = formData;
+        const { name, company, inn, phone } = formData;
 
         if (!email || !password) {
             showToast("Пожалуйста, заполните все поля", 'warning');
@@ -289,7 +289,7 @@ export default function App() {
                 const userId = data.user?.id;
                 if (userId) {
                     const { error: profileError } = await supabase.from('profiles').insert([
-                        { id: userId, company, inn, phone, role: regRole, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }
+                        { id: userId, name, company, inn, phone, role: regRole, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
@@ -320,18 +320,23 @@ export default function App() {
      * Единственная точка сборки — гарантирует одинаковую форму везде.
      */
     const buildChatObject = useCallback((bid, req, profilesList) => {
-        const shipperProfile = (profilesList || profiles).find(p => p.inn === req?.shipperInn);
+        const list = profilesList || profiles;
+        const shipperProfile = list.find(p => p.inn === req?.shipperInn);
+        const ownerProfile = list.find(p => p.id === bid.ownerId);
         return {
             ...bid,
-            stationFrom:  req?.stationFrom  ?? bid.stationFrom  ?? null,
-            stationTo:    req?.stationTo    ?? bid.stationTo    ?? null,
-            cargoType:    req?.cargoType    ?? bid.cargoType    ?? null,
-            wagonType:    req?.wagonType    ?? bid.wagonType    ?? null,
-            totalWagons:  req?.totalWagons  ?? bid.totalWagons  ?? null,
-            totalTons:    req?.totalTons    ?? bid.totalTons    ?? null,
-            shipperInn:   req?.shipperInn   ?? bid.shipperInn   ?? null,
-            shipperName:  shipperProfile?.company ?? bid.shipperName ?? 'Грузоотправитель',
-            shipperPhone: shipperProfile?.phone   ?? bid.shipperPhone ?? null,
+            stationFrom:    req?.stationFrom  ?? bid.stationFrom  ?? null,
+            stationTo:      req?.stationTo    ?? bid.stationTo    ?? null,
+            cargoType:      req?.cargoType    ?? bid.cargoType    ?? null,
+            wagonType:      req?.wagonType    ?? bid.wagonType    ?? null,
+            totalWagons:    req?.totalWagons  ?? bid.totalWagons  ?? null,
+            totalTons:      req?.totalTons    ?? bid.totalTons    ?? null,
+            shipperInn:     req?.shipperInn   ?? bid.shipperInn   ?? null,
+            shipperName:    shipperProfile?.name  ?? bid.shipperName  ?? 'Грузоотправитель',
+            shipperCompany: shipperProfile?.company ?? null,
+            shipperPhone:   shipperProfile?.phone  ?? bid.shipperPhone ?? null,
+            ownerName:      ownerProfile?.name     ?? bid.ownerName    ?? 'Владелец вагонов',
+            ownerCompany:   ownerProfile?.company  ?? null,
         };
     }, [profiles]);
 
@@ -370,7 +375,7 @@ export default function App() {
         const bidData = {
             requestId: selectedRequest.id,
             ownerId: sbUser.id,
-            ownerName: userProfile.company,
+            ownerName: userProfile.name || userProfile.company,
             ownerPhone: userProfile.phone,
             ownerInn: userProfile.inn,
             price: Number(price),
@@ -1033,7 +1038,7 @@ export default function App() {
                                                     })}
                                                     rank={idx}
                                                     creatorRole={creatorProfile?.role}
-                                                    creatorCompany={creatorProfile?.company}
+                                                    creatorCompany={creatorProfile?.name || creatorProfile?.company}
                                                 />
                                             </div>
                                         );

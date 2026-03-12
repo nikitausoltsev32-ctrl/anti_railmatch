@@ -83,12 +83,9 @@ export default function ChatWindow({
     const isMyBid = chat.ownerId === currentUserId;
     const contactsRevealed = chat.contacts_revealed || chat.status === 'contacts_revealed' || chat.status === 'accepted';
 
-    // Имя всегда показываем — это название компании партнёра.
-    // После оплаты комиссии дополнительно раскрываем телефон.
-    const partnerRawName = isMyBid ? chat.shipperName : chat.ownerName;
-    const partnerName = partnerRawName || (isMyBid ? 'Грузоотправитель' : 'Владелец вагонов');
-    // Название компании отдельно для subtitle после оплаты
-    const partnerCompany = contactsRevealed ? partnerRawName : null;
+    // До оплаты показываем только имя, после — компанию и телефон
+    const partnerName = (isMyBid ? chat.shipperName : chat.ownerName) || (isMyBid ? 'Грузоотправитель' : 'Владелец вагонов');
+    const partnerCompany = contactsRevealed ? (isMyBid ? chat.shipperCompany : chat.ownerCompany) : null;
     const partnerPhone = contactsRevealed
         ? (isMyBid ? chat.shipperPhone : chat.ownerPhone)
         : null;

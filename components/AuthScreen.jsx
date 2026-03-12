@@ -13,7 +13,7 @@ const validatePhone = (phone) => {
 
 export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading }) {
     const [formData, setFormData] = useState({
-        email: '', password: '', company: '', inn: '', phone: ''
+        email: '', password: '', name: '', company: '', inn: '', phone: ''
     });
     const [errors, setErrors] = useState({});
     const handleChange = (e) => {
@@ -24,6 +24,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
     const validate = () => {
         if (mode !== 'register') return true;
         const errs = {};
+        if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
         if (!formData.company.trim()) errs.company = 'Укажите название компании';
         if (!validateInn(formData.inn)) errs.inn = 'ИНН должен содержать 10 или 12 цифр';
         if (!validatePhone(formData.phone)) errs.phone = 'Укажите корректный номер телефона';
@@ -51,6 +52,10 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
 
                     {mode === 'register' && (
                         <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+                            <div>
+                                <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ваше имя" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.name ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
+                                {errors.name && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.name}</p>}
+                            </div>
                             <div>
                                 <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.company ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
                                 {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
