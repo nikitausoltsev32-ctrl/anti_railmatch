@@ -34,15 +34,15 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
 
     return (
         <div className="min-h-screen animate-in fade-in duration-500 bg-slate-50 dark:bg-[#0B1120] flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 shadow-2xl border border-white dark:border-slate-800">
+            <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl border border-white dark:border-slate-800">
                 <button onClick={onBack} className="text-slate-400 font-bold text-sm mb-8 flex items-center gap-2 hover:text-blue-600 transition-colors"><ArrowRight className="w-4 h-4 rotate-180" /> Назад</button>
                 <h2 className="text-3xl font-black mb-2 dark:text-white">{mode === 'login' ? 'Вход' : 'Регистрация'}</h2>
                 <p className="text-slate-400 mb-8 font-medium text-sm">Введите данные вашей компании</p>
 
                 {mode === 'register' && (
                     <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6">
-                        <button onClick={() => setRole('owner')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-400'}`}>Владелец</button>
-                        <button onClick={() => setRole('shipper')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-400'}`}>Отправитель</button>
+                        <button onClick={() => setRole('owner')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-400'}`}>Владелец вагонов</button>
+                        <button onClick={() => setRole('shipper')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-400'}`}>Грузоотправитель</button>
                     </div>
                 )}
 

@@ -11,14 +11,14 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                         <TrainFront className="text-white w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
-                    <span className="text-2xl sm:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">RailMatch</span>
+                    <span className="text-xl sm:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">RailMatch</span>
                 </div>
-                <div className="flex items-center gap-3 sm:gap-6">
-                    <button onClick={() => setIsDark(!isDark)} className="p-2.5 sm:p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm hover:rotate-180 hover:shadow-lg transition-all duration-500 text-slate-400">
-                        {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
+                <div className="flex items-center gap-2 sm:gap-6">
+                    <button onClick={() => setIsDark(!isDark)} className="p-2 sm:p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm hover:rotate-180 hover:shadow-lg transition-all duration-500 text-slate-400">
+                        {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
-                    <button onClick={onLogin} className="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Войти</button>
-                    <button onClick={onStart} className="px-4 py-2.5 sm:px-8 sm:py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs sm:text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300">Регистрация</button>
+                    <button onClick={onLogin} className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Войти</button>
+                    <button onClick={onStart} className="px-3 py-2 sm:px-8 sm:py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] sm:text-sm font-black uppercase tracking-widest rounded-xl sm:rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 whitespace-nowrap">Регистрация</button>
                 </div>
             </header>
 

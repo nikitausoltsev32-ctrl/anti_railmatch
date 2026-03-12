@@ -598,11 +598,11 @@ export default function ChatWindow({
 
                 {/* ===== DEAL PIPELINE STEPPER ===== */}
                 <div className="px-3 sm:px-6 py-2 sm:py-3 bg-slate-50/80 dark:bg-slate-900/30 border-b dark:border-slate-800 z-10">
-                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
                         {/* Route + info */}
-                        <div className="flex items-center gap-1.5 sm:gap-3 text-[10px] sm:text-xs font-bold flex-wrap min-w-0">
-                            <span className="dark:text-white flex items-center gap-1 sm:gap-1.5 truncate">
-                                <span className="truncate">{chat.stationFrom}</span> <ChevronRight className="w-3 h-3 text-blue-500 shrink-0" /> <span className="truncate">{chat.stationTo}</span>
+                        <div className="flex items-center gap-1.5 sm:gap-3 text-[10px] sm:text-xs font-bold shrink-0">
+                            <span className="dark:text-white flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
+                                {chat.stationFrom} <ChevronRight className="w-3 h-3 text-blue-500 shrink-0" /> {chat.stationTo}
                             </span>
                             <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0"></span>
                             <span className="text-slate-500 shrink-0">{chat.wagons} ваг.</span>
@@ -611,7 +611,7 @@ export default function ChatWindow({
                         </div>
 
                         {/* 3-stage stepper */}
-                        <div className="flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar">
+                        <div className="flex items-center gap-1 shrink-0">
                             {[
                                 { label: 'Переговоры', icon: <MessageSquare className="w-3.5 h-3.5" /> },
                                 { label: 'Комиссия', icon: <Wallet className="w-3.5 h-3.5" /> },

@@ -931,7 +931,7 @@ export default function App() {
                         <div onClick={() => requireAuth(() => setView('profile'))} className="flex items-center gap-3 cursor-pointer pl-6 border-l dark:border-slate-800 group">
                             <div className="text-right hidden sm:block">
                                 <div className="text-sm font-bold group-hover:text-blue-600 transition-colors dark:text-white">{userProfile?.company || "Аноним"}</div>
-                                <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{userProfile?.role === 'shipper' ? 'Отправитель' : userProfile?.role === 'owner' ? 'Владелец' : 'Гость'}</div>
+                                <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{userProfile?.role === 'shipper' ? 'Грузоотправитель' : userProfile?.role === 'owner' ? 'Владелец вагонов' : 'Гость'}</div>
                             </div>
                             <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-full flex items-center justify-center font-bold border border-slate-300 dark:border-slate-600 dark:text-white shadow-sm"><User className="w-5 h-5 text-slate-400" /></div>
                         </div>
