@@ -901,7 +901,7 @@ export default function App() {
         <ErrorBoundary>
         <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top">
             <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('catalog')}>
                         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform"><TrainFront className="text-white w-5 h-5" /></div>
                         <span className="text-2xl font-black tracking-tight dark:text-white hidden sm:block">RailMatch</span>
@@ -937,7 +937,7 @@ export default function App() {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-10 relative">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24 md:pb-10 relative">
                 {/* SECURITY WARNING BANNER */}
                 {securityWarning && (
                     <div className={`mb-8 p-6 rounded-[2rem] border animate-in fade-in slide-in-from-top-4 duration-500 z-40 shadow-xl flex items-center gap-6 ${securityWarning.severity === 'critical'
@@ -959,9 +959,9 @@ export default function App() {
                 {view === 'catalog' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                         {(!sbUser || userProfile?.role === 'demo') && (
-                            <div className="mb-10 p-6 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800/30 rounded-3xl flex justify-between items-center shadow-sm border-l-4 border-l-orange-500">
-                                <div className="flex items-center gap-4 text-orange-600 dark:text-orange-400"><AlertCircle className="w-10 h-10" /><div><h3 className="font-extrabold text-lg">Демо-режим</h3><p className="text-sm font-medium opacity-80">Зарегистрируйтесь, чтобы иметь возможность публиковать грузы и делать ставки.</p></div></div>
-                                <button onClick={() => setScreen('auth')} className="px-6 py-2.5 bg-orange-500 text-white rounded-xl font-bold text-sm shadow-sm">Авторизация</button>
+                            <div className="mb-6 sm:mb-10 p-4 sm:p-6 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm border-l-4 border-l-orange-500">
+                                <div className="flex items-center gap-3 sm:gap-4 text-orange-600 dark:text-orange-400"><AlertCircle className="w-8 h-8 sm:w-10 sm:h-10 shrink-0" /><div><h3 className="font-extrabold text-base sm:text-lg">Демо-режим</h3><p className="text-xs sm:text-sm font-medium opacity-80">Зарегистрируйтесь для публикации грузов и ставок.</p></div></div>
+                                <button onClick={() => setScreen('auth')} className="px-4 sm:px-6 py-2 sm:py-2.5 bg-orange-500 text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm shrink-0">Авторизация</button>
                             </div>
                         )}
 
@@ -1053,8 +1053,8 @@ export default function App() {
 
 
                 {view === 'messenger' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[700px] animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <div className="lg:col-span-1 bg-white dark:bg-[#111827] rounded-[2.5rem] border dark:border-slate-800 p-6 shadow-xl overflow-hidden flex flex-col">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-8 min-h-[500px] sm:min-h-[700px] animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div className={`lg:col-span-1 bg-white dark:bg-[#111827] rounded-2xl sm:rounded-[2.5rem] border dark:border-slate-800 p-4 sm:p-6 shadow-xl overflow-hidden flex flex-col ${activeChat ? 'hidden lg:flex' : ''}`}>
                             <h2 className="text-xl font-black mb-6 dark:text-white uppercase tracking-tight flex items-center gap-2">
                                 <MessageSquare className="w-5 h-5 text-blue-600" /> Диалоги
                             </h2>
@@ -1100,7 +1100,7 @@ export default function App() {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-3">
+                        <div className={`lg:col-span-3 ${!activeChat ? 'hidden lg:block' : ''}`}>
                             {activeChat ? (
                                 <ChatWindow
                                     chat={activeChat}
@@ -1197,7 +1197,7 @@ export default function App() {
             </main>
 
                     {/* ===== TOAST NOTIFICATIONS ===== */}
-            <div className="fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none max-w-sm w-full">
+            <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[200] flex flex-col gap-3 pointer-events-none max-w-[calc(100vw-2rem)] sm:max-w-sm w-full">
                 {toasts.map(toast => (
                     <div key={toast.id} className={`flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border pointer-events-auto animate-in slide-in-from-right-4 fade-in duration-300 ${
                         toast.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200' :
@@ -1227,6 +1227,32 @@ export default function App() {
                 <OnboardingModal role={userProfile.role} onComplete={handleOnboardingComplete} />
             )}
             {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#0B1120]/90 backdrop-blur-xl border-t border-slate-200/60 dark:border-slate-800/60 px-2 pb-[env(safe-area-inset-bottom)]">
+                <div className="flex items-center justify-around h-16">
+                    {[
+                        { key: 'catalog', label: 'Биржа', icon: <Sparkles className="w-5 h-5" /> },
+                        { key: 'my-requests', label: 'Заявки', icon: <ArrowRight className="w-5 h-5" /> },
+                        { key: 'messenger', label: 'Чаты', icon: <MessageSquare className="w-5 h-5" />, badge: hasUnread },
+                        { key: 'profile', label: 'Профиль', icon: <User className="w-5 h-5" /> },
+                    ].map(tab => (
+                        <button
+                            key={tab.key}
+                            onClick={() => tab.key === 'profile' ? requireAuth(() => setView('profile')) : setView(tab.key)}
+                            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors relative ${
+                                (view === tab.key || (tab.key === 'messenger' && view === 'chat'))
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-400 dark:text-slate-500'
+                            }`}
+                        >
+                            {tab.icon}
+                            <span className="text-[10px] font-bold">{tab.label}</span>
+                            {tab.badge && <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>}
+                        </button>
+                    ))}
+                </div>
+            </nav>
         </div>
         </ErrorBoundary>
     );
