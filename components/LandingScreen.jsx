@@ -17,7 +17,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                     <button onClick={() => setIsDark(!isDark)} className="p-2.5 sm:p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm hover:rotate-180 hover:shadow-lg transition-all duration-500 text-slate-400">
                         {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
                     </button>
-                    <button onClick={onLogin} className="hidden sm:block text-sm font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Войти</button>
+                    <button onClick={onLogin} className="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Войти</button>
                     <button onClick={onStart} className="px-4 py-2.5 sm:px-8 sm:py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs sm:text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300">Регистрация</button>
                 </div>
             </header>
@@ -53,7 +53,7 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                 </div>
 
                 {/* H1 */}
-                <h1 className="text-5xl md:text-8xl font-black mb-8 leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <h1 className="text-3xl sm:text-5xl md:text-8xl font-black mb-6 sm:mb-8 leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">
                     Грузы и вагоны.<br />
                     <span className="relative inline-block mt-2">
                         <span className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 blur-2xl opacity-20"></span>

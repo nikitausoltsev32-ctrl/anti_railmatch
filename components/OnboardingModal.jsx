@@ -52,11 +52,11 @@ export default function OnboardingModal({ role, onComplete }) {
     ];
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-[#111827] rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-10">
 
                 {/* Progress bar */}
-                <div className="flex gap-2 mb-10">
+                <div className="flex gap-2 mb-6 sm:mb-10">
                     {steps.map((s, i) => (
                         <div
                             key={i}
@@ -68,23 +68,23 @@ export default function OnboardingModal({ role, onComplete }) {
                 </div>
 
                 {/* Icon */}
-                <div className={`w-20 h-20 rounded-3xl ${colors.bg} ${colors.text} flex items-center justify-center mb-8 shadow-inner`}>
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl ${colors.bg} ${colors.text} flex items-center justify-center mb-5 sm:mb-8 shadow-inner`}>
                     {current.icon}
                 </div>
 
                 {/* Title */}
-                <h2 className="text-2xl font-black mb-4 dark:text-white leading-tight">{current.title}</h2>
+                <h2 className="text-xl sm:text-2xl font-black mb-3 sm:mb-4 dark:text-white leading-tight">{current.title}</h2>
 
                 {/* Text description */}
                 {current.desc && (
-                    <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-8">{current.desc}</p>
+                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-5 sm:mb-8">{current.desc}</p>
                 )}
 
                 {/* Flow diagram (step 2) */}
                 {current.flow && (
-                    <div className="mb-8 space-y-3">
+                    <div className="mb-5 sm:mb-8 space-y-2 sm:space-y-3">
                         {flowSteps.map((item) => (
-                            <div key={item.num} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                            <div key={item.num} className="flex items-start gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/50">
                                 <span className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
                                     {item.num}
                                 </span>
