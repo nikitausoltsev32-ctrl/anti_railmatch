@@ -27,6 +27,7 @@ import { validateMessageIntent } from './src/security.js';
 export default function App() {
     const [isDark, setIsDark] = useState(false);
     const [sbUser, setSbUser] = useState(null);
+    const [authChecking, setAuthChecking] = useState(true);
 
     // Состояния данных
     const [requests, setRequests] = useState([]);
@@ -110,6 +111,7 @@ export default function App() {
                             if (!mounted) return;
                             if (retryData) {
                                 setUserProfile(retryData);
+                                setAuthChecking(false);
                                 if (isInitialLogin) {
                                     const savedScreen = localStorage.getItem('rm_screen');
                                     setScreen('app');
@@ -120,6 +122,7 @@ export default function App() {
                                     }
                                 }
                             } else {
+                                setAuthChecking(false);
                                 showToast("Профиль не найден. Попробуйте войти через минуту.", 'error');
                                 await supabase.auth.signOut();
                             }
@@ -131,6 +134,7 @@ export default function App() {
 
                 if (data) {
                     setUserProfile(data);
+                    setAuthChecking(false);
                     if (isInitialLogin) {
                         const savedScreen = localStorage.getItem('rm_screen');
                         setScreen('app');
@@ -142,7 +146,10 @@ export default function App() {
                     }
                 }
             } catch (err) {
-                if (mounted) console.error("fetchProfile failed:", err);
+                if (mounted) {
+                    console.error("fetchProfile failed:", err);
+                    setAuthChecking(false);
+                }
             }
         };
 
@@ -150,6 +157,8 @@ export default function App() {
             if (session?.user) {
                 setSbUser(session.user);
                 fetchProfile(session.user.id, true);
+            } else {
+                setAuthChecking(false);
             }
         });
 
@@ -895,6 +904,12 @@ export default function App() {
 
     // --- RENDERING ---
 
+    if (authChecking) return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0B1120]">
+            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
+
     if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
     if (screen === 'auth') return <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />;
@@ -1073,9 +1088,10 @@ export default function App() {
                                     const req = requests.find(r => r.id === chatBid.requestId);
                                     const isMeOwner = chatBid.ownerId === sbUser?.id;
                                     const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
-                                    const contactsRevealedForBid = chatBid.contacts_revealed || chatBid.status === 'contacts_revealed' || chatBid.status === 'accepted';
-                                    const realPartnerName = isMeOwner ? (creatorProfile?.company || req?.stationTo || 'Заявка') : (chatBid.ownerName || 'Партнёр');
-                                    const partnerName = contactsRevealedForBid ? realPartnerName : 'Переговоры';
+                                    const ownerProfile = profiles.find(p => p.id === chatBid.ownerId);
+                                    const partnerName = isMeOwner
+                                        ? (creatorProfile?.company || creatorProfile?.name || req?.stationTo || 'Заявка')
+                                        : (ownerProfile?.name || ownerProfile?.company || chatBid.ownerName || 'Партнёр');
                                     const isActive = activeChat?.id === chatBid.id;
 
                                     return (
