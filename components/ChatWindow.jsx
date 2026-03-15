@@ -2,14 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowLeft, ShieldCheck, MoreVertical, MessageSquare, Send, CheckCircle2,
     FileText, Wallet, Phone, Download, Loader2, Clock, Lock, Unlock,
-    Info, PenTool, CreditCard, X, ChevronRight, ThumbsUp, ThumbsDown, SplitSquareHorizontal
+    Info, PenTool, CreditCard, X, ChevronRight, ThumbsUp, ThumbsDown, SplitSquareHorizontal,
+    Shield, AlertTriangle, Ban
 } from 'lucide-react';
 import { downloadDocument } from './DocumentGenerator';
 import DocumentSigningModal from './DocumentSigningModal';
 import { PLATFORM_COMMISSION_RATE } from '../src/constants.js';
+import { validateMessageIntent } from '../src/security.js';
 
 export default function ChatWindow({
     chat, messages, currentUserId, userRole, userProfile,
+    violationInfo, onDismissViolation,
     onSend, onAccept, onPayCommission, onProposeCommission, onApproveCommission, onRejectCommission, onDocSign, onBack
 }) {
     const [showCommissionModal, setShowCommissionModal] = useState(false);
@@ -23,7 +26,9 @@ export default function ChatWindow({
     const [isProcessingPayment, setIsProcessingPayment] = useState(false);
     const [docSigningType, setDocSigningType] = useState(null);
     const [timeLeft, setTimeLeft] = useState(null);
+    const [inputWarning, setInputWarning] = useState(false); // pre-send validation hint
     const scrollRef = useRef(null);
+    const inputWarningTimer = useRef(null);
 
     // Sync payment mode from agreed commission mode
     useEffect(() => {
@@ -49,10 +54,29 @@ export default function ChatWindow({
         }
     }, [messages]);
 
+    // Pre-send validation: check input as user types (debounced)
+    const handleInputChange = (e) => {
+        const val = e.target.value;
+        setInputText(val);
+        clearTimeout(inputWarningTimer.current);
+        if (val.trim().length > 2) {
+            inputWarningTimer.current = setTimeout(() => {
+                const check = validateMessageIntent(val);
+                setInputWarning(check.isViolation);
+            }, 300);
+        } else {
+            setInputWarning(false);
+        }
+    };
+
+    const isChatBlocked = userProfile?.chat_blocked_until && new Date(userProfile.chat_blocked_until) > new Date();
+    const isBanned = userProfile?.is_banned;
+
     const handleSend = () => {
-        if (!inputText.trim()) return;
+        if (!inputText.trim() || isChatBlocked || isBanned) return;
         onSend(inputText);
         setInputText('');
+        setInputWarning(false);
     };
 
     const handleDownloadPDF = () => {
@@ -654,6 +678,54 @@ export default function ChatWindow({
                     )}
                 </div>
 
+                {/* ===== ПОСТОЯННАЯ ПЛАШКА БЕЗОПАСНОСТИ (Уровень 3) ===== */}
+                <div className="px-3 sm:px-6 py-2 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-100 dark:border-amber-900/50 flex items-center gap-3">
+                    <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <p className="text-[10px] sm:text-xs font-bold text-amber-700 dark:text-amber-400 leading-relaxed">
+                        Передача контактов вне платформы = блокировка аккаунта. Раскрывайте контакты через кнопку «Раскрыть контакты».
+                        <span className="hidden sm:inline text-amber-500 dark:text-amber-500/70"> Верификация, история сделок и защита при спорах действуют только внутри RailMatch.</span>
+                    </p>
+                </div>
+
+                {/* ===== МОДАЛЬНОЕ ОКНО НАРУШЕНИЯ (Уровень 3) ===== */}
+                {violationInfo && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in-95 duration-300">
+                            <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-6 ${
+                                violationInfo.sanctionLevel === 'banned' ? 'bg-red-100 dark:bg-red-900/40 text-red-600' :
+                                violationInfo.sanctionLevel === 'blocked' ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-600' :
+                                violationInfo.sanctionLevel === 'unverified' ? 'bg-red-100 dark:bg-red-900/40 text-red-600' :
+                                'bg-amber-100 dark:bg-amber-900/40 text-amber-600'
+                            }`}>
+                                {violationInfo.sanctionLevel === 'banned' ? <Ban className="w-8 h-8" /> :
+                                 violationInfo.sanctionLevel === 'blocked' ? <Lock className="w-8 h-8" /> :
+                                 <AlertTriangle className="w-8 h-8" />}
+                            </div>
+                            <h3 className="text-center text-lg font-black dark:text-white uppercase tracking-wider mb-3">
+                                {violationInfo.sanctionLevel === 'banned' ? 'Аккаунт заблокирован' :
+                                 violationInfo.sanctionLevel === 'blocked' ? 'Чат заблокирован' :
+                                 violationInfo.sanctionLevel === 'unverified' ? 'Верификация снята' :
+                                 'Сообщение заблокировано'}
+                            </h3>
+                            <p className="text-center text-sm font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                                {violationInfo.message}
+                            </p>
+                            <div className="text-center text-xs font-black text-slate-400 uppercase tracking-widest mb-6">
+                                Нарушений: {violationInfo.warningCount}
+                            </div>
+                            <p className="text-center text-xs text-slate-500 dark:text-slate-500 mb-6 leading-relaxed">
+                                Защита сделки действует только при оплате через RailMatch. Используйте кнопку «Раскрыть контакты» для безопасной передачи данных.
+                            </p>
+                            <button
+                                onClick={onDismissViolation}
+                                className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm uppercase tracking-widest rounded-2xl hover:opacity-90 transition-opacity"
+                            >
+                                Понятно
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* ===== MESSAGES AREA ===== */}
                 <div ref={scrollRef} className="flex-1 p-3 sm:p-8 overflow-y-auto space-y-3 sm:space-y-4 bg-[#fafafa] dark:bg-transparent custom-scrollbar">
                     {(!messages || messages.length === 0) ? (
@@ -720,22 +792,48 @@ export default function ChatWindow({
                         </div>
                     )}
 
-                    <div className="flex gap-3 items-center bg-slate-50 dark:bg-slate-900/50 p-2 rounded-2xl border dark:border-slate-800 focus-within:ring-2 ring-blue-500/20 transition-all">
-                        <input
-                            value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Напишите сообщение..."
-                            className="flex-1 bg-transparent px-4 py-3 outline-none dark:text-white font-bold text-sm placeholder:text-slate-400"
-                        />
-                        <button
-                            onClick={handleSend}
-                            disabled={!inputText.trim()}
-                            className="w-11 h-11 bg-blue-600 disabled:opacity-50 text-white rounded-xl flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
-                        >
-                            <Send className="w-5 h-5" />
-                        </button>
-                    </div>
+                    {/* Pre-send warning */}
+                    {inputWarning && (
+                        <div className="mb-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 rounded-xl flex items-center gap-2">
+                            <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                            <span className="text-[10px] font-bold text-red-600 dark:text-red-400">Обнаружены контактные данные. Сообщение будет заблокировано.</span>
+                        </div>
+                    )}
+
+                    {isBanned ? (
+                        <div className="flex items-center justify-center gap-3 py-4 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-800/50">
+                            <Ban className="w-5 h-5 text-red-500" />
+                            <span className="text-sm font-bold text-red-600 dark:text-red-400">Аккаунт заблокирован. Отправка сообщений недоступна.</span>
+                        </div>
+                    ) : isChatBlocked ? (
+                        <div className="flex items-center justify-center gap-3 py-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-800/50">
+                            <Lock className="w-5 h-5 text-orange-500" />
+                            <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                                Чат заблокирован до {new Date(userProfile.chat_blocked_until).toLocaleString('ru-RU')}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className={`flex gap-3 items-center bg-slate-50 dark:bg-slate-900/50 p-2 rounded-2xl border transition-all ${
+                            inputWarning
+                                ? 'border-red-300 dark:border-red-700 ring-2 ring-red-500/20'
+                                : 'dark:border-slate-800 focus-within:ring-2 ring-blue-500/20'
+                        }`}>
+                            <input
+                                value={inputText}
+                                onChange={handleInputChange}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                placeholder="Напишите сообщение..."
+                                className="flex-1 bg-transparent px-4 py-3 outline-none dark:text-white font-bold text-sm placeholder:text-slate-400"
+                            />
+                            <button
+                                onClick={handleSend}
+                                disabled={!inputText.trim()}
+                                className="w-11 h-11 bg-blue-600 disabled:opacity-50 text-white rounded-xl flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
+                            >
+                                <Send className="w-5 h-5" />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* ===== DOCUMENT SIGNING MODAL ===== */}

@@ -126,6 +126,37 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                             <Building2 className="w-3 h-3" /> ИНН: {user.inn}
                         </p>
                         <button onClick={onLogout} className="w-full mt-10 py-4 border border-red-100 dark:border-red-900/30 text-red-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-95">Выйти из системы</button>
+
+                        {/* Счётчик нарушений */}
+                        {(user.violation_points > 0 || user.is_banned) && (
+                            <div className={`mt-4 p-4 rounded-2xl border text-center ${
+                                user.is_banned ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+                                user.violation_points >= 3 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+                                user.violation_points >= 2 ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
+                                'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                            }`}>
+                                <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+                                    user.is_banned ? 'text-red-600 dark:text-red-400' :
+                                    user.violation_points >= 3 ? 'text-red-600 dark:text-red-400' :
+                                    user.violation_points >= 2 ? 'text-orange-600 dark:text-orange-400' :
+                                    'text-amber-600 dark:text-amber-400'
+                                }`}>
+                                    {user.is_banned ? 'Аккаунт заблокирован' :
+                                     user.violation_points >= 3 ? 'Верификация снята' :
+                                     user.violation_points >= 2 ? 'Чат ограничен' :
+                                     'Предупреждение'}
+                                </div>
+                                <div className="text-2xl font-black dark:text-white">{user.violation_points}</div>
+                                <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                                    {user.violation_points === 1 ? 'нарушение' : 'нарушений'}
+                                </div>
+                                {user.last_violation_at && !user.is_banned && (
+                                    <div className="text-[9px] text-slate-400 mt-2 font-bold">
+                                        Сброс через {Math.max(0, 30 - Math.floor((Date.now() - new Date(user.last_violation_at).getTime()) / (1000 * 60 * 60 * 24)))} дн.
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-white dark:bg-[#111827] rounded-2xl sm:rounded-[2rem] border dark:border-slate-800 p-1.5 sm:p-2 shadow-sm flex md:flex-col gap-1 overflow-x-auto">
@@ -210,6 +241,7 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                                         <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
                                         <p className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">Компания успешно верифицирована</p>
                                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Теперь ваши заявки будут отмечены специальным знаком доверия.</p>
+                                        <p className="text-[10px] text-emerald-500 dark:text-emerald-600 mt-1 font-bold">Видна только внутри платформы. Рейтинг теряется при обходе.</p>
                                     </div>
                                 ) : (
                                     <>
