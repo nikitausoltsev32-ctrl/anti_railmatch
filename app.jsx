@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
     TrainFront, ArrowRight, AlertCircle, User,
-    MessageSquare, Sparkles, Moon, Sun, Ban
+    MessageSquare, Sparkles, Moon, Sun, Ban, TrendingUp
 } from 'lucide-react';
 
 import LandingScreen from './components/LandingScreen';
@@ -18,6 +18,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import OnboardingModal from './components/OnboardingModal.jsx';
 import TermsModal from './components/TermsModal.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
+import AdminPanel from './components/AdminPanel.jsx';
 
 import { supabase } from './src/supabaseClient';
 import { PLATFORM_COMMISSION_RATE } from './src/constants.js';
@@ -37,7 +38,7 @@ export default function App() {
 
     // Навигация
     const [screen, setScreen] = useState(() => localStorage.getItem('rm_screen') || 'landing'); // 'landing' | 'auth' | 'app'
-    const [view, setView] = useState(() => localStorage.getItem('rm_view') || 'catalog'); // 'catalog' | 'my-requests' | 'my-bids' | 'messenger' | 'profile' | 'create'
+    const [view, setView] = useState(() => localStorage.getItem('rm_view') || 'catalog'); // 'catalog' | 'my-requests' | 'my-bids' | 'messenger' | 'profile' | 'create' | 'admin'
 
     // Persist state across reloads so user isn't kicked to main page
     useEffect(() => { localStorage.setItem('rm_screen', screen); }, [screen]);
@@ -69,14 +70,13 @@ export default function App() {
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4500);
     }, []);
 
-    // Email-уведомление партнёру через Edge Function (non-blocking, fire-and-forget)
+    // Уведомления партнёру: email + Telegram (non-blocking, fire-and-forget)
     const sendNotification = useCallback(async (toUserId, subject, bodyText) => {
         if (!toUserId) return;
-        try {
-            await supabase.functions.invoke('notify', { body: { userId: toUserId, subject, bodyText } });
-        } catch (e) {
-            console.warn('Email notification skipped:', e);
-        }
+        supabase.functions.invoke('notify', { body: { userId: toUserId, subject, bodyText } })
+            .catch(e => console.warn('Email notification skipped:', e));
+        supabase.functions.invoke('telegram-notify', { body: { user_id: toUserId, message: bodyText } })
+            .catch(e => console.warn('TG notification skipped:', e));
     }, []);
 
     // 1a. ШРИФТ — загружается один раз при монтировании
@@ -180,6 +180,26 @@ export default function App() {
             subscription.unsubscribe();
         };
     }, []);
+
+    // 2b. Telegram Mini App — инициализация и автолинковка
+    useEffect(() => {
+        if (!window.Telegram?.WebApp) return;
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+    }, []);
+
+    useEffect(() => {
+        if (!window.Telegram?.WebApp) return;
+        const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+        if (tgUser?.id && sbUser && userProfile && !userProfile.telegram_id) {
+            supabase.from('profiles')
+                .update({ telegram_id: tgUser.id, telegram_username: tgUser.username || null })
+                .eq('id', sbUser.id)
+                .then(() => {
+                    setUserProfile(prev => ({ ...prev, telegram_id: tgUser.id, telegram_username: tgUser.username || null }));
+                });
+        }
+    }, [sbUser, userProfile]);
 
     // 3. СИНХРОНИЗАЦИЯ С БД (Supabase Realtime)
     useEffect(() => {
@@ -935,6 +955,9 @@ export default function App() {
                                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                             )}
                         </button>
+                        {userProfile?.role === 'admin' && (
+                            <button onClick={() => setView('admin')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'admin' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Админ</button>
+                        )}
                     </nav>
                     <div className="flex items-center gap-4">
                         <button onClick={() => setIsDark(!isDark)} className="p-3 text-slate-400 hover:text-blue-600 hover:rotate-[360deg] hover:scale-110 active:scale-95 transition-all duration-700 ease-out rounded-2xl bg-slate-100 dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-blue-900/40 border border-transparent dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800 shadow-sm">
@@ -1189,7 +1212,13 @@ export default function App() {
                         requests={requests}
                         showToast={showToast}
                         onProfileUpdate={(updated) => setUserProfile(prev => ({ ...prev, ...updated }))}
+                        supabase={supabase}
+                        sbUser={sbUser}
                     />
+                )}
+
+                {view === 'admin' && userProfile?.role === 'admin' && (
+                    <AdminPanel supabase={supabase} sbUser={sbUser} isDark={isDark} />
                 )}
 
                 {view === 'chat' && activeChat && (
@@ -1254,6 +1283,7 @@ export default function App() {
                         { key: 'my-requests', label: 'Заявки', icon: <ArrowRight className="w-5 h-5" /> },
                         { key: 'messenger', label: 'Чаты', icon: <MessageSquare className="w-5 h-5" />, badge: hasUnread },
                         { key: 'profile', label: 'Профиль', icon: <User className="w-5 h-5" /> },
+                        ...(userProfile?.role === 'admin' ? [{ key: 'admin', label: 'Админ', icon: <TrendingUp className="w-5 h-5" /> }] : []),
                     ].map(tab => (
                         <button
                             key={tab.key}

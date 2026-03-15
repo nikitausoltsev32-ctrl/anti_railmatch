@@ -1,15 +1,21 @@
-import React, { useState, useMemo } from 'react';
-import { ShieldCheck, Settings, Bot, Users, FileText, Upload, Check, X, Mail, Phone, Building2, User, History, ArrowRight, Clock, TrendingUp, Wallet, Pencil, Save } from 'lucide-react';
-import { supabase } from '../src/supabaseClient';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { ShieldCheck, Settings, Bot, Users, FileText, Upload, Check, X, Mail, Phone, Building2, User, History, ArrowRight, Clock, TrendingUp, Wallet, Pencil, Save, Copy, ExternalLink } from 'lucide-react';
+import { supabase as defaultSupabase } from '../src/supabaseClient';
 import { PLATFORM_COMMISSION_RATE, ALLOWED_DOC_TYPES, MAX_DOC_SIZE_BYTES } from '../src/constants.js';
 
-export default function ProfileSettings({ user, onLogout, bids = [], requests = [], showToast = () => {}, onProfileUpdate = () => {} }) {
+export default function ProfileSettings({ user, onLogout, bids = [], requests = [], showToast = () => {}, onProfileUpdate = () => {}, supabase: supabaseProp, sbUser }) {
+    const supabase = supabaseProp || defaultSupabase;
     const [activeTab, setActiveTab] = useState('general');
     const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [editData, setEditData] = useState({ company: user.company || '', phone: user.phone || '' });
+
+    // Telegram linking state
+    const [tgToken, setTgToken] = useState(null);
+    const [tgPolling, setTgPolling] = useState(false);
+    const tgPollRef = useRef(null);
 
     const handleFileDrop = (e) => {
         e.preventDefault();
@@ -33,6 +39,32 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
             setSaving(false);
         }
     };
+
+    const handleGenerateTgToken = async () => {
+        const token = Math.random().toString(36).slice(-6).toUpperCase();
+        const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        await supabase.from('profiles').update({
+            telegram_link_token: token,
+            telegram_link_token_expires: expires,
+        }).eq('id', user.id);
+        setTgToken(token);
+        setTgPolling(true);
+        // Poll every 3s to check if telegram_id was linked by the bot
+        tgPollRef.current = setInterval(async () => {
+            const { data } = await supabase.from('profiles').select('telegram_id, telegram_username').eq('id', user.id).single();
+            if (data?.telegram_id) {
+                clearInterval(tgPollRef.current);
+                setTgPolling(false);
+                setTgToken(null);
+                onProfileUpdate({ telegram_id: data.telegram_id, telegram_username: data.telegram_username });
+                showToast('Telegram успешно привязан!', 'success');
+            }
+        }, 3000);
+        // Stop polling after 10 min
+        setTimeout(() => { clearInterval(tgPollRef.current); setTgPolling(false); }, 600000);
+    };
+
+    useEffect(() => () => clearInterval(tgPollRef.current), []);
 
     const handleUpload = async () => {
         if (files.length === 0) return;
@@ -281,28 +313,70 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                     )}
 
                     {activeTab === 'notif' && (
-                        <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-10 border dark:border-slate-800 shadow-sm relative overflow-hidden">
-                            <div className="absolute inset-0 bg-white/60 dark:bg-[#111827]/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6">
-                                <div className="p-4 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl mb-4">
-                                    <Bot className="w-8 h-8" />
-                                </div>
-                                <h3 className="text-xl font-black uppercase tracking-widest mb-2 dark:text-white">Интеграция с Telegram</h3>
-                                <p className="text-sm font-bold text-slate-500 max-w-sm">Бот уведомлений RailMatch проходит финальное тестирование. Запуск в ближайшее время.</p>
-                            </div>
-                            <div className="opacity-30 pointer-events-none filter blur-sm">
-                                <h3 className="text-2xl font-black mb-6 dark:text-white uppercase tracking-tight">Telegram Уведомления</h3>
-                                <p className="text-slate-400 mb-10 font-medium">Подключите официального бота RailMatch, чтобы мгновенно получать уведомления о новых ставках, сообщениях в чате и изменении статуса ваших документов.</p>
+                        <div className="bg-white dark:bg-[#111827] rounded-[2.5rem] p-6 sm:p-10 border dark:border-slate-800 shadow-sm">
+                            <h3 className="text-2xl font-black mb-2 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                                <Bot className="w-6 h-6 text-blue-600" /> Telegram
+                            </h3>
+                            <p className="text-sm text-slate-500 mb-8 font-medium">
+                                Привяжите Telegram — все уведомления о ставках, сделках и сообщениях будут приходить прямо в бот.
+                            </p>
 
-                                <div className="bg-slate-50 dark:bg-[#0B1120] rounded-3xl p-10 border-2 border-dashed border-blue-100 dark:border-blue-900/30 text-center relative overflow-hidden">
-                                    <Bot className="w-20 h-20 text-blue-100 dark:text-blue-900/20 absolute -top-4 -right-4 rotate-12" />
-                                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] mb-4">Ваш уникальный код</p>
-                                    <div className="text-4xl font-black dark:text-white tracking-[0.5em] mb-10">CODE-881-22</div>
-                                    <div className="flex flex-col sm:flex-row gap-4">
-                                        <button disabled className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg transition-all">Копировать код</button>
-                                        <button disabled className="flex-1 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs transition-all">Открыть бот</button>
+                            {user.telegram_id ? (
+                                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6 flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-xl flex items-center justify-center text-green-600">
+                                        <Check className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <div className="font-black text-green-700 dark:text-green-400 uppercase tracking-widest text-sm">Telegram привязан</div>
+                                        {user.telegram_username && (
+                                            <div className="text-sm text-slate-500 mt-0.5">@{user.telegram_username}</div>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
+                            ) : tgToken ? (
+                                <div className="bg-slate-50 dark:bg-[#0B1120] rounded-3xl p-8 border-2 border-dashed border-blue-200 dark:border-blue-900/40 text-center space-y-5">
+                                    <Bot className="w-12 h-12 text-blue-600 mx-auto" />
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] mb-2">Ваш код</p>
+                                        <div className="text-3xl font-black dark:text-white tracking-[0.4em]">{tgToken}</div>
+                                    </div>
+                                    <p className="text-sm text-slate-500 font-medium">
+                                        Напишите боту{' '}
+                                        <a href="https://t.me/RailMatchBot" target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline">@RailMatchBot</a>
+                                        {' '}команду:{' '}
+                                        <code className="bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-sm font-mono dark:text-white">/start {tgToken}</code>
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <button
+                                            onClick={() => { navigator.clipboard.writeText(`/start ${tgToken}`); showToast('Команда скопирована', 'success'); }}
+                                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
+                                        >
+                                            <Copy className="w-4 h-4" /> Копировать команду
+                                        </button>
+                                        <a
+                                            href="https://t.me/RailMatchBot"
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all"
+                                        >
+                                            <ExternalLink className="w-4 h-4" /> Открыть бот
+                                        </a>
+                                    </div>
+                                    {tgPolling && (
+                                        <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
+                                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse inline-block" />
+                                            Ожидаем подтверждения...
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleGenerateTgToken}
+                                    className="flex items-center gap-3 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-lg shadow-blue-500/20"
+                                >
+                                    <Bot className="w-5 h-5" /> Привязать Telegram
+                                </button>
+                            )}
                         </div>
                     )}
 
