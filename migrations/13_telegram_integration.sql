@@ -16,8 +16,7 @@ ALTER TABLE public.profiles
   ADD CONSTRAINT profiles_role_check
   CHECK (role IN ('shipper', 'owner', 'demo', 'admin'));
 
--- 3. Broadcasts history table
-CREATE TABLE IF NOT EXISTS public.broadcasts (
+CREATE TABLE IF NOT EXISTS public.broadcasts ( -- 3. Broadcasts history table
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   message TEXT NOT NULL,
   sent_by UUID REFERENCES public.profiles(id),
