@@ -738,6 +738,8 @@ export default function App() {
 
     const handleProposeCommission = async (bidId, mode) => {
         if (!sbUser || !userProfile) return;
+        const VALID_COMMISSION_MODES = ['split', 'full'];
+        if (!VALID_COMMISSION_MODES.includes(mode)) return;
         const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
         const modeText = mode === 'split' ? 'разделить комиссию 50/50' : 'оплатить комиссию полностью';
         const updates = { commission_mode: mode, commission_proposer_id: sbUser.id, commission_agreed: false };
