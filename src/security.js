@@ -131,6 +131,49 @@ function detectMessenger(text) {
     // Ключевые слова мессенджеров (английские)
     if (/\b(telegram|whats\s*app|viber|signal)\b/i.test(lower)) return true;
 
+    // Аббревиатуры "тг" / "tg" + username (с @ или без)
+    // Ловит: "тг onemonba", "tg username", "тг: onemonba", "тг- username"
+    if (/\b(тг|т\.г\.?|телега|тлг)\s*[:\-]?\s*@?[a-zA-Z][a-zA-Z0-9_.]{1,}/i.test(lower)) return true;
+    if (/\btg\s*[:\-]?\s*@?[a-zA-Z][a-zA-Z0-9_.]{1,}/i.test(lower)) return true;
+
+    // Любой мессенджер-keyword + username без @ (напр. "телеграм onemonba")
+    if (/\b(telegram|телеграм|whatsapp|вотсап|ватсап|viber|вайбер|signal|тг|tg|телега)\s*[:\-–]?\s*[a-zA-Z][a-zA-Z0-9_.]{2,}/i.test(lower)) return true;
+
+    // Username-подобный паттерн после любого слова-триггера (латинские слова 4+ симв. после пробела)
+    // Ловит скрытые передачи типа "пишите мне username123"
+    if (/\b(пиши|пишите|напиши|найди|ищи|найдите)\s+(?:мне\s+)?@?[a-zA-Z][a-zA-Z0-9_.]{3,}/i.test(lower)) return true;
+
+    return false;
+}
+
+// Белый список латинских слов, легитимных в контексте грузоперевозок
+const LATIN_WHITELIST = new Set([
+    'cargo', 'express', 'online', 'email', 'market', 'russia', 'global',
+    'trans', 'logistic', 'service', 'group', 'https', 'http', 'gmail',
+    'yandex', 'railmatch', 'mobile', 'phone', 'signal', 'viber', 'telegram',
+    'whatsapp', 'instagram', 'google', 'hello', 'thanks', 'order', 'price',
+    'delivery', 'truck', 'train', 'wagon', 'route', 'depot', 'agent',
+    'client', 'manager', 'driver', 'office', 'company', 'partner',
+]);
+
+/** Username-подобные строки на латинице (без @ и без мессенджер-префикса) */
+function detectLatinUsername(text) {
+    // Ищем латинские слова 5-32 символа: буква + буквы/цифры/underscore
+    const latinWords = text.match(/\b[a-zA-Z][a-zA-Z0-9_]{4,31}\b/g);
+    if (!latinWords) return false;
+
+    const hasCyrillic = /[а-яёА-ЯЁ]/.test(text);
+
+    for (const word of latinWords) {
+        const lower = word.toLowerCase();
+        if (LATIN_WHITELIST.has(lower)) continue;
+
+        // Содержит цифры или underscore — явный признак username (user_name, nick123)
+        if (/[0-9_]/.test(word)) return true;
+
+        // Длинное латинское слово (8+) в кириллическом контексте — подозрительно
+        if (word.length >= 8 && hasCyrillic) return true;
+    }
     return false;
 }
 
@@ -172,7 +215,7 @@ function detectUrl(text) {
 /** Обфускация стоп-слов: т.е.л.е.ф.о.н, т-е-л-е-г-р-а-м */
 function detectObfuscated(text) {
     const lower = text.toLowerCase();
-    const keyWords = ['телефон', 'телеграм', 'вотсап', 'ватсап', 'вайбер', 'контакт', 'номер', 'почта'];
+    const keyWords = ['телефон', 'телеграм', 'вотсап', 'ватсап', 'вайбер', 'контакт', 'номер', 'почта', 'телега'];
 
     for (const word of keyWords) {
         if (word.length < 4) continue;
@@ -217,22 +260,27 @@ export const validateMessageIntent = (text) => {
         return violation(text, 'messenger');
     }
 
-    // 5. Email
+    // 5. Username-подобные строки на латинице
+    if (detectLatinUsername(text)) {
+        return violation(text, 'messenger');
+    }
+
+    // 6. Email
     if (detectEmail(text)) {
         return violation(text, 'email');
     }
 
-    // 6. URL
+    // 7. URL
     if (detectUrl(text)) {
         return violation(text, 'url');
     }
 
-    // 7. Обфускация ключевых слов
+    // 8. Обфускация ключевых слов
     if (detectObfuscated(text)) {
         return violation(text, 'obfuscated');
     }
 
-    // 8. Стоп-слова
+    // 9. Стоп-слова
     if (STOP_WORDS.some(sw => lower.includes(sw))) {
         return violation(text, 'stop_word');
     }
