@@ -450,38 +450,32 @@ export default function App() {
 
         try {
             if (authMode === 'register') {
-                const { data, error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        emailRedirectTo: window.location.origin + window.location.pathname,
-                        data: { name, company },
+                // Registration is handled server-side via edge function:
+                // admin.createUser({ email_confirm: true }) — no Supabase email sent,
+                // no rate limits, user can login immediately.
+                const { data: regData, error: regError } = await supabase.functions.invoke('send-confirmation-email', {
+                    body: {
+                        email, password, name, company, phone,
+                        role: regRole,
+                        redirectTo: window.location.origin + window.location.pathname,
                     },
                 });
-                if (error) {
-                    console.error("Registration failed:", error);
-                    showToast(getAuthErrorMessage(error, 'register'), 'error');
+                if (regError || !regData?.ok) {
+                    console.error("Registration failed:", regError || regData);
+                    const msg = regData?.error || regError?.message || '';
+                    showToast(getAuthErrorMessage({ message: msg }, 'register'), 'error');
                     setAuthLoading(false);
                     return;
                 }
 
-                const userId = data.user?.id;
-                if (userId) {
-                    const registrationInn = `9${Date.now().toString().slice(-9)}`;
-                    const { error: profileError } = await supabase.from('profiles').insert([
-                        { id: userId, name, company, email, inn: registrationInn, phone, role: regRole, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }
-                    ]);
-                    if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
+                // Auto-login after successful registration
+                const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+                if (loginError) {
+                    console.error("Auto-login after registration failed:", loginError);
+                    showToast(`Аккаунт создан! Войдите с вашим email и паролем.`, 'success');
+                } else {
+                    showToast(`Добро пожаловать, ${name || email}!`, 'success');
                 }
-
-                supabase.functions.invoke('send-confirmation-email', {
-                    body: {
-                        userId: data.user.id,
-                        redirectTo: window.location.origin + window.location.pathname,
-                    },
-                }).catch(e => console.warn('Confirmation email skipped:', e));
-
-                showToast(`Добро пожаловать, ${name || data.user?.email}! Аккаунт создан, можете войти.`, 'success');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
