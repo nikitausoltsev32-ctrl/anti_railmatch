@@ -1015,6 +1015,10 @@
           "format": "text",
           "type": "string"
         },
+        "ownerInn": {
+          "format": "text",
+          "type": "string"
+        },
         "price": {
           "format": "integer",
           "type": "integer"
