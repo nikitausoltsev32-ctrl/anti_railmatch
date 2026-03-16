@@ -1,22 +1,26 @@
 // Supabase Edge Function: send-confirmation-email
-// Sends a branded HTML confirmation email via Resend API
+// Accepts { userId } — fetches user info and generates confirmation link via admin API,
+// then sends branded HTML email via Resend.
 //
 // Required env vars (set in Supabase Dashboard → Project Settings → Edge Functions):
 //   RESEND_API_KEY          — your Resend API key (https://resend.com)
-//   EMAIL_CONFIRMATION_SECRET — shared secret for request auth (set same value in frontend)
+//   SUPABASE_URL            — injected automatically
+//   SUPABASE_SERVICE_ROLE_KEY — injected automatically
 //
 // Deploy:
 //   supabase functions deploy send-confirmation-email --no-verify-jwt
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-confirmation-secret',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
-const CONFIRMATION_SECRET = Deno.env.get('EMAIL_CONFIRMATION_SECRET') ?? '';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const FROM_EMAIL = 'RailMatch <noreply@railmatch.ru>';
 
 function buildHtml(name: string, confirmationUrl: string): string {
@@ -45,7 +49,6 @@ function buildHtml(name: string, confirmationUrl: string): string {
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td>
-                    <!-- Rail icon (Unicode) + wordmark -->
                     <span style="display:inline-block;background:#2563eb;
                                  border-radius:10px;padding:6px 10px;
                                  margin-bottom:14px;">
@@ -165,17 +168,6 @@ serve(async (req: Request) => {
         });
     }
 
-    // Validate shared secret (skip check if secret is not configured)
-    if (CONFIRMATION_SECRET) {
-        const providedSecret = req.headers.get('x-confirmation-secret');
-        if (providedSecret !== CONFIRMATION_SECRET) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-                status: 401,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-        }
-    }
-
     if (!RESEND_API_KEY) {
         console.error('RESEND_API_KEY is not set');
         return new Response(JSON.stringify({ error: 'Email service not configured' }), {
@@ -184,12 +176,11 @@ serve(async (req: Request) => {
         });
     }
 
-    let email: string, name: string, confirmation_url: string;
+    let userId: string, redirectTo: string;
     try {
-        const body = await req.json() as { email: string; name: string; confirmation_url: string };
-        email = body.email?.trim();
-        name = body.name?.trim() || 'Пользователь';
-        confirmation_url = body.confirmation_url?.trim();
+        const body = await req.json() as { userId: string; redirectTo?: string };
+        userId = body.userId?.trim();
+        redirectTo = body.redirectTo?.trim() || SUPABASE_URL;
     } catch {
         return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
             status: 400,
@@ -197,14 +188,49 @@ serve(async (req: Request) => {
         });
     }
 
-    if (!email || !confirmation_url) {
-        return new Response(JSON.stringify({ error: 'Missing required fields: email, confirmation_url' }), {
+    if (!userId) {
+        return new Response(JSON.stringify({ error: 'Missing required field: userId' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     }
 
-    const html = buildHtml(name, confirmation_url);
+    // Create admin client to fetch user data and generate confirmation link
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+        auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // Fetch user info
+    const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(userId);
+    if (userError || !userData?.user) {
+        console.error('Failed to fetch user:', userError);
+        return new Response(JSON.stringify({ error: 'User not found' }), {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
+
+    const user = userData.user;
+    const email = user.email ?? '';
+    const name = (user.user_metadata?.name as string) || 'Пользователь';
+
+    // Generate confirmation link via admin API
+    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+        type: 'signup',
+        email,
+        options: { redirectTo },
+    });
+
+    if (linkError || !linkData?.properties?.action_link) {
+        console.error('Failed to generate confirmation link:', linkError);
+        return new Response(JSON.stringify({ error: 'Failed to generate confirmation link' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
+
+    const confirmationUrl = linkData.properties.action_link;
+    const html = buildHtml(name, confirmationUrl);
 
     const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',

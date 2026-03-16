@@ -486,7 +486,10 @@ export default function App() {
                 }
 
                 supabase.functions.invoke('send-confirmation-email', {
-                    body: { userId: data.user.id },
+                    body: {
+                        userId: data.user.id,
+                        redirectTo: window.location.origin + window.location.pathname,
+                    },
                 }).catch(e => console.warn('Confirmation email skipped:', e));
 
                 showToast(`Добро пожаловать, ${name || data.user?.email}! Проверьте почту для подтверждения.`, 'success');
