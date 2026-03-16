@@ -413,9 +413,18 @@ export default function App() {
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
 
-                supabase.functions.invoke('send-confirmation-email', {
-                    body: { userId: data.user.id },
-                }).catch(e => console.warn('Confirmation email skipped:', e));
+                const confirmationSecret = import.meta.env.VITE_EMAIL_CONFIRMATION_SECRET;
+                const { error: confirmationError } = await supabase.functions.invoke('send-confirmation-email', {
+                    body: {
+                        userId: data.user.id,
+                        name,
+                        redirectTo: window.location.origin + window.location.pathname,
+                    },
+                    headers: confirmationSecret ? { 'x-confirmation-secret': confirmationSecret } : undefined,
+                });
+                if (confirmationError) {
+                    console.warn('Confirmation email skipped:', confirmationError);
+                }
 
                 showToast(`Добро пожаловать, ${name || data.user?.email}! Проверьте почту для подтверждения.`, 'success');
             } else {

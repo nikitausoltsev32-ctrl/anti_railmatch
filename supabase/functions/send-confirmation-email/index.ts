@@ -9,6 +9,7 @@
 //   supabase functions deploy send-confirmation-email --no-verify-jwt
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -18,6 +19,8 @@ const corsHeaders = {
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
 const CONFIRMATION_SECRET = Deno.env.get('EMAIL_CONFIRMATION_SECRET') ?? '';
 const FROM_EMAIL = 'RailMatch <noreply@railmatch.ru>';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 function buildHtml(name: string, confirmationUrl: string): string {
     return `<!DOCTYPE html>
@@ -184,12 +187,59 @@ serve(async (req: Request) => {
         });
     }
 
-    let email: string, name: string, confirmation_url: string;
+    let email = '';
+    let name = 'Пользователь';
+    let confirmation_url = '';
+
     try {
-        const body = await req.json() as { email: string; name: string; confirmation_url: string };
-        email = body.email?.trim();
+        const body = await req.json() as {
+            email?: string;
+            name?: string;
+            confirmation_url?: string;
+            userId?: string;
+            redirectTo?: string;
+        };
+
         name = body.name?.trim() || 'Пользователь';
-        confirmation_url = body.confirmation_url?.trim();
+
+        if (body.email && body.confirmation_url) {
+            email = body.email.trim();
+            confirmation_url = body.confirmation_url.trim();
+        } else if (body.userId) {
+            if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+                return new Response(JSON.stringify({ error: 'Supabase admin is not configured' }), {
+                    status: 500,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                });
+            }
+
+            const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            const { data: userData, error: userError } = await admin.auth.admin.getUserById(body.userId);
+            if (userError || !userData?.user?.email) {
+                return new Response(JSON.stringify({ error: 'User not found' }), {
+                    status: 404,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                });
+            }
+
+            email = userData.user.email;
+            name = (body.name?.trim() || userData.user.user_metadata?.name || 'Пользователь') as string;
+
+            const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+                type: 'signup',
+                email,
+                options: { redirectTo: body.redirectTo || undefined },
+            });
+
+            if (linkError || !linkData?.properties?.action_link) {
+                return new Response(JSON.stringify({ error: 'Failed to generate confirmation link', details: linkError?.message }), {
+                    status: 500,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                });
+            }
+
+            confirmation_url = linkData.properties.action_link;
+        }
     } catch {
         return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
             status: 400,
@@ -198,7 +248,7 @@ serve(async (req: Request) => {
     }
 
     if (!email || !confirmation_url) {
-        return new Response(JSON.stringify({ error: 'Missing required fields: email, confirmation_url' }), {
+        return new Response(JSON.stringify({ error: 'Missing required fields: either (email + confirmation_url) or userId' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
