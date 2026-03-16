@@ -188,8 +188,14 @@ export default function App() {
                     ], { onConflict: 'id' });
 
                 if (createProfileError) {
-                    console.error('Auto profile creation failed:', createProfileError);
-                    return null;
+                    console.error('Auto profile creation failed (trying server-side recovery):', createProfileError);
+                    // Client-side upsert may fail due to RLS — fall back to admin-privileged Edge Function
+                    const { data: recoveryData, error: recoveryError } = await supabase.functions.invoke('recover-profile');
+                    if (recoveryError || !recoveryData?.profile) {
+                        console.error('Server-side profile recovery failed:', recoveryError);
+                        return null;
+                    }
+                    return recoveryData.profile;
                 }
 
                 const { data: createdProfile } = await supabase.from('profiles').select('*').eq('id', userId).single();
