@@ -43,4 +43,15 @@ CREATE INDEX IF NOT EXISTS idx_requests_status_created_at
 -- ── 5. Enable Realtime for the requests table (idempotent) ─────────────────
 -- This ensures INSERT events are broadcast so the frontend subscription works
 -- as a secondary refresh mechanism (primary fix is the optimistic state update).
-ALTER PUBLICATION supabase_realtime ADD TABLE public.requests;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime'
+          AND schemaname = 'public'
+          AND tablename = 'requests'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.requests;
+    END IF;
+END
+$$;
