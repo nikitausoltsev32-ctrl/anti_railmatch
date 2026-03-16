@@ -139,7 +139,7 @@ serve(async (req: Request) => {
         email,
         password,
         email_confirm: true,
-        user_metadata: { name, company },
+        user_metadata: { name, company, phone, role },
     });
 
     if (createError) {
@@ -151,13 +151,17 @@ serve(async (req: Request) => {
 
     const userId = userData.user.id;
 
-    // Insert profile
+    // Insert profile — if this fails, delete the auth user so registration can be retried cleanly
     const registrationInn = `9${Date.now().toString().slice(-9)}`;
     const { error: profileError } = await adminClient
         .from('profiles')
         .insert([{ id: userId, name, company, email, inn: registrationInn, phone, role, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }]);
     if (profileError) {
         console.error('Profile insert error:', profileError);
+        await adminClient.auth.admin.deleteUser(userId);
+        return new Response(JSON.stringify({ error: 'Ошибка при создании профиля. Попробуйте зарегистрироваться снова.' }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
     }
 
     // Send welcome email via Resend (non-blocking on failure)

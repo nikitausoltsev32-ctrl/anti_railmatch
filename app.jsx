@@ -160,7 +160,7 @@ export default function App() {
     useEffect(() => {
         let mounted = true;
 
-        const fetchProfile = async (userId, isInitialLogin = false, userMeta = null, userEmail = null) => {
+        const fetchProfile = async (userId, isInitialLogin = false, userMeta = null, userEmail = null, onSuccess = null) => {
             const ensureProfileExists = async () => {
                 const meta = userMeta || sbUser?.user_metadata || {};
                 const metaName = meta.name || 'Пользователь';
@@ -177,19 +177,21 @@ export default function App() {
                             id: userId,
                             name: metaName,
                             company: metaCompany,
-                            email: metaEmail,
                             phone: metaPhone,
                             role: metaRole,
                             inn: registrationInn,
-                            plan: 'Free',
-                            leakage_attempts: 0,
-                            daily_profile_views: 0,
                         },
                     ], { onConflict: 'id' });
 
                 if (createProfileError) {
-                    console.error('Auto profile creation failed:', createProfileError);
-                    return null;
+                    console.error('Auto profile creation failed (trying server-side recovery):', createProfileError);
+                    // Client-side upsert may fail due to RLS — fall back to admin-privileged Edge Function
+                    const { data: recoveryData, error: recoveryError } = await supabase.functions.invoke('recover-profile');
+                    if (recoveryError || !recoveryData?.profile) {
+                        console.error('Server-side profile recovery failed:', recoveryError);
+                        return null;
+                    }
+                    return recoveryData.profile;
                 }
 
                 const { data: createdProfile } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -207,6 +209,7 @@ export default function App() {
                         if (createdProfile) {
                             setUserProfile(createdProfile);
                             setAuthChecking(false);
+                            onSuccess?.();
                             if (isInitialLogin) {
                                 const savedScreen = localStorage.getItem('rm_screen');
                                 setScreen('app');
@@ -227,6 +230,7 @@ export default function App() {
                             if (retryData) {
                                 setUserProfile(retryData);
                                 setAuthChecking(false);
+                                onSuccess?.();
                                 if (isInitialLogin) {
                                     const savedScreen = localStorage.getItem('rm_screen');
                                     setScreen('app');
@@ -240,8 +244,9 @@ export default function App() {
                                 setAuthChecking(false);
                                 showToast("Профиль не найден. Попробуйте войти через минуту.", 'error');
                                 await supabase.auth.signOut();
+                                setScreen('landing');
                             }
-                        }, 1500);
+                        }, 3000);
                         return;
                     }
                     throw error;
@@ -250,6 +255,7 @@ export default function App() {
                 if (data) {
                     setUserProfile(data);
                     setAuthChecking(false);
+                    onSuccess?.();
                     if (isInitialLogin) {
                         const savedScreen = localStorage.getItem('rm_screen');
                         setScreen('app');
@@ -287,7 +293,9 @@ export default function App() {
             if (user) {
                 // Только при явном входе меняем экраны, чтобы не выкидывало при TOKEN_REFRESHED
                 const isInitialLogin = _event === 'SIGNED_IN';
-                fetchProfile(user.id, isInitialLogin, user.user_metadata, user.email);
+                const onSuccess = pendingLoginSuccessRef.current;
+                pendingLoginSuccessRef.current = null;
+                fetchProfile(user.id, isInitialLogin, user.user_metadata, user.email, onSuccess);
             } else {
                 setUserProfile(null);
                 // setScreen('landing'); // Изменил: если логаут, мы идём на лендинг (вызывается в handleLogout)
@@ -482,7 +490,7 @@ export default function App() {
                     console.error("Login failed:", error);
                     showToast(getAuthErrorMessage(error, 'login'), 'error');
                 } else {
-                    showToast(`С возвращением!`, 'success');
+                    pendingLoginSuccessRef.current = () => showToast(`С возвращением!`, 'success');
                 }
             }
         } catch (e) {
@@ -532,6 +540,7 @@ export default function App() {
     }, [profiles]);
 
     const securityWarningTimerRef = useRef(null);
+    const pendingLoginSuccessRef = useRef(null);
 
     const requireAuth = useCallback((callback) => {
         if (!sbUser || userProfile?.role === 'demo') {
