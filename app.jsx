@@ -300,17 +300,6 @@ export default function App() {
         };
     }, []);
 
-    useEffect(() => {
-        const hash = window.location.hash || '';
-        const params = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
-        const authType = params.get('type');
-        if (authType === 'signup') {
-            showToast('Email подтверждён. Вход выполнен успешно!', 'success');
-            const cleanUrl = window.location.origin + window.location.pathname + window.location.search;
-            window.history.replaceState({}, document.title, cleanUrl);
-        }
-    }, [showToast]);
-
     // 2b. Telegram Mini App — инициализация и автолинковка
     useEffect(() => {
         if (!window.Telegram?.WebApp) return;
@@ -492,7 +481,7 @@ export default function App() {
                     },
                 }).catch(e => console.warn('Confirmation email skipped:', e));
 
-                showToast(`Добро пожаловать, ${name || data.user?.email}! Проверьте почту для подтверждения.`, 'success');
+                showToast(`Добро пожаловать, ${name || data.user?.email}! Аккаунт создан, можете войти.`, 'success');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
