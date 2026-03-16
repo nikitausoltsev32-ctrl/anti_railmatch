@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
-export default function BidModal({ request, userLimit, onClose, onConfirm }) {
+export default function BidModal({ request, onClose, onConfirm }) {
     const maxWagons = request.totalWagons - (request.fulfilledWagons || 0);
     const [price, setPrice] = useState("");
     const [wagons, setWagons] = useState(maxWagons);
@@ -19,12 +19,6 @@ export default function BidModal({ request, userLimit, onClose, onConfirm }) {
                 <div className="flex justify-between items-center mb-5 sm:mb-8"><h2 className="text-2xl sm:text-3xl font-black dark:text-white">Подача ставки</h2><button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors dark:text-white"><X /></button></div>
                 <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl mb-5 sm:mb-8 font-bold text-blue-700 dark:text-blue-300 text-center text-sm sm:text-base">{request.stationFrom} → {request.stationTo}</div>
 
-                {userLimit !== undefined && userLimit !== null && (
-                    <div className="mb-6 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 bg-white dark:bg-[#0B1120] text-center shadow-inner">
-                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Ваш текущий баланс</div>
-                        <div className={`text-xl font-black ${userLimit > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>{userLimit} откликов</div>
-                    </div>
-                )}
 
                 <div className="space-y-6">
                     <div className="space-y-2">
