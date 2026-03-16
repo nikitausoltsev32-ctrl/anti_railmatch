@@ -2,22 +2,6 @@ import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { supabase } from '../src/supabaseClient';
 
-const validateInn = (inn) => {
-    const digits = inn.replace(/\D/g, '');
-    if (digits.length !== 10 && digits.length !== 12) return 'ИНН должен содержать 10 или 12 цифр';
-    const d = digits.split('').map(Number);
-    if (digits.length === 10) {
-        const sum = [2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
-        if (d[9] !== (sum % 11) % 10) return 'Неверный ИНН — проверьте правильность введённых цифр';
-    }
-    if (digits.length === 12) {
-        const sum1 = [7,2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
-        const sum2 = [3,7,2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
-        if (d[10] !== (sum1 % 11) % 10 || d[11] !== (sum2 % 11) % 10) return 'Неверный ИНН — проверьте правильность введённых цифр';
-    }
-    return null;
-};
-
 const validatePhone = (phone) => {
     const digits = phone.replace(/\D/g, '');
     return digits.length >= 10 && digits.length <= 12;
@@ -91,7 +75,7 @@ function ForgotPasswordView({ onBack, isDark }) {
 
 export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading }) {
     const [formData, setFormData] = useState({
-        email: '', password: '', name: '', company: '', inn: '', phone: ''
+        email: '', password: '', name: '', company: '', phone: ''
     });
     const [errors, setErrors] = useState({});
     const [showForgot, setShowForgot] = useState(false);
@@ -107,8 +91,6 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
         if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
         else if (!validatePersonName(formData.name.trim())) errs.name = 'Укажите имя человека, а не название компании';
         if (!formData.company.trim()) errs.company = 'Укажите название компании';
-        const innError = validateInn(formData.inn);
-        if (innError) errs.inn = innError;
         if (!validatePhone(formData.phone)) errs.phone = 'Укажите корректный номер телефона';
         setErrors(errs);
         return Object.keys(errs).length === 0;
@@ -126,9 +108,9 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                         <p className="text-slate-400 mb-8 font-medium text-sm">Введите данные вашей компании</p>
 
                         {mode === 'register' && (
-                            <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6">
-                                <button onClick={() => setRole('owner')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-400'}`}>Владелец вагонов</button>
-                                <button onClick={() => setRole('shipper')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-400'}`}>Грузоотправитель</button>
+                            <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6 shadow-inner border border-slate-200/70 dark:border-slate-700/70">
+                                <button onClick={() => setRole('owner')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Владелец вагонов</button>
+                                <button onClick={() => setRole('shipper')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Грузоотправитель</button>
                             </div>
                         )}
 
@@ -146,10 +128,9 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                                         <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.company ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
                                         {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
                                     </div>
-                                    <div>
-                                        <input name="inn" type="text" value={formData.inn} onChange={handleChange} placeholder="ИНН (10 или 12 цифр)" maxLength={12} className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.inn ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
-                                        {errors.inn && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.inn}</p>}
-                                    </div>
+                                    <p className="rounded-2xl border border-blue-100 dark:border-blue-900/70 bg-blue-50/70 dark:bg-blue-950/30 px-4 py-3 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                        ИНН временно заполняется автоматически на этапе регистрации.
+                                    </p>
                                     <div>
                                         <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.phone ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
                                         {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}
@@ -160,7 +141,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale-[0.5]"
+                                className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-600/25 mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale-[0.5]"
                             >
                                 {loading ? 'Обработка...' : (mode === 'login' ? 'Войти' : 'Создать аккаунт')}
                             </button>
@@ -169,13 +150,13 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                         {mode === 'login' && (
                             <button
                                 onClick={() => setShowForgot(true)}
-                                className="w-full text-center mt-4 text-slate-400 font-medium text-sm hover:text-blue-600 transition-colors"
+                                className="w-full text-center mt-4 text-slate-500 dark:text-slate-400 font-semibold text-sm hover:text-blue-600 transition-colors bg-slate-100/90 dark:bg-slate-800/90 py-3 rounded-xl border border-slate-200/80 dark:border-slate-700/70 shadow-sm"
                             >
                                 Забыли пароль?
                             </button>
                         )}
 
-                        <button onClick={() => setMode(mode === 'login' ? 'register' : 'login')} className="w-full text-center mt-4 text-slate-400 font-bold text-sm hover:text-blue-600 transition-colors">{mode === 'login' ? 'Нет аккаунта? Регистрация' : 'Есть аккаунт? Войти'}</button>
+                        <button onClick={() => setMode(mode === 'login' ? 'register' : 'login')} className="w-full text-center mt-4 text-slate-500 dark:text-slate-400 font-bold text-sm hover:text-blue-600 transition-colors bg-slate-100/90 dark:bg-slate-800/90 py-3 rounded-xl border border-slate-200/80 dark:border-slate-700/70 shadow-sm">{mode === 'login' ? 'Нет аккаунта? Регистрация' : 'Есть аккаунт? Войти'}</button>
                     </>
                 )}
             </div>

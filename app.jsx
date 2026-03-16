@@ -378,7 +378,7 @@ export default function App() {
         if (authLoading) return;
         const email = formData.email?.trim();
         const password = formData.password?.trim();
-        const { name, company, inn, phone } = formData;
+        const { name, company, phone } = formData;
 
         if (!email || !password) {
             showToast("Пожалуйста, заполните все поля", 'warning');
@@ -406,8 +406,9 @@ export default function App() {
 
                 const userId = data.user?.id;
                 if (userId) {
+                    const registrationInn = `9${Date.now().toString().slice(-9)}`;
                     const { error: profileError } = await supabase.from('profiles').insert([
-                        { id: userId, name, company, inn, phone, role: regRole, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }
+                        { id: userId, name, company, inn: registrationInn, phone, role: regRole, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
