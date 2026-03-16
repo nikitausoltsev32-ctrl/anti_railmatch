@@ -11,6 +11,13 @@ const validatePhone = (phone) => {
     return digits.length >= 10 && digits.length <= 12;
 };
 
+const COMPANY_NAME_PATTERN = /\b(ООО|ИП|АО|ЗАО|ОАО|ПАО|НКО|LLC|Ltd|Inc|GmbH|компани[ая]|логистик|транспорт[а-я]*|экспедиц|сервис|груз[а-я]*|карго|cargo|express|экспресс)\b/i;
+
+const validatePersonName = (name) => {
+    if (COMPANY_NAME_PATTERN.test(name)) return false;
+    return true;
+};
+
 export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading }) {
     const [formData, setFormData] = useState({
         email: '', password: '', name: '', company: '', inn: '', phone: ''
@@ -25,6 +32,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
         if (mode !== 'register') return true;
         const errs = {};
         if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
+        else if (!validatePersonName(formData.name.trim())) errs.name = 'Укажите имя человека, а не название компании';
         if (!formData.company.trim()) errs.company = 'Укажите название компании';
         if (!validateInn(formData.inn)) errs.inn = 'ИНН должен содержать 10 или 12 цифр';
         if (!validatePhone(formData.phone)) errs.phone = 'Укажите корректный номер телефона';
