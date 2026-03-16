@@ -423,7 +423,7 @@ export default function App() {
                         name: name || email,
                         confirmation_url: confirmationUrl,
                     },
-                }).catch((e: unknown) => console.warn('Confirmation email skipped:', e));
+                }).catch((e) => console.warn('Confirmation email skipped:', e));
 
                 showToast(`Добро пожаловать, ${name || data.user?.email}! Проверьте почту для подтверждения.`, 'success');
             } else {
