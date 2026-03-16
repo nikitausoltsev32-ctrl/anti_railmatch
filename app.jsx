@@ -116,6 +116,7 @@ export default function App() {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [showResetPassword, setShowResetPassword] = useState(false);
+    const [cancelConfirmId, setCancelConfirmId] = useState(null);
 
     const showToast = useCallback((message, type = 'success') => {
         const id = Date.now() + Math.random();
@@ -272,7 +273,7 @@ export default function App() {
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
                 supabase.from('bids').select('*').order('created_at', { ascending: false }),
                 supabase.from('messages').select('*').order('created_at', { ascending: true }),
-                supabase.from('profiles').select('id, inn, role, company, name, phone'),
+                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
             ]);
             if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
@@ -295,14 +296,6 @@ export default function App() {
                     setBids(prev => [payload.new, ...prev]);
                     // Notify request owner when someone bids on their request
                     if (payload.new.ownerId !== sbUser.id) {
-                        setRequests(prev => {
-                            const req = prev.find(r => r.id === payload.new.requestId);
-                            if (req && req.shipperInn) {
-                                // We check after state update via functional form
-                            }
-                            return prev;
-                        });
-                        // Check if the bid is on a request owned by current user (shipper)
                         setRequests(currentRequests => {
                             const req = currentRequests.find(r => r.id === payload.new.requestId);
                             if (req) {
@@ -357,7 +350,7 @@ export default function App() {
         const fetchDemoData = async () => {
             const [{ data: demoRequests }, { data: demoProfiles }] = await Promise.all([
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
-                supabase.from('profiles').select('id, inn, role, company, name, phone'),
+                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
             ]);
             if (demoRequests) setRequests(demoRequests);
             if (demoProfiles) setProfiles(demoProfiles);
@@ -396,7 +389,14 @@ export default function App() {
 
         try {
             if (authMode === 'register') {
-                const { data, error } = await supabase.auth.signUp({ email, password });
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: window.location.origin + window.location.pathname,
+                        data: { name, company },
+                    },
+                });
                 if (error) {
                     console.error("Registration failed:", error);
                     showToast("Ошибка регистрации: " + (error.message || "Проверьте данные"), 'error');
@@ -411,7 +411,21 @@ export default function App() {
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
-                showToast(`Добро пожаловать, ${name || data.user.email}!`, 'success');
+
+                // Send branded confirmation email via edge function (non-blocking)
+                // Supabase generates the confirmation_url and embeds it in the signUp response
+                // when email confirmations are enabled. If the user object has no email_confirmed_at,
+                // we trigger our custom email. The confirmation URL points back to this page.
+                const confirmationUrl = `${window.location.origin}${window.location.pathname}`;
+                supabase.functions.invoke('send-confirmation-email', {
+                    body: {
+                        email,
+                        name: name || email,
+                        confirmation_url: confirmationUrl,
+                    },
+                }).catch((e) => console.warn('Confirmation email skipped:', e));
+
+                showToast(`Добро пожаловать, ${name || data.user?.email}! Проверьте почту для подтверждения.`, 'success');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
@@ -431,6 +445,11 @@ export default function App() {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
+        supabase.removeAllChannels();
+        setUserProfile(null);
+        setRequests([]);
+        setBids([]);
+        setMessages([]);
         showToast('Вы вышли из аккаунта', 'info');
         setScreen('landing');
         localStorage.removeItem('rm_screen');
@@ -662,7 +681,12 @@ export default function App() {
             return;
         }
 
-        if (!window.confirm('Отменить заявку? Все входящие отклики будут закрыты.')) return;
+        if (cancelConfirmId !== reqId) {
+            setCancelConfirmId(reqId);
+            setTimeout(() => setCancelConfirmId(null), 3000);
+            return;
+        }
+        setCancelConfirmId(null);
 
         const { error } = await supabase.from('requests').update({ status: 'cancelled' }).eq('id', reqId);
         if (error) {
@@ -691,6 +715,8 @@ export default function App() {
 
             const fullyConfirmed = updatedBid.shipper_confirmed && updatedBid.owner_confirmed;
 
+            const partnerId = isShipper ? bid.ownerId : profiles.find(p => p.inn === bid.shipperInn)?.id;
+
             if (fullyConfirmed && updatedBid.status === 'pending') {
                 await supabase.from('bids').update({ status: 'commission_pending' }).eq('id', bid.id);
                 setActiveChat(prev => ({ ...prev, ...updateField, status: 'commission_pending' }));
@@ -700,6 +726,14 @@ export default function App() {
                     sender_id: 'system',
                     text: 'Условия согласованы обеими сторонами! Следующий шаг — оплата комиссии платформы (2.5%) для раскрытия контактов партнёра.'
                 }]);
+                // Уведомить обоих участников
+                if (partnerId) {
+                    sendNotification(
+                        partnerId,
+                        'Условия сделки согласованы — RailMatch',
+                        `Компания «${userProfile.company}» подтвердила условия. Обе стороны согласовали сделку!\n\nСледующий шаг — оплата комиссии платформы для раскрытия контактов.`
+                    );
+                }
             } else {
                 setActiveChat(prev => ({ ...prev, ...updateField }));
                 setBids(prev => prev.map(b => b.id === bid.id ? { ...b, ...updateField } : b));
@@ -709,6 +743,14 @@ export default function App() {
                     sender_id: 'system',
                     text: `${roleName} подтвердил условия. Ожидаем подтверждение второй стороны.`
                 }]);
+                // Уведомить партнёра что ждём его подтверждения
+                if (partnerId) {
+                    sendNotification(
+                        partnerId,
+                        'Партнёр подтвердил условия — ваша очередь! RailMatch',
+                        `Компания «${userProfile.company}» подтвердила условия сделки.\n\nОткройте платформу, чтобы подтвердить со своей стороны.`
+                    );
+                }
             }
 
             showToast('Условия сделки подтверждены', 'success');
@@ -720,6 +762,8 @@ export default function App() {
 
     const handleProposeCommission = async (bidId, mode) => {
         if (!sbUser || !userProfile) return;
+        const VALID_COMMISSION_MODES = ['split', 'full'];
+        if (!VALID_COMMISSION_MODES.includes(mode)) return;
         const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
         const modeText = mode === 'split' ? 'разделить комиссию 50/50' : 'оплатить комиссию полностью';
         const updates = { commission_mode: mode, commission_proposer_id: sbUser.id, commission_agreed: false };
@@ -785,6 +829,15 @@ export default function App() {
                 text: `${roleName} отклонил предложение. Обсудите и предложите другой вариант оплаты.`
             }]);
             showToast('Предложение отклонено', 'warning');
+            const rejectedBid = bids.find(b => b.id === bidId) || activeChat;
+            const proposerId = rejectedBid?.commission_proposer_id;
+            if (proposerId && proposerId !== sbUser.id) {
+                sendNotification(
+                    proposerId,
+                    'Предложение по комиссии отклонено — RailMatch',
+                    `Компания «${userProfile.company}» отклонила ваше предложение по оплате комиссии.\n\nОткройте платформу, чтобы обсудить другой вариант.`
+                );
+            }
         }
     };
 
@@ -884,6 +937,18 @@ export default function App() {
                 text: `Загружен документ: ${docNames[stage] || stage}`
             }]);
             showToast('Документ загружен', 'success');
+            const uploadBid = bids.find(b => b.id === bidId) || activeChat;
+            const isShipperUpload = userProfile?.role === 'shipper';
+            const docPartnerId = isShipperUpload
+                ? uploadBid?.ownerId
+                : profiles.find(p => p.inn === uploadBid?.shipperInn)?.id;
+            if (docPartnerId) {
+                sendNotification(
+                    docPartnerId,
+                    'Партнёр загрузил документ — RailMatch',
+                    `Компания «${userProfile?.company}» загрузила ${docNames[stage] || stage}.\n\nОткройте платформу, чтобы проверить документ.`
+                );
+            }
         }
     };
 

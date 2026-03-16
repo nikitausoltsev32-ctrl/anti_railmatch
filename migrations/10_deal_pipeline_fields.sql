@@ -54,8 +54,10 @@ ALTER TABLE public.messages ALTER COLUMN sender_id TYPE TEXT USING sender_id::TE
 
 -- Update INSERT policy to allow system messages
 DROP POLICY IF EXISTS "Participants can insert messages" ON public.messages;
-CREATE POLICY "Participants can insert messages" ON public.messages 
-    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Participants can insert messages" ON public.messages
+    FOR INSERT WITH CHECK (
+    auth.uid()::text = sender_id OR sender_id = 'system'
+);
 
 -- ============================================
 -- 7. REQUESTS: Expand status constraint

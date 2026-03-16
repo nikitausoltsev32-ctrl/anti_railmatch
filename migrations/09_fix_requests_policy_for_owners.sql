@@ -10,5 +10,5 @@ CREATE POLICY "Authenticated users can insert requests" ON public.requests FOR I
 -- Опционально: если владельцу нужно изменять свои опубликованные заявки, нужно также обновить UPDATE:
 DROP POLICY IF EXISTS "Shippers can update own requests" ON public.requests;
 CREATE POLICY "Users can update own requests" ON public.requests FOR UPDATE USING (
-    "shipperInn" = (SELECT inn FROM public.profiles WHERE id = auth.uid()) OR auth.uid() IS NOT NULL
+    "shipperInn" = (SELECT inn FROM public.profiles WHERE id = auth.uid())
 );

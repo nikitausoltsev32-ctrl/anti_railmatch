@@ -43,12 +43,28 @@ CREATE POLICY "Deal participants can view documents" ON public.deal_documents
     );
 
 -- Participants can insert documents
-CREATE POLICY "Deal participants can insert documents" ON public.deal_documents
-    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Deal participants can insert documents" ON public.deal_documents FOR INSERT WITH CHECK (
+    bid_id IN (
+        SELECT id FROM public.bids
+        WHERE "ownerId" = auth.uid()
+        OR "requestId" IN (
+            SELECT id FROM public.requests
+            WHERE "shipperInn" = (SELECT inn FROM public.profiles WHERE id = auth.uid())
+        )
+    )
+);
 
 -- Participants can update documents
-CREATE POLICY "Deal participants can update documents" ON public.deal_documents
-    FOR UPDATE USING (true);
+CREATE POLICY "Deal participants can update documents" ON public.deal_documents FOR UPDATE USING (
+    bid_id IN (
+        SELECT id FROM public.bids
+        WHERE "ownerId" = auth.uid()
+        OR "requestId" IN (
+            SELECT id FROM public.requests
+            WHERE "shipperInn" = (SELECT inn FROM public.profiles WHERE id = auth.uid())
+        )
+    )
+);
 
 -- ============================================
 -- 4. STORAGE BUCKET (run in Supabase dashboard)

@@ -57,7 +57,13 @@ CREATE TABLE IF NOT EXISTS public.bids (
 ALTER TABLE public.bids ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Bids are viewable by everyone" ON public.bids FOR SELECT USING (true);
 CREATE POLICY "Owners can insert their own bids" ON public.bids FOR INSERT WITH CHECK (auth.uid() = "ownerId");
-CREATE POLICY "Owners and Shippers can update bids" ON public.bids FOR UPDATE USING (true); -- Ideally, narrow this down to owner or related shipper
+CREATE POLICY "Owners and Shippers can update bids" ON public.bids FOR UPDATE USING (
+    auth.uid() = "ownerId"
+    OR "requestId" IN (
+        SELECT id FROM public.requests
+        WHERE "shipperInn" = (SELECT inn FROM public.profiles WHERE id = auth.uid())
+    )
+);
 
 -- 4. Messages Table
 CREATE TABLE IF NOT EXISTS public.messages (

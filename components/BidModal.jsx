@@ -7,7 +7,9 @@ export default function BidModal({ request, userLimit, onClose, onConfirm }) {
     const [wagons, setWagons] = useState(maxWagons);
     const [tons, setTons] = useState("");
 
-    const isValid = Number(price) > 0 && Number(wagons) > 0 && Number(wagons) <= maxWagons;
+    const MIN_PRICE = 100_000;
+    const MAX_PRICE = 10_000_000;
+    const isValid = Number(price) >= MIN_PRICE && Number(price) <= MAX_PRICE && Number(wagons) > 0 && Number(wagons) <= maxWagons;
     const totalSum = Number(price) * Number(wagons) || 0;
 
     return (
@@ -28,7 +30,8 @@ export default function BidModal({ request, userLimit, onClose, onConfirm }) {
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Цена за 1 вагон (₽)</label>
                         <input type="number" min="1" value={price} onChange={e => setPrice(e.target.value)} placeholder="Введите цену" className={`w-full px-6 sm:px-8 py-4 sm:py-5 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white font-black text-xl sm:text-2xl text-center ${price !== '' && Number(price) <= 0 ? 'ring-2 ring-red-400' : ''}`} />
-                        {price !== '' && Number(price) <= 0 && <p className="text-xs text-red-500 font-bold ml-4">Укажите цену больше 0</p>}
+                        {price !== '' && Number(price) < MIN_PRICE && <p className="text-xs text-red-500 font-bold ml-4">Минимальная цена — {MIN_PRICE.toLocaleString()} ₽</p>}
+                        {price !== '' && Number(price) > MAX_PRICE && <p className="text-xs text-red-500 font-bold ml-4">Цена не может превышать {MAX_PRICE.toLocaleString()} ₽</p>}
                     </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Количество вагонов (макс. {maxWagons})</label>
