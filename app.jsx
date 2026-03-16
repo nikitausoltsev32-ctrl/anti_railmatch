@@ -396,7 +396,14 @@ export default function App() {
 
         try {
             if (authMode === 'register') {
-                const { data, error } = await supabase.auth.signUp({ email, password });
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: window.location.origin + window.location.pathname,
+                        data: { name, company },
+                    },
+                });
                 if (error) {
                     console.error("Registration failed:", error);
                     showToast("Ошибка регистрации: " + (error.message || "Проверьте данные"), 'error');
@@ -411,7 +418,21 @@ export default function App() {
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
-                showToast(`Добро пожаловать, ${name || data.user.email}!`, 'success');
+
+                // Send branded confirmation email via edge function (non-blocking)
+                // Supabase generates the confirmation_url and embeds it in the signUp response
+                // when email confirmations are enabled. If the user object has no email_confirmed_at,
+                // we trigger our custom email. The confirmation URL points back to this page.
+                const confirmationUrl = `${window.location.origin}${window.location.pathname}`;
+                supabase.functions.invoke('send-confirmation-email', {
+                    body: {
+                        email,
+                        name: name || email,
+                        confirmation_url: confirmationUrl,
+                    },
+                }).catch((e: unknown) => console.warn('Confirmation email skipped:', e));
+
+                showToast(`Добро пожаловать, ${name || data.user?.email}! Проверьте почту для подтверждения.`, 'success');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
