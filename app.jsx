@@ -289,7 +289,32 @@ export default function App() {
 
         const bidChannel = supabase.channel('public:bids')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'bids' }, (payload) => {
-                if (payload.eventType === 'INSERT') setBids(prev => [payload.new, ...prev]);
+                if (payload.eventType === 'INSERT') {
+                    setBids(prev => [payload.new, ...prev]);
+                    // Notify request owner when someone bids on their request
+                    if (payload.new.ownerId !== sbUser.id) {
+                        setRequests(prev => {
+                            const req = prev.find(r => r.id === payload.new.requestId);
+                            if (req && req.shipperInn) {
+                                // We check after state update via functional form
+                            }
+                            return prev;
+                        });
+                        // Check if the bid is on a request owned by current user (shipper)
+                        setRequests(currentRequests => {
+                            const req = currentRequests.find(r => r.id === payload.new.requestId);
+                            if (req) {
+                                setUserProfile(currentProfile => {
+                                    if (currentProfile && req.shipperInn === currentProfile.inn) {
+                                        showToast(`📩 Новый отклик на вашу заявку`, 'info');
+                                    }
+                                    return currentProfile;
+                                });
+                            }
+                            return currentRequests;
+                        });
+                    }
+                }
                 else if (payload.eventType === 'UPDATE') setBids(prev => prev.map(b => b.id === payload.new.id ? payload.new : b));
                 else if (payload.eventType === 'DELETE') setBids(prev => prev.filter(b => b.id !== payload.old.id));
             }).subscribe();
@@ -306,7 +331,14 @@ export default function App() {
                 table: 'profiles',
                 filter: `id=eq.${sbUser.id}`
             }, (payload) => {
-                setUserProfile(prev => ({ ...prev, ...payload.new }));
+                setUserProfile(prev => {
+                    if (payload.new.verification_status === 'verified' && prev?.verification_status !== 'verified') {
+                        showToast('✅ Ваш аккаунт верифицирован!', 'success');
+                    } else if (payload.new.verification_status === 'rejected' && prev?.verification_status !== 'rejected') {
+                        showToast('❌ Верификация отклонена. Проверьте документы', 'error');
+                    }
+                    return { ...prev, ...payload.new };
+                });
             }).subscribe();
 
         return () => {
@@ -377,11 +409,14 @@ export default function App() {
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
+                showToast(`Добро пожаловать, ${name || data.user.email}! 🎉`, 'success');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     console.error("Login failed:", error);
                     showToast("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message), 'error');
+                } else {
+                    showToast(`С возвращением! 👋`, 'success');
                 }
             }
         } catch (e) {
@@ -394,6 +429,7 @@ export default function App() {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
+        showToast('Вы вышли из аккаунта', 'info');
         setScreen('landing');
         localStorage.removeItem('rm_screen');
         localStorage.removeItem('rm_view');
@@ -673,6 +709,7 @@ export default function App() {
                 }]);
             }
 
+            showToast('✅ Условия сделки подтверждены', 'success');
         } catch (e) {
             console.error("Deal confirmation error:", e);
             showToast("Ошибка при подтверждении условий", 'error');
@@ -692,6 +729,7 @@ export default function App() {
                 chat_id: bidId, sender_id: 'system',
                 text: `${roleName} предлагает ${modeText}. Пожалуйста, подтвердите или отклоните предложение.`
             }]);
+            showToast('💬 Предложение отправлено партнёру', 'info');
             // Уведомление партнёру
             const bid = bids.find(b => b.id === bidId) || activeChat;
             const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : profiles.find(p => p.inn === bid?.shipperInn)?.id;
@@ -843,6 +881,7 @@ export default function App() {
                 sender_id: 'system',
                 text: `📄 Загружен документ: ${docNames[stage] || stage}`
             }]);
+            showToast('📄 Документ загружен', 'success');
         }
     };
 
