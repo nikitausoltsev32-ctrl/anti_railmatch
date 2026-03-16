@@ -124,6 +124,15 @@ export default function App() {
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4500);
     }, []);
 
+    const getAuthErrorMessage = useCallback((error, mode = 'login') => {
+        const raw = (error?.message || '').toLowerCase();
+        if (raw.includes('email not confirmed')) return 'Подтвердите email по ссылке из письма и попробуйте снова.';
+        if (raw.includes('invalid login credentials')) return 'Неверный email или пароль.';
+        if (raw.includes('user already registered')) return 'Пользователь с таким email уже зарегистрирован.';
+        if (raw.includes('password')) return mode === 'register' ? 'Слишком простой пароль. Используйте не менее 6 символов.' : 'Некорректный пароль.';
+        return error?.message || (mode === 'register' ? 'Ошибка регистрации. Проверьте данные.' : 'Ошибка входа.');
+    }, []);
+
     // Уведомления партнёру: email + Telegram (non-blocking, fire-and-forget)
     const sendNotification = useCallback(async (toUserId, subject, bodyText) => {
         if (!toUserId) return;
@@ -151,14 +160,66 @@ export default function App() {
     useEffect(() => {
         let mounted = true;
 
-        const fetchProfile = async (userId, isInitialLogin = false) => {
+        const fetchProfile = async (userId, isInitialLogin = false, userMeta = null, userEmail = null) => {
+            const ensureProfileExists = async () => {
+                const meta = userMeta || sbUser?.user_metadata || {};
+                const metaName = meta.name || 'Пользователь';
+                const metaCompany = meta.company || null;
+                const metaPhone = meta.phone || null;
+                const metaRole = meta.role === 'shipper' ? 'shipper' : 'owner';
+                const metaEmail = userEmail || sbUser?.email || null;
+                const registrationInn = `9${Date.now().toString().slice(-9)}`;
+
+                const { error: createProfileError } = await supabase
+                    .from('profiles')
+                    .upsert([
+                        {
+                            id: userId,
+                            name: metaName,
+                            company: metaCompany,
+                            email: metaEmail,
+                            phone: metaPhone,
+                            role: metaRole,
+                            inn: registrationInn,
+                            plan: 'Free',
+                            leakage_attempts: 0,
+                            daily_profile_views: 0,
+                        },
+                    ], { onConflict: 'id' });
+
+                if (createProfileError) {
+                    console.error('Auto profile creation failed:', createProfileError);
+                    return null;
+                }
+
+                const { data: createdProfile } = await supabase.from('profiles').select('*').eq('id', userId).single();
+                return createdProfile || null;
+            };
+
             try {
                 const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
                 if (!mounted) return;
                 if (error) {
                     console.error("Profile fetch error:", error);
                     if (error.code === 'PGRST116') {
-                        // Новая регистрация — профиль ещё не вставлен, ждём и повторяем
+                        // Новая регистрация — профиль может ещё не существовать, пробуем автосоздать
+                        const createdProfile = await ensureProfileExists();
+                        if (createdProfile) {
+                            setUserProfile(createdProfile);
+                            setAuthChecking(false);
+                            if (isInitialLogin) {
+                                const savedScreen = localStorage.getItem('rm_screen');
+                                setScreen('app');
+                                if (savedScreen !== 'app') setView('catalog');
+                                const onboardedKey = `rm_onboarded_${userId}`;
+                                if (!createdProfile.onboarded && !localStorage.getItem(onboardedKey)) {
+                                    setShowOnboarding(true);
+                                }
+                            }
+                            return;
+                        }
+
+                        // Если автосоздать не удалось — ждём и повторяем один раз
                         setTimeout(async () => {
                             if (!mounted) return;
                             const { data: retryData } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -210,7 +271,7 @@ export default function App() {
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) {
                 setSbUser(session.user);
-                fetchProfile(session.user.id, true);
+                fetchProfile(session.user.id, true, session.user.user_metadata, session.user.email);
             } else {
                 setAuthChecking(false);
             }
@@ -226,7 +287,7 @@ export default function App() {
             if (user) {
                 // Только при явном входе меняем экраны, чтобы не выкидывало при TOKEN_REFRESHED
                 const isInitialLogin = _event === 'SIGNED_IN';
-                fetchProfile(user.id, isInitialLogin);
+                fetchProfile(user.id, isInitialLogin, user.user_metadata, user.email);
             } else {
                 setUserProfile(null);
                 // setScreen('landing'); // Изменил: если логаут, мы идём на лендинг (вызывается в handleLogout)
@@ -238,6 +299,17 @@ export default function App() {
             subscription.unsubscribe();
         };
     }, []);
+
+    useEffect(() => {
+        const hash = window.location.hash || '';
+        const params = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+        const authType = params.get('type');
+        if (authType === 'signup') {
+            showToast('Email подтверждён. Вход выполнен успешно!', 'success');
+            const cleanUrl = window.location.origin + window.location.pathname + window.location.search;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    }, [showToast]);
 
     // 2b. Telegram Mini App — инициализация и автолинковка
     useEffect(() => {
@@ -399,7 +471,7 @@ export default function App() {
                 });
                 if (error) {
                     console.error("Registration failed:", error);
-                    showToast("Ошибка регистрации: " + (error.message || "Проверьте данные"), 'error');
+                    showToast(getAuthErrorMessage(error, 'register'), 'error');
                     setAuthLoading(false);
                     return;
                 }
@@ -408,7 +480,7 @@ export default function App() {
                 if (userId) {
                     const registrationInn = `9${Date.now().toString().slice(-9)}`;
                     const { error: profileError } = await supabase.from('profiles').insert([
-                        { id: userId, name, company, inn: registrationInn, phone, role: regRole, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }
+                        { id: userId, name, company, email, inn: registrationInn, phone, role: regRole, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
@@ -422,7 +494,7 @@ export default function App() {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     console.error("Login failed:", error);
-                    showToast("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message), 'error');
+                    showToast(getAuthErrorMessage(error, 'login'), 'error');
                 } else {
                     showToast(`С возвращением!`, 'success');
                 }
