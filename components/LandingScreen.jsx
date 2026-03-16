@@ -64,22 +64,22 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                 {/* Subheadline */}
                 <p className="text-lg md:text-2xl text-slate-500 dark:text-slate-400 max-w-3xl mb-14 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-10 duration-1000">
                     RailMatch соединяет грузоотправителей и владельцев вагонов напрямую.<br className="hidden md:block" />
-                    Комиссия <strong className="text-slate-700 dark:text-slate-200">2.5%</strong> вместо 15–20% у посредников. Сделка — от 60 секунд.
+                    {' '}Комиссия <strong className="text-slate-700 dark:text-slate-200">2.5%</strong> вместо 15–20% у посредников. Сделка — от 60 секунд.
                 </p>
 
                 {/* CTA buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-300">
-                    <button onClick={onStart} className="flex-1 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black uppercase tracking-widest text-sm rounded-3xl shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all group flex items-center justify-center gap-3 whitespace-nowrap">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md sm:max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-300">
+                    <button onClick={onStart} className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all group flex items-center justify-center gap-3 whitespace-nowrap">
                         Начать бесплатно <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <button onClick={onDemo} className="flex-1 h-16 bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 font-black uppercase tracking-widest text-sm rounded-3xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 shadow-xl hover:-translate-y-1.5 active:scale-95 transition-all flex items-center justify-center gap-3 group whitespace-nowrap">
+                    <button onClick={onDemo} className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 shadow-xl hover:-translate-y-1.5 active:scale-95 transition-all flex items-center justify-center gap-3 group whitespace-nowrap">
                         Смотреть демо <Zap className="w-5 h-5 text-amber-500 group-hover:scale-125 transition-transform" />
                     </button>
                     <a
                         href="https://t.me/RailMatchBot"
                         target="_blank"
                         rel="noreferrer"
-                        className="flex-1 h-16 bg-[#229ED9] hover:bg-[#1a8bbf] text-white font-black uppercase tracking-widest text-sm rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all flex items-center justify-center gap-3 whitespace-nowrap"
+                        className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-[#229ED9] hover:bg-[#1a8bbf] text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all flex items-center justify-center gap-3 whitespace-nowrap"
                     >
                         <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
                         Открыть в Telegram
