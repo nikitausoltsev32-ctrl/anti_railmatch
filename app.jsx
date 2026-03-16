@@ -21,7 +21,11 @@ import ErrorBoundary from './components/ErrorBoundary.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 
 import { supabase } from './src/supabaseClient';
-import { PLATFORM_COMMISSION_RATE } from './src/constants.js';
+import {
+    PLATFORM_COMMISSION_RATE,
+    VIOLATION_WARNING, VIOLATION_CHAT_BLOCK, VIOLATION_UNVERIFY, VIOLATION_BAN,
+    CHAT_BLOCK_HOURS, VIOLATION_RESET_DAYS
+} from './src/constants.js';
 import { validateMessageIntent } from './src/security.js';
 
 // --- ГЛАВНЫЙ КОМПОНЕНТ ---
@@ -60,6 +64,7 @@ export default function App() {
     const [isAiSearching, setIsAiSearching] = useState(false);
     const [quickFilter, setQuickFilter] = useState({ wagonType: null, direction: null });
     const [securityWarning, setSecurityWarning] = useState(null); // { message: string, severity: 'warning' | 'critical' }
+    const [violationInfo, setViolationInfo] = useState(null); // { message, sanctionLevel, warningCount } — для модального окна
     const [toasts, setToasts] = useState([]); // { id, message, type: 'success'|'error'|'warning'|'info' }
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
@@ -441,42 +446,119 @@ export default function App() {
     const handleSendMessage = async (chatId, text) => {
         if (!sbUser || !text.trim()) return;
 
+        // --- Проверка бана ---
+        if (userProfile?.is_banned) {
+            setViolationInfo({
+                message: 'Ваш аккаунт заблокирован за многократные нарушения правил RailMatch. Отправка сообщений недоступна.',
+                sanctionLevel: 'banned',
+                warningCount: userProfile.violation_points || 0,
+            });
+            return;
+        }
+
+        // --- Проверка блокировки чата ---
+        if (userProfile?.chat_blocked_until && new Date(userProfile.chat_blocked_until) > new Date()) {
+            const until = new Date(userProfile.chat_blocked_until).toLocaleString('ru-RU');
+            setViolationInfo({
+                message: `Чат заблокирован до ${until} за нарушение правил передачи контактов.`,
+                sanctionLevel: 'blocked',
+                warningCount: userProfile.violation_points || 0,
+            });
+            return;
+        }
+
+        // --- Автосброс баллов через 30 дней ---
+        if (userProfile?.last_violation_at && userProfile.violation_points > 0) {
+            const lastViolation = new Date(userProfile.last_violation_at);
+            const daysSince = (Date.now() - lastViolation.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSince >= VIOLATION_RESET_DAYS) {
+                await supabase.from('profiles').update({
+                    violation_points: 0,
+                    last_violation_at: null,
+                }).eq('id', sbUser.id);
+                setUserProfile(prev => ({ ...prev, violation_points: 0, last_violation_at: null }));
+            }
+        }
+
         const validation = validateMessageIntent(text);
 
         try {
-            // Если нарушение - инкрементируем счетчик в профиле
             if (validation.isViolation) {
-                const newAttempts = (userProfile.leakage_attempts || 0) + 1;
+                // --- Логирование нарушения ---
+                await supabase.from('violations').insert([{
+                    user_id: sbUser.id,
+                    chat_id: chatId,
+                    original_text: text,
+                    violation_type: validation.violationType,
+                }]);
 
-                // Shadow flagging: инкрементируем попытки
-                await supabase.from('profiles').update({ leakage_attempts: newAttempts }).eq('id', sbUser.id);
-                setUserProfile(prev => ({ ...prev, leakage_attempts: newAttempts }));
+                // --- Инкремент баллов нарушений ---
+                const newPoints = (userProfile.violation_points || 0) + 1;
+                const now = new Date().toISOString();
 
-                if (newAttempts >= 3) {
-                    setSecurityWarning({
-                        message: "ВНИМАНИЕ: Зафиксированы множественные попытки обхода платформы. Ваш аккаунт передан на модерацию.",
-                        severity: 'critical'
-                    });
+                const profileUpdate = {
+                    violation_points: newPoints,
+                    leakage_attempts: (userProfile.leakage_attempts || 0) + 1,
+                    last_violation_at: now,
+                };
+
+                // --- Применение санкций по уровню ---
+                let sanctionLevel = 'warning';
+                let sanctionMessage = '';
+
+                if (newPoints >= VIOLATION_BAN) {
+                    // 4+ нарушений: полный бан
+                    profileUpdate.is_banned = true;
+                    sanctionLevel = 'banned';
+                    sanctionMessage = 'Ваш аккаунт заблокирован за систематические нарушения правил RailMatch. Обратитесь в поддержку.';
+                } else if (newPoints >= VIOLATION_UNVERIFY) {
+                    // 3 нарушения: снятие верификации
+                    profileUpdate.is_verified = false;
+                    sanctionLevel = 'unverified';
+                    sanctionMessage = 'Верификация вашего аккаунта снята за нарушения правил. Контрагенты больше не видят ваш статус проверки.';
+                } else if (newPoints >= VIOLATION_CHAT_BLOCK) {
+                    // 2 нарушения: блокировка чата на 24 часа
+                    const blockUntil = new Date(Date.now() + CHAT_BLOCK_HOURS * 60 * 60 * 1000).toISOString();
+                    profileUpdate.chat_blocked_until = blockUntil;
+                    sanctionLevel = 'blocked';
+                    sanctionMessage = `Чат заблокирован на ${CHAT_BLOCK_HOURS} часов. Повторные нарушения приведут к снятию верификации.`;
                 } else {
-                    setSecurityWarning({
-                        message: "Система безопасности RailMatch скрыла контактные данные. Пожалуйста, используйте безопасную сделку.",
-                        severity: 'warning'
-                    });
+                    // 1 нарушение: предупреждение
+                    sanctionMessage = 'Ваше сообщение содержит контактные данные и заблокировано. Используйте кнопку «Раскрыть контакты» для безопасной передачи данных.';
                 }
 
+                await supabase.from('profiles').update(profileUpdate).eq('id', sbUser.id);
+                setUserProfile(prev => ({ ...prev, ...profileUpdate }));
+
+                // --- Показ модального окна нарушения ---
+                setViolationInfo({
+                    message: sanctionMessage,
+                    sanctionLevel,
+                    warningCount: newPoints,
+                });
+
+                // Баннер безопасности
+                setSecurityWarning({
+                    message: sanctionMessage,
+                    severity: newPoints >= VIOLATION_UNVERIFY ? 'critical' : 'warning',
+                });
                 clearTimeout(securityWarningTimerRef.current);
-                securityWarningTimerRef.current = setTimeout(() => setSecurityWarning(null), 5000);
+                securityWarningTimerRef.current = setTimeout(() => setSecurityWarning(null), 7000);
+
+                // Сообщение НЕ отправляется
+                return;
             }
 
+            // --- Отправка легитимного сообщения ---
             const { error } = await supabase.from('messages').insert([{
                 chat_id: chatId,
                 sender_id: sbUser.id,
-                text: validation.cleaned
+                text: text.trim(),
             }]);
             if (error) throw error;
         } catch (err) {
             console.error("Error sending message:", err);
-            // setSecurityWarning({ message: "Ошибка при отправке сообщения", severity: 'warning' });
+            showToast('Ошибка при отправке сообщения', 'error');
         }
     };
 
@@ -1149,6 +1231,8 @@ export default function App() {
                                     currentUserId={sbUser?.id}
                                     userRole={userProfile?.role}
                                     userProfile={userProfile}
+                                    violationInfo={violationInfo}
+                                    onDismissViolation={() => setViolationInfo(null)}
                                     onSend={(text) => handleSendMessage(activeChat.id, text)}
                                     onAccept={() => handleConfirmDeal(activeChat)}
                                     onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}
@@ -1229,6 +1313,8 @@ export default function App() {
                             currentUserId={sbUser?.id}
                             userRole={userProfile?.role}
                             userProfile={userProfile}
+                            violationInfo={violationInfo}
+                            onDismissViolation={() => setViolationInfo(null)}
                             onSend={(text) => handleSendMessage(activeChat.id, text)}
                             onAccept={() => handleConfirmDeal(activeChat)}
                             onPayCommission={(mode) => handleCommissionPayment(activeChat.id, mode)}

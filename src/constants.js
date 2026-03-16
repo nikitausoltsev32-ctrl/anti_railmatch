@@ -9,3 +9,17 @@ export const ALLOWED_DOC_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 
 
 /** Максимальный размер загружаемого документа в байтах (10 МБ). */
 export const MAX_DOC_SIZE_BYTES = 10 * 1024 * 1024;
+
+// --- Санкции за нарушения чата ---
+/** Порог: предупреждение */
+export const VIOLATION_WARNING = 1;
+/** Порог: блокировка чата на 24 часа */
+export const VIOLATION_CHAT_BLOCK = 2;
+/** Порог: снятие верификации */
+export const VIOLATION_UNVERIFY = 3;
+/** Порог: полный бан аккаунта */
+export const VIOLATION_BAN = 4;
+/** Длительность блокировки чата в часах */
+export const CHAT_BLOCK_HOURS = 24;
+/** Дней без нарушений для сброса баллов */
+export const VIOLATION_RESET_DAYS = 30;
