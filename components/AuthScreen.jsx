@@ -4,7 +4,18 @@ import { supabase } from '../src/supabaseClient';
 
 const validateInn = (inn) => {
     const digits = inn.replace(/\D/g, '');
-    return digits.length === 10 || digits.length === 12;
+    if (digits.length !== 10 && digits.length !== 12) return false;
+    const d = digits.split('').map(Number);
+    if (digits.length === 10) {
+        const sum = [2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
+        return d[9] === (sum % 11) % 10;
+    }
+    if (digits.length === 12) {
+        const sum1 = [7,2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
+        const sum2 = [3,7,2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
+        return d[10] === (sum1 % 11) % 10 && d[11] === (sum2 % 11) % 10;
+    }
+    return false;
 };
 
 const validatePhone = (phone) => {
