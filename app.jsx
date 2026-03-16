@@ -409,7 +409,7 @@ export default function App() {
         const bidData = {
             requestId: selectedRequest.id,
             ownerId: sbUser.id,
-            ownerName: userProfile.name || userProfile.company,
+            ownerName: userProfile.name || 'Владелец вагонов',
             ownerPhone: userProfile.phone,
             ownerInn: userProfile.inn,
             price: Number(price),
@@ -1160,7 +1160,7 @@ export default function App() {
                                                     })}
                                                     rank={idx}
                                                     creatorRole={creatorProfile?.role}
-                                                    creatorCompany={creatorProfile?.name || creatorProfile?.company}
+                                                    creatorCompany={creatorProfile?.company || creatorProfile?.name}
                                                 />
                                             </div>
                                         );
@@ -1195,8 +1195,8 @@ export default function App() {
                                     const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
                                     const ownerProfile = profiles.find(p => p.id === chatBid.ownerId);
                                     const partnerName = isMeOwner
-                                        ? (creatorProfile?.company || creatorProfile?.name || req?.stationTo || 'Заявка')
-                                        : (ownerProfile?.name || ownerProfile?.company || chatBid.ownerName || 'Партнёр');
+                                        ? (creatorProfile?.name || req?.stationTo || 'Заявка')
+                                        : (ownerProfile?.name || chatBid.ownerName || 'Партнёр');
                                     const isActive = activeChat?.id === chatBid.id;
 
                                     return (
