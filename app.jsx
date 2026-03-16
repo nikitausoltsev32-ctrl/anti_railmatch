@@ -747,12 +747,12 @@ export default function App() {
         }
         setCancelConfirmId(null);
 
-        const { error } = await supabase.from('requests').update({ status: 'cancelled' }).eq('id', reqId);
+        const { error } = await supabase.from('requests').update({ status: 'closed' }).eq('id', reqId);
         if (error) {
             showToast('Ошибка при отмене заявки', 'error');
             return;
         }
-        setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'cancelled' } : r));
+        setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'closed' } : r));
         showToast('Заявка отменена и снята с биржи', 'info');
     };
 
@@ -1082,12 +1082,17 @@ export default function App() {
             fulfilledTons: 0,
             shipperInn: userProfile.inn || '000000',
             status: 'open'
-        }
-        const { error, data: insertedReq } = await supabase.from('requests').insert([reqData]);
+        };
+        const { error, data: insertedReq } = await supabase.from('requests').insert([reqData]).select().single();
         if (error) {
             console.error("Error creating request", error);
             showToast("Ошибка при сохранении заявки: " + (error.message || JSON.stringify(error)), 'error');
         } else {
+            // Optimistically add the new request to local state so it appears immediately
+            // without waiting for the realtime subscription event.
+            if (insertedReq) {
+                setRequests(prev => [insertedReq, ...prev]);
+            }
             showToast("Заявка успешно опубликована на бирже!", 'success');
             setView('my-requests');
         }
