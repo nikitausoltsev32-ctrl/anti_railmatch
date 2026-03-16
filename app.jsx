@@ -1236,7 +1236,27 @@ export default function App() {
 
     if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
-    if (screen === 'auth') return <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />;
+    if (screen === 'auth') return (
+        <>
+            <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />
+            <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[200] flex flex-col gap-3 pointer-events-none max-w-[calc(100vw-2rem)] sm:max-w-sm w-full">
+                {toasts.map(toast => (
+                    <div key={toast.id} className={`flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border pointer-events-auto animate-in slide-in-from-right-4 fade-in duration-300 ${
+                        toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                        toast.type === 'error'   ? 'bg-red-50 border-red-200 text-red-800' :
+                        toast.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' :
+                                                   'bg-blue-50 border-blue-200 text-blue-800'
+                    }`}>
+                        {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />}
+                        {toast.type === 'error'   && <XCircle      className="w-4 h-4 mt-0.5 shrink-0 text-red-500" />}
+                        {toast.type === 'warning' && <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />}
+                        {toast.type === 'info'    && <Info          className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />}
+                        <span className="text-sm font-bold leading-relaxed">{toast.message}</span>
+                    </div>
+                ))}
+            </div>
+        </>
+    );
 
     return (
         <ErrorBoundary>
