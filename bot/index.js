@@ -24,24 +24,25 @@ app.get('/', (req, res) => res.json({ status: 'ok', service: 'RailMatch Bot' }))
 
 // Telegram webhook endpoint
 app.post(`/webhook/${BOT_SECRET}`, async (req, res) => {
-  // Respond immediately — Telegram expects 200 within a few seconds
-  res.sendStatus(200);
-
-  const update = req.body;
-  const message = update?.message;
-  if (!message || !message.text) return;
-
-  const chatId = message.chat.id;
-  const text = message.text;
-  const from = message.from;
-
   try {
-    if (text.startsWith('/start')) {
-      await handleStart(chatId, text, from);
+    const update = req.body;
+    const message = update?.message;
+
+    if (message?.text) {
+      const chatId = message.chat.id;
+      const text = message.text;
+      const from = message.from;
+
+      if (text.startsWith('/start')) {
+        await handleStart(chatId, text, from);
+      }
+      // add other handlers here if they exist
     }
   } catch (err) {
-    console.error('Handler error:', err);
+    console.error('Webhook handler error:', err);
   }
+
+  res.sendStatus(200);
 });
 
 app.listen(PORT, async () => {

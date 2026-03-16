@@ -272,7 +272,7 @@ export default function App() {
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
                 supabase.from('bids').select('*').order('created_at', { ascending: false }),
                 supabase.from('messages').select('*').order('created_at', { ascending: true }),
-                supabase.from('profiles').select('id, inn, role, company, name, phone'),
+                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
             ]);
             if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
@@ -295,14 +295,6 @@ export default function App() {
                     setBids(prev => [payload.new, ...prev]);
                     // Notify request owner when someone bids on their request
                     if (payload.new.ownerId !== sbUser.id) {
-                        setRequests(prev => {
-                            const req = prev.find(r => r.id === payload.new.requestId);
-                            if (req && req.shipperInn) {
-                                // We check after state update via functional form
-                            }
-                            return prev;
-                        });
-                        // Check if the bid is on a request owned by current user (shipper)
                         setRequests(currentRequests => {
                             const req = currentRequests.find(r => r.id === payload.new.requestId);
                             if (req) {
@@ -357,7 +349,7 @@ export default function App() {
         const fetchDemoData = async () => {
             const [{ data: demoRequests }, { data: demoProfiles }] = await Promise.all([
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
-                supabase.from('profiles').select('id, inn, role, company, name, phone'),
+                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
             ]);
             if (demoRequests) setRequests(demoRequests);
             if (demoProfiles) setProfiles(demoProfiles);
@@ -452,6 +444,11 @@ export default function App() {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
+        supabase.removeAllChannels();
+        setUserProfile(null);
+        setRequests([]);
+        setBids([]);
+        setMessages([]);
         showToast('Вы вышли из аккаунта', 'info');
         setScreen('landing');
         localStorage.removeItem('rm_screen');
