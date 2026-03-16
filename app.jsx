@@ -715,6 +715,8 @@ export default function App() {
 
             const fullyConfirmed = updatedBid.shipper_confirmed && updatedBid.owner_confirmed;
 
+            const partnerId = isShipper ? bid.ownerId : profiles.find(p => p.inn === bid.shipperInn)?.id;
+
             if (fullyConfirmed && updatedBid.status === 'pending') {
                 await supabase.from('bids').update({ status: 'commission_pending' }).eq('id', bid.id);
                 setActiveChat(prev => ({ ...prev, ...updateField, status: 'commission_pending' }));
@@ -724,6 +726,14 @@ export default function App() {
                     sender_id: 'system',
                     text: 'Условия согласованы обеими сторонами! Следующий шаг — оплата комиссии платформы (2.5%) для раскрытия контактов партнёра.'
                 }]);
+                // Уведомить обоих участников
+                if (partnerId) {
+                    sendNotification(
+                        partnerId,
+                        'Условия сделки согласованы — RailMatch',
+                        `Компания «${userProfile.company}» подтвердила условия. Обе стороны согласовали сделку!\n\nСледующий шаг — оплата комиссии платформы для раскрытия контактов.`
+                    );
+                }
             } else {
                 setActiveChat(prev => ({ ...prev, ...updateField }));
                 setBids(prev => prev.map(b => b.id === bid.id ? { ...b, ...updateField } : b));
@@ -733,6 +743,14 @@ export default function App() {
                     sender_id: 'system',
                     text: `${roleName} подтвердил условия. Ожидаем подтверждение второй стороны.`
                 }]);
+                // Уведомить партнёра что ждём его подтверждения
+                if (partnerId) {
+                    sendNotification(
+                        partnerId,
+                        'Партнёр подтвердил условия — ваша очередь! RailMatch',
+                        `Компания «${userProfile.company}» подтвердила условия сделки.\n\nОткройте платформу, чтобы подтвердить со своей стороны.`
+                    );
+                }
             }
 
             showToast('Условия сделки подтверждены', 'success');
@@ -811,6 +829,15 @@ export default function App() {
                 text: `${roleName} отклонил предложение. Обсудите и предложите другой вариант оплаты.`
             }]);
             showToast('Предложение отклонено', 'warning');
+            const rejectedBid = bids.find(b => b.id === bidId) || activeChat;
+            const proposerId = rejectedBid?.commission_proposer_id;
+            if (proposerId && proposerId !== sbUser.id) {
+                sendNotification(
+                    proposerId,
+                    'Предложение по комиссии отклонено — RailMatch',
+                    `Компания «${userProfile.company}» отклонила ваше предложение по оплате комиссии.\n\nОткройте платформу, чтобы обсудить другой вариант.`
+                );
+            }
         }
     };
 
@@ -910,6 +937,18 @@ export default function App() {
                 text: `Загружен документ: ${docNames[stage] || stage}`
             }]);
             showToast('Документ загружен', 'success');
+            const uploadBid = bids.find(b => b.id === bidId) || activeChat;
+            const isShipperUpload = userProfile?.role === 'shipper';
+            const docPartnerId = isShipperUpload
+                ? uploadBid?.ownerId
+                : profiles.find(p => p.inn === uploadBid?.shipperInn)?.id;
+            if (docPartnerId) {
+                sendNotification(
+                    docPartnerId,
+                    'Партнёр загрузил документ — RailMatch',
+                    `Компания «${userProfile?.company}» загрузила ${docNames[stage] || stage}.\n\nОткройте платформу, чтобы проверить документ.`
+                );
+            }
         }
     };
 
