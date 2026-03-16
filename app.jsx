@@ -1103,10 +1103,10 @@ export default function App() {
 
         // Сначала создаём демо-профили обеих ролей, чтобы фильтрация по ролям на бирже работала
         const demoProfiles = [
-            { id: crypto.randomUUID(), company: 'ДемоГруз ООО', inn: '7700000000', role: 'shipper', phone: '+7 (999) 100-00-01', plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 },
-            { id: crypto.randomUUID(), company: 'ДемоГруз-2 ОАО', inn: '7711111111', role: 'shipper', phone: '+7 (999) 100-00-02', plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 },
-            { id: crypto.randomUUID(), company: 'ТрансВагон ЗАО', inn: '7722222222', role: 'owner', phone: '+7 (999) 200-00-01', plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 },
-            { id: crypto.randomUUID(), company: 'ВагонПарк ООО', inn: '7733333333', role: 'owner', phone: '+7 (999) 200-00-02', plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 },
+            { id: crypto.randomUUID(), company: 'ДемоГруз ООО', inn: '7700000000', role: 'shipper', phone: '+7 (999) 100-00-01' },
+            { id: crypto.randomUUID(), company: 'ДемоГруз-2 ОАО', inn: '7711111111', role: 'shipper', phone: '+7 (999) 100-00-02' },
+            { id: crypto.randomUUID(), company: 'ТрансВагон ЗАО', inn: '7722222222', role: 'owner', phone: '+7 (999) 200-00-01' },
+            { id: crypto.randomUUID(), company: 'ВагонПарк ООО', inn: '7733333333', role: 'owner', phone: '+7 (999) 200-00-02' },
         ];
         // Upsert чтобы не дублировать
         for (const dp of demoProfiles) {
@@ -1587,7 +1587,6 @@ export default function App() {
     {isModalOpen && selectedRequest && (
                 <BidModal
                     request={selectedRequest}
-                    userLimit={userProfile?.role === 'owner' ? userProfile?.bids_limit : null}
                     onClose={() => setIsModalOpen(false)}
                     onConfirm={handleBidSubmit}
                 />
