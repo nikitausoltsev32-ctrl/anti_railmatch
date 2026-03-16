@@ -116,6 +116,7 @@ export default function App() {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [showResetPassword, setShowResetPassword] = useState(false);
+    const [cancelConfirmId, setCancelConfirmId] = useState(null);
 
     const showToast = useCallback((message, type = 'success') => {
         const id = Date.now() + Math.random();
@@ -680,7 +681,12 @@ export default function App() {
             return;
         }
 
-        if (!window.confirm('Отменить заявку? Все входящие отклики будут закрыты.')) return;
+        if (cancelConfirmId !== reqId) {
+            setCancelConfirmId(reqId);
+            setTimeout(() => setCancelConfirmId(null), 3000);
+            return;
+        }
+        setCancelConfirmId(null);
 
         const { error } = await supabase.from('requests').update({ status: 'cancelled' }).eq('id', reqId);
         if (error) {
