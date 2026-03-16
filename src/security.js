@@ -131,6 +131,18 @@ function detectMessenger(text) {
     // Ключевые слова мессенджеров (английские)
     if (/\b(telegram|whats\s*app|viber|signal)\b/i.test(lower)) return true;
 
+    // Аббревиатуры "тг" / "tg" + username (с @ или без)
+    // Ловит: "тг onemonba", "tg username", "тг: onemonba", "тг- username"
+    if (/\b(тг|т\.г\.?|телега|тлг)\s*[:\-]?\s*@?[a-zA-Z][a-zA-Z0-9_.]{1,}/i.test(lower)) return true;
+    if (/\btg\s*[:\-]?\s*@?[a-zA-Z][a-zA-Z0-9_.]{1,}/i.test(lower)) return true;
+
+    // Любой мессенджер-keyword + username без @ (напр. "телеграм onemonba")
+    if (/\b(telegram|телеграм|whatsapp|вотсап|ватсап|viber|вайбер|signal|тг|tg|телега)\s*[:\-–]?\s*[a-zA-Z][a-zA-Z0-9_.]{2,}/i.test(lower)) return true;
+
+    // Username-подобный паттерн после любого слова-триггера (латинские слова 4+ симв. после пробела)
+    // Ловит скрытые передачи типа "пишите мне username123"
+    if (/\b(пиши|пишите|напиши|найди|ищи|найдите)\s+(?:мне\s+)?@?[a-zA-Z][a-zA-Z0-9_.]{3,}/i.test(lower)) return true;
+
     return false;
 }
 
@@ -172,7 +184,7 @@ function detectUrl(text) {
 /** Обфускация стоп-слов: т.е.л.е.ф.о.н, т-е-л-е-г-р-а-м */
 function detectObfuscated(text) {
     const lower = text.toLowerCase();
-    const keyWords = ['телефон', 'телеграм', 'вотсап', 'ватсап', 'вайбер', 'контакт', 'номер', 'почта'];
+    const keyWords = ['телефон', 'телеграм', 'вотсап', 'ватсап', 'вайбер', 'контакт', 'номер', 'почта', 'телега'];
 
     for (const word of keyWords) {
         if (word.length < 4) continue;
