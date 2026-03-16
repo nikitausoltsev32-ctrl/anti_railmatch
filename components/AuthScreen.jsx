@@ -4,18 +4,18 @@ import { supabase } from '../src/supabaseClient';
 
 const validateInn = (inn) => {
     const digits = inn.replace(/\D/g, '');
-    if (digits.length !== 10 && digits.length !== 12) return false;
+    if (digits.length !== 10 && digits.length !== 12) return 'ИНН должен содержать 10 или 12 цифр';
     const d = digits.split('').map(Number);
     if (digits.length === 10) {
         const sum = [2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
-        return d[9] === (sum % 11) % 10;
+        if (d[9] !== (sum % 11) % 10) return 'Неверный ИНН — проверьте правильность введённых цифр';
     }
     if (digits.length === 12) {
         const sum1 = [7,2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
         const sum2 = [3,7,2,4,10,3,5,9,4,6,8].reduce((acc, w, i) => acc + w * d[i], 0);
-        return d[10] === (sum1 % 11) % 10 && d[11] === (sum2 % 11) % 10;
+        if (d[10] !== (sum1 % 11) % 10 || d[11] !== (sum2 % 11) % 10) return 'Неверный ИНН — проверьте правильность введённых цифр';
     }
-    return false;
+    return null;
 };
 
 const validatePhone = (phone) => {
@@ -107,7 +107,8 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
         if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
         else if (!validatePersonName(formData.name.trim())) errs.name = 'Укажите имя человека, а не название компании';
         if (!formData.company.trim()) errs.company = 'Укажите название компании';
-        if (!validateInn(formData.inn)) errs.inn = 'ИНН должен содержать 10 или 12 цифр';
+        const innError = validateInn(formData.inn);
+        if (innError) errs.inn = innError;
         if (!validatePhone(formData.phone)) errs.phone = 'Укажите корректный номер телефона';
         setErrors(errs);
         return Object.keys(errs).length === 0;
