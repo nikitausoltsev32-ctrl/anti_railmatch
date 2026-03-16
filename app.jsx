@@ -412,18 +412,9 @@ export default function App() {
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
 
-                // Send branded confirmation email via edge function (non-blocking)
-                // Supabase generates the confirmation_url and embeds it in the signUp response
-                // when email confirmations are enabled. If the user object has no email_confirmed_at,
-                // we trigger our custom email. The confirmation URL points back to this page.
-                const confirmationUrl = `${window.location.origin}${window.location.pathname}`;
                 supabase.functions.invoke('send-confirmation-email', {
-                    body: {
-                        email,
-                        name: name || email,
-                        confirmation_url: confirmationUrl,
-                    },
-                }).catch((e) => console.warn('Confirmation email skipped:', e));
+                    body: { userId: data.user.id },
+                }).catch(e => console.warn('Confirmation email skipped:', e));
 
                 showToast(`Добро пожаловать, ${name || data.user?.email}! Проверьте почту для подтверждения.`, 'success');
             } else {
