@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
     TrainFront, ArrowRight, AlertCircle, User,
-    MessageSquare, Sparkles, Moon, Sun, Ban, TrendingUp
+    MessageSquare, Sparkles, Moon, Sun, Ban, TrendingUp,
+    CheckCircle2, XCircle, AlertTriangle, Info, Bell,
+    FileText, MessageCircle, ShieldCheck, ShieldX, LogIn, LogOut
 } from 'lucide-react';
 
 import LandingScreen from './components/LandingScreen';
@@ -306,7 +308,7 @@ export default function App() {
                             if (req) {
                                 setUserProfile(currentProfile => {
                                     if (currentProfile && req.shipperInn === currentProfile.inn) {
-                                        showToast(`📩 Новый отклик на вашу заявку`, 'info');
+                                        showToast(`Новый отклик на вашу заявку`, 'info');
                                     }
                                     return currentProfile;
                                 });
@@ -333,9 +335,9 @@ export default function App() {
             }, (payload) => {
                 setUserProfile(prev => {
                     if (payload.new.verification_status === 'verified' && prev?.verification_status !== 'verified') {
-                        showToast('✅ Ваш аккаунт верифицирован!', 'success');
+                        showToast('Ваш аккаунт верифицирован!', 'success');
                     } else if (payload.new.verification_status === 'rejected' && prev?.verification_status !== 'rejected') {
-                        showToast('❌ Верификация отклонена. Проверьте документы', 'error');
+                        showToast('Верификация отклонена. Проверьте документы', 'error');
                     }
                     return { ...prev, ...payload.new };
                 });
@@ -409,14 +411,14 @@ export default function App() {
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
-                showToast(`Добро пожаловать, ${name || data.user.email}! 🎉`, 'success');
+                showToast(`Добро пожаловать, ${name || data.user.email}!`, 'success');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     console.error("Login failed:", error);
                     showToast("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message), 'error');
                 } else {
-                    showToast(`С возвращением! 👋`, 'success');
+                    showToast(`С возвращением!`, 'success');
                 }
             }
         } catch (e) {
@@ -709,7 +711,7 @@ export default function App() {
                 }]);
             }
 
-            showToast('✅ Условия сделки подтверждены', 'success');
+            showToast('Условия сделки подтверждены', 'success');
         } catch (e) {
             console.error("Deal confirmation error:", e);
             showToast("Ошибка при подтверждении условий", 'error');
@@ -729,7 +731,7 @@ export default function App() {
                 chat_id: bidId, sender_id: 'system',
                 text: `${roleName} предлагает ${modeText}. Пожалуйста, подтвердите или отклоните предложение.`
             }]);
-            showToast('💬 Предложение отправлено партнёру', 'info');
+            showToast('Предложение отправлено партнёру', 'info');
             // Уведомление партнёру
             const bid = bids.find(b => b.id === bidId) || activeChat;
             const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : profiles.find(p => p.inn === bid?.shipperInn)?.id;
@@ -879,9 +881,9 @@ export default function App() {
             await supabase.from('messages').insert([{
                 chat_id: bidId,
                 sender_id: 'system',
-                text: `📄 Загружен документ: ${docNames[stage] || stage}`
+                text: `Загружен документ: ${docNames[stage] || stage}`
             }]);
-            showToast('📄 Документ загружен', 'success');
+            showToast('Документ загружен', 'success');
         }
     };
 
@@ -934,7 +936,7 @@ export default function App() {
             await supabase.from('messages').insert([{
                 chat_id: bidId,
                 sender_id: 'system',
-                text: `📝 ${roleName} подписал документ: ${docNames[docType] || docType}`
+                text: `${roleName} подписал документ: ${docNames[docType] || docType}`
             }]);
 
         } catch (e) {
@@ -1429,11 +1431,10 @@ export default function App() {
                         toast.type === 'warning' ? 'bg-amber-50 dark:bg-amber-900/40 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200' :
                                                    'bg-blue-50 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200'
                     }`}>
-                        <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                            toast.type === 'success' ? 'bg-emerald-500' :
-                            toast.type === 'error'   ? 'bg-red-500' :
-                            toast.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
-                        }`} />
+                        {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />}
+                        {toast.type === 'error'   && <XCircle      className="w-4 h-4 mt-0.5 shrink-0 text-red-500" />}
+                        {toast.type === 'warning' && <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />}
+                        {toast.type === 'info'    && <Info          className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />}
                         <span className="text-sm font-bold leading-relaxed">{toast.message}</span>
                     </div>
                 ))}
