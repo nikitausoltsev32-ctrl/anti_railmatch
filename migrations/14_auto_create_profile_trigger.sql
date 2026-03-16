@@ -9,11 +9,10 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, name, email, role, company, phone, inn)
+  INSERT INTO public.profiles (id, name, role, company, phone, inn)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'name', 'Пользователь'),
-    NEW.email,
     CASE
       WHEN NEW.raw_user_meta_data->>'role' = 'shipper' THEN 'shipper'
       ELSE 'owner'
@@ -34,11 +33,10 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- One-time fix: create profiles for existing orphaned auth users (no profile row)
-INSERT INTO public.profiles (id, name, email, role, company, phone, inn)
+INSERT INTO public.profiles (id, name, role, company, phone, inn)
 SELECT
   u.id,
   COALESCE(u.raw_user_meta_data->>'name', 'Пользователь'),
-  u.email,
   CASE
     WHEN u.raw_user_meta_data->>'role' = 'shipper' THEN 'shipper'
     ELSE 'owner'

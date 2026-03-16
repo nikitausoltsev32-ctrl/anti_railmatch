@@ -177,13 +177,9 @@ export default function App() {
                             id: userId,
                             name: metaName,
                             company: metaCompany,
-                            email: metaEmail,
                             phone: metaPhone,
                             role: metaRole,
                             inn: registrationInn,
-                            plan: 'Free',
-                            leakage_attempts: 0,
-                            daily_profile_views: 0,
                         },
                     ], { onConflict: 'id' });
 
