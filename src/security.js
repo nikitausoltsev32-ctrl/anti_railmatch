@@ -146,6 +146,37 @@ function detectMessenger(text) {
     return false;
 }
 
+// Белый список латинских слов, легитимных в контексте грузоперевозок
+const LATIN_WHITELIST = new Set([
+    'cargo', 'express', 'online', 'email', 'market', 'russia', 'global',
+    'trans', 'logistic', 'service', 'group', 'https', 'http', 'gmail',
+    'yandex', 'railmatch', 'mobile', 'phone', 'signal', 'viber', 'telegram',
+    'whatsapp', 'instagram', 'google', 'hello', 'thanks', 'order', 'price',
+    'delivery', 'truck', 'train', 'wagon', 'route', 'depot', 'agent',
+    'client', 'manager', 'driver', 'office', 'company', 'partner',
+]);
+
+/** Username-подобные строки на латинице (без @ и без мессенджер-префикса) */
+function detectLatinUsername(text) {
+    // Ищем латинские слова 5-32 символа: буква + буквы/цифры/underscore
+    const latinWords = text.match(/\b[a-zA-Z][a-zA-Z0-9_]{4,31}\b/g);
+    if (!latinWords) return false;
+
+    const hasCyrillic = /[а-яёА-ЯЁ]/.test(text);
+
+    for (const word of latinWords) {
+        const lower = word.toLowerCase();
+        if (LATIN_WHITELIST.has(lower)) continue;
+
+        // Содержит цифры или underscore — явный признак username (user_name, nick123)
+        if (/[0-9_]/.test(word)) return true;
+
+        // Длинное латинское слово (8+) в кириллическом контексте — подозрительно
+        if (word.length >= 8 && hasCyrillic) return true;
+    }
+    return false;
+}
+
 /** Email-адреса */
 function detectEmail(text) {
     const lower = text.toLowerCase();
@@ -229,22 +260,27 @@ export const validateMessageIntent = (text) => {
         return violation(text, 'messenger');
     }
 
-    // 5. Email
+    // 5. Username-подобные строки на латинице
+    if (detectLatinUsername(text)) {
+        return violation(text, 'messenger');
+    }
+
+    // 6. Email
     if (detectEmail(text)) {
         return violation(text, 'email');
     }
 
-    // 6. URL
+    // 7. URL
     if (detectUrl(text)) {
         return violation(text, 'url');
     }
 
-    // 7. Обфускация ключевых слов
+    // 8. Обфускация ключевых слов
     if (detectObfuscated(text)) {
         return violation(text, 'obfuscated');
     }
 
-    // 8. Стоп-слова
+    // 9. Стоп-слова
     if (STOP_WORDS.some(sw => lower.includes(sw))) {
         return violation(text, 'stop_word');
     }
