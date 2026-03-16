@@ -130,6 +130,13 @@ serve(async (req: Request) => {
         });
     }
 
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('SUPABASE_SERVICE_ROLE_KEY is not set');
+        return new Response(JSON.stringify({ error: 'Server configuration error: missing service role key' }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
+
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
         auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -143,8 +150,12 @@ serve(async (req: Request) => {
     });
 
     if (createError) {
-        console.error('Failed to create user:', createError);
-        return new Response(JSON.stringify({ error: createError.message }), {
+        console.error('Failed to create user:', createError.message, createError.status);
+        // "User already registered" — graceful message for client
+        const msg = createError.message?.toLowerCase().includes('already registered')
+            ? 'User already registered'
+            : createError.message;
+        return new Response(JSON.stringify({ error: msg }), {
             status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     }
