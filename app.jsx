@@ -28,6 +28,51 @@ import {
 } from './src/constants.js';
 import { validateMessageIntent } from './src/security.js';
 
+// --- ЭКРАН СБРОСА ПАРОЛЯ ---
+function ResetPasswordScreen({ isDark, onDone }) {
+    const [password, setPassword] = useState('');
+    const [confirm, setConfirm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (password !== confirm) { setError('Пароли не совпадают'); return; }
+        if (password.length < 6) { setError('Пароль должен содержать минимум 6 символов'); return; }
+        setError(null);
+        setLoading(true);
+        const { error: err } = await supabase.auth.updateUser({ password });
+        setLoading(false);
+        if (err) { setError(err.message); return; }
+        setSuccess(true);
+        setTimeout(onDone, 2000);
+    };
+
+    return (
+        <div className="min-h-screen animate-in fade-in duration-500 bg-slate-50 dark:bg-[#0B1120] flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl border border-white dark:border-slate-800">
+                <h2 className="text-3xl font-black mb-2 dark:text-white">Новый пароль</h2>
+                <p className="text-slate-400 mb-8 font-medium text-sm">Придумайте новый пароль для входа</p>
+                {success ? (
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-5 text-center">
+                        <p className="text-green-700 dark:text-green-400 font-semibold text-sm">Пароль успешно изменён!</p>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Новый пароль (минимум 6 символов)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
+                        <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Повторите пароль" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
+                        {error && <p className="text-red-500 text-xs font-bold ml-2">{error}</p>}
+                        <button type="submit" disabled={loading} className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50">
+                            {loading ? 'Сохранение...' : 'Сохранить пароль'}
+                        </button>
+                    </form>
+                )}
+            </div>
+        </div>
+    );
+}
+
 // --- ГЛАВНЫЙ КОМПОНЕНТ ---
 export default function App() {
     const [isDark, setIsDark] = useState(false);
@@ -68,6 +113,7 @@ export default function App() {
     const [toasts, setToasts] = useState([]); // { id, message, type: 'success'|'error'|'warning'|'info' }
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
+    const [showResetPassword, setShowResetPassword] = useState(false);
 
     const showToast = useCallback((message, type = 'success') => {
         const id = Date.now() + Math.random();
@@ -170,6 +216,10 @@ export default function App() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             const user = session?.user || null;
             setSbUser(user);
+            if (_event === 'PASSWORD_RECOVERY') {
+                setShowResetPassword(true);
+                return;
+            }
             if (user) {
                 // Только при явном входе меняем экраны, чтобы не выкидывало при TOKEN_REFRESHED
                 const isInitialLogin = _event === 'SIGNED_IN';
@@ -1011,6 +1061,8 @@ export default function App() {
             <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
         </div>
     );
+
+    if (showResetPassword) return <ResetPasswordScreen isDark={isDark} onDone={() => { setShowResetPassword(false); setScreen('app'); }} />;
 
     if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
