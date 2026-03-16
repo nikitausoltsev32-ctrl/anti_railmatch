@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
     TrainFront, ArrowRight, AlertCircle, User,
-    MessageSquare, Sparkles, Moon, Sun, Ban, TrendingUp
+    MessageSquare, Sparkles, Moon, Sun, Ban, TrendingUp,
+    CheckCircle2, XCircle, AlertTriangle, Info, Bell,
+    FileText, MessageCircle, ShieldCheck, ShieldX, LogIn, LogOut
 } from 'lucide-react';
 
 import LandingScreen from './components/LandingScreen';
@@ -27,6 +29,51 @@ import {
     CHAT_BLOCK_HOURS, VIOLATION_RESET_DAYS
 } from './src/constants.js';
 import { validateMessageIntent } from './src/security.js';
+
+// --- ЭКРАН СБРОСА ПАРОЛЯ ---
+function ResetPasswordScreen({ isDark, onDone }) {
+    const [password, setPassword] = useState('');
+    const [confirm, setConfirm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (password !== confirm) { setError('Пароли не совпадают'); return; }
+        if (password.length < 6) { setError('Пароль должен содержать минимум 6 символов'); return; }
+        setError(null);
+        setLoading(true);
+        const { error: err } = await supabase.auth.updateUser({ password });
+        setLoading(false);
+        if (err) { setError(err.message); return; }
+        setSuccess(true);
+        setTimeout(onDone, 2000);
+    };
+
+    return (
+        <div className="min-h-screen animate-in fade-in duration-500 bg-slate-50 dark:bg-[#0B1120] flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl border border-white dark:border-slate-800">
+                <h2 className="text-3xl font-black mb-2 dark:text-white">Новый пароль</h2>
+                <p className="text-slate-400 mb-8 font-medium text-sm">Придумайте новый пароль для входа</p>
+                {success ? (
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-5 text-center">
+                        <p className="text-green-700 dark:text-green-400 font-semibold text-sm">Пароль успешно изменён!</p>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Новый пароль (минимум 6 символов)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
+                        <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Повторите пароль" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
+                        {error && <p className="text-red-500 text-xs font-bold ml-2">{error}</p>}
+                        <button type="submit" disabled={loading} className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50">
+                            {loading ? 'Сохранение...' : 'Сохранить пароль'}
+                        </button>
+                    </form>
+                )}
+            </div>
+        </div>
+    );
+}
 
 // --- ГЛАВНЫЙ КОМПОНЕНТ ---
 export default function App() {
@@ -68,6 +115,7 @@ export default function App() {
     const [toasts, setToasts] = useState([]); // { id, message, type: 'success'|'error'|'warning'|'info' }
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
+    const [showResetPassword, setShowResetPassword] = useState(false);
 
     const showToast = useCallback((message, type = 'success') => {
         const id = Date.now() + Math.random();
@@ -170,6 +218,10 @@ export default function App() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             const user = session?.user || null;
             setSbUser(user);
+            if (_event === 'PASSWORD_RECOVERY') {
+                setShowResetPassword(true);
+                return;
+            }
             if (user) {
                 // Только при явном входе меняем экраны, чтобы не выкидывало при TOKEN_REFRESHED
                 const isInitialLogin = _event === 'SIGNED_IN';
@@ -239,7 +291,32 @@ export default function App() {
 
         const bidChannel = supabase.channel('public:bids')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'bids' }, (payload) => {
-                if (payload.eventType === 'INSERT') setBids(prev => [payload.new, ...prev]);
+                if (payload.eventType === 'INSERT') {
+                    setBids(prev => [payload.new, ...prev]);
+                    // Notify request owner when someone bids on their request
+                    if (payload.new.ownerId !== sbUser.id) {
+                        setRequests(prev => {
+                            const req = prev.find(r => r.id === payload.new.requestId);
+                            if (req && req.shipperInn) {
+                                // We check after state update via functional form
+                            }
+                            return prev;
+                        });
+                        // Check if the bid is on a request owned by current user (shipper)
+                        setRequests(currentRequests => {
+                            const req = currentRequests.find(r => r.id === payload.new.requestId);
+                            if (req) {
+                                setUserProfile(currentProfile => {
+                                    if (currentProfile && req.shipperInn === currentProfile.inn) {
+                                        showToast(`Новый отклик на вашу заявку`, 'info');
+                                    }
+                                    return currentProfile;
+                                });
+                            }
+                            return currentRequests;
+                        });
+                    }
+                }
                 else if (payload.eventType === 'UPDATE') setBids(prev => prev.map(b => b.id === payload.new.id ? payload.new : b));
                 else if (payload.eventType === 'DELETE') setBids(prev => prev.filter(b => b.id !== payload.old.id));
             }).subscribe();
@@ -256,7 +333,14 @@ export default function App() {
                 table: 'profiles',
                 filter: `id=eq.${sbUser.id}`
             }, (payload) => {
-                setUserProfile(prev => ({ ...prev, ...payload.new }));
+                setUserProfile(prev => {
+                    if (payload.new.verification_status === 'verified' && prev?.verification_status !== 'verified') {
+                        showToast('Ваш аккаунт верифицирован!', 'success');
+                    } else if (payload.new.verification_status === 'rejected' && prev?.verification_status !== 'rejected') {
+                        showToast('Верификация отклонена. Проверьте документы', 'error');
+                    }
+                    return { ...prev, ...payload.new };
+                });
             }).subscribe();
 
         return () => {
@@ -327,11 +411,14 @@ export default function App() {
                     ]);
                     if (profileError) { console.error("Ошибка сохранения профиля", profileError); }
                 }
+                showToast(`Добро пожаловать, ${name || data.user.email}!`, 'success');
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     console.error("Login failed:", error);
                     showToast("Ошибка входа: " + (error.status === 400 ? "Неверный email или пароль" : error.message), 'error');
+                } else {
+                    showToast(`С возвращением!`, 'success');
                 }
             }
         } catch (e) {
@@ -344,6 +431,7 @@ export default function App() {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
+        showToast('Вы вышли из аккаунта', 'info');
         setScreen('landing');
         localStorage.removeItem('rm_screen');
         localStorage.removeItem('rm_view');
@@ -623,6 +711,7 @@ export default function App() {
                 }]);
             }
 
+            showToast('Условия сделки подтверждены', 'success');
         } catch (e) {
             console.error("Deal confirmation error:", e);
             showToast("Ошибка при подтверждении условий", 'error');
@@ -642,6 +731,7 @@ export default function App() {
                 chat_id: bidId, sender_id: 'system',
                 text: `${roleName} предлагает ${modeText}. Пожалуйста, подтвердите или отклоните предложение.`
             }]);
+            showToast('Предложение отправлено партнёру', 'info');
             // Уведомление партнёру
             const bid = bids.find(b => b.id === bidId) || activeChat;
             const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : profiles.find(p => p.inn === bid?.shipperInn)?.id;
@@ -791,8 +881,9 @@ export default function App() {
             await supabase.from('messages').insert([{
                 chat_id: bidId,
                 sender_id: 'system',
-                text: `📄 Загружен документ: ${docNames[stage] || stage}`
+                text: `Загружен документ: ${docNames[stage] || stage}`
             }]);
+            showToast('Документ загружен', 'success');
         }
     };
 
@@ -845,7 +936,7 @@ export default function App() {
             await supabase.from('messages').insert([{
                 chat_id: bidId,
                 sender_id: 'system',
-                text: `📝 ${roleName} подписал документ: ${docNames[docType] || docType}`
+                text: `${roleName} подписал документ: ${docNames[docType] || docType}`
             }]);
 
         } catch (e) {
@@ -1011,6 +1102,8 @@ export default function App() {
             <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
         </div>
     );
+
+    if (showResetPassword) return <ResetPasswordScreen isDark={isDark} onDone={() => { setShowResetPassword(false); setScreen('app'); }} />;
 
     if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
@@ -1338,11 +1431,10 @@ export default function App() {
                         toast.type === 'warning' ? 'bg-amber-50 dark:bg-amber-900/40 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200' :
                                                    'bg-blue-50 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200'
                     }`}>
-                        <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                            toast.type === 'success' ? 'bg-emerald-500' :
-                            toast.type === 'error'   ? 'bg-red-500' :
-                            toast.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
-                        }`} />
+                        {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />}
+                        {toast.type === 'error'   && <XCircle      className="w-4 h-4 mt-0.5 shrink-0 text-red-500" />}
+                        {toast.type === 'warning' && <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />}
+                        {toast.type === 'info'    && <Info          className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />}
                         <span className="text-sm font-bold leading-relaxed">{toast.message}</span>
                     </div>
                 ))}
