@@ -91,8 +91,8 @@ export default function ChatWindow({
                 stationFrom: chat.stationFrom, stationTo: chat.stationTo,
                 cargoType: chat.cargoType, wagonType: chat.wagonType || 'Крытый',
                 wagons: chat.wagons, tons: chat.tons, price: chat.price,
-                shipper: { company: chat.shipperName, inn: chat.shipperInn },
-                owner: { company: chat.ownerName, inn: chat.ownerInn },
+                shipper: { company: chat.shipperName, inn: '' },
+                owner: { company: chat.ownerName, inn: '' },
             };
             downloadDocument(templateType, dealData);
         } catch (e) {

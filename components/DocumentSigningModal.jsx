@@ -8,7 +8,7 @@ import { downloadDocument, getDocumentBlob } from './DocumentGenerator';
 // ============================================
 const VALIDATORS = {
     inn: (v) => {
-        if (!v) return 'Укажите ИНН';
+        if (!v) return null; // optional
         if (!/^\d{10}$|^\d{12}$/.test(v)) return 'ИНН: 10 или 12 цифр';
         return null;
     },
@@ -269,7 +269,7 @@ export default function DocumentSigningModal({ docType, deal, userRole, userProf
             baseAmount,
             shipper: {
                 company: deal.shipperName || userProfile?.company,
-                inn: userProfile?.inn || formData.inn,
+                inn: formData.inn || '',
                 kpp: formData.kpp,
                 ogrn: formData.ogrn,
                 legal_address: formData.legal_address,
@@ -280,7 +280,7 @@ export default function DocumentSigningModal({ docType, deal, userRole, userProf
             },
             owner: {
                 company: deal.ownerName,
-                inn: deal.ownerInn,
+                inn: '',
             },
             signerShipper: {
                 name: formData.signer_name || userProfile?.ceo_name,

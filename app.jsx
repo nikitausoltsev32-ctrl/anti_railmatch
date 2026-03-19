@@ -369,7 +369,7 @@ export default function App() {
                             const req = currentRequests.find(r => r.id === payload.new.requestId);
                             if (req) {
                                 setUserProfile(currentProfile => {
-                                    if (currentProfile && req.shipperInn === currentProfile.inn) {
+                                    if (currentProfile && req.shipperInn === sbUser.id) {
                                         showToast(`Новый отклик на вашу заявку`, 'info');
                                     }
                                     return currentProfile;
@@ -438,7 +438,7 @@ export default function App() {
     }, [sbUser]);
 
     const handleEnterDemo = () => {
-        setUserProfile({ name: 'Гость', company: 'Демо режим', role: 'demo', inn: '000000' });
+        setUserProfile({ name: 'Гость', company: 'Демо режим', role: 'demo' });
         setScreen('app');
         setView('catalog');
     };
@@ -520,7 +520,7 @@ export default function App() {
      */
     const buildChatObject = useCallback((bid, req, profilesList) => {
         const list = profilesList || profiles;
-        const shipperProfile = list.find(p => p.inn === req?.shipperInn);
+        const shipperProfile = list.find(p => p.id === req?.shipperInn);
         const ownerProfile = list.find(p => p.id === bid.ownerId);
         return {
             ...bid,
@@ -577,7 +577,7 @@ export default function App() {
             ownerId: sbUser.id,
             ownerName: userProfile.name || 'Владелец вагонов',
             ownerPhone: userProfile.phone,
-            ownerInn: userProfile.inn,
+            ownerInn: sbUser.id,
             price: Number(price),
             wagons: Number(wagons),
             tons: Number(tons),
@@ -595,7 +595,7 @@ export default function App() {
         setIsModalOpen(false);
 
         // Уведомление грузоотправителю о новой ставке
-        const shipperProfile = profiles.find(p => p.inn === selectedRequest.shipperInn);
+        const shipperProfile = profiles.find(p => p.id === selectedRequest.shipperInn);
         if (shipperProfile?.id) {
             sendNotification(
                 shipperProfile.id,
@@ -731,7 +731,7 @@ export default function App() {
     const handleCancelRequest = async (reqId) => {
         if (!sbUser || !userProfile) return;
         const req = requests.find(r => r.id === reqId);
-        if (!req || req.shipperInn !== userProfile.inn) return;
+        if (!req || req.shipperInn !== sbUser.id) return;
 
         // Нельзя отменить заявку с принятыми сделками
         const hasAccepted = bids.some(b => b.requestId === reqId && b.status === 'accepted');
@@ -774,7 +774,7 @@ export default function App() {
 
             const fullyConfirmed = updatedBid.shipper_confirmed && updatedBid.owner_confirmed;
 
-            const partnerId = isShipper ? bid.ownerId : profiles.find(p => p.inn === bid.shipperInn)?.id;
+            const partnerId = isShipper ? bid.ownerId : bid.shipperInn;
 
             if (fullyConfirmed && updatedBid.status === 'pending') {
                 await supabase.from('bids').update({ status: 'commission_pending' }).eq('id', bid.id);
@@ -837,7 +837,7 @@ export default function App() {
             showToast('Предложение отправлено партнёру', 'info');
             // Уведомление партнёру
             const bid = bids.find(b => b.id === bidId) || activeChat;
-            const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : profiles.find(p => p.inn === bid?.shipperInn)?.id;
+            const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : bid?.shipperInn;
             if (partnerId) {
                 sendNotification(
                     partnerId,
@@ -959,7 +959,7 @@ export default function App() {
             await supabase.from('messages').insert([{ chat_id: bidId, sender_id: 'system', text: msg }]);
 
             // Уведомление партнёру об оплате
-            const partnerId = isShipper ? currentBid.ownerId : profiles.find(p => p.inn === currentBid.shipperInn)?.id;
+            const partnerId = isShipper ? currentBid.ownerId : currentBid.shipperInn;
             if (partnerId) {
                 const notifText = willReveal
                     ? `Комиссия полностью оплачена! Контакты партнёра открыты.\n\nОткройте платформу, чтобы увидеть контакты и подписать документы.`
@@ -1000,7 +1000,7 @@ export default function App() {
             const isShipperUpload = userProfile?.role === 'shipper';
             const docPartnerId = isShipperUpload
                 ? uploadBid?.ownerId
-                : profiles.find(p => p.inn === uploadBid?.shipperInn)?.id;
+                : uploadBid?.shipperInn;
             if (docPartnerId) {
                 sendNotification(
                     docPartnerId,
@@ -1070,10 +1070,6 @@ export default function App() {
     };
     const handleCreateRequest = async (data) => {
         if (!sbUser || !userProfile) return;
-        if (!userProfile.inn) {
-            showToast("Ошибка: ИНН не найден в профиле. Попробуйте перезайти.", 'error');
-            return;
-        }
         const reqData = {
             stationFrom: data.stationFrom,
             stationTo: data.stationTo,
@@ -1084,7 +1080,7 @@ export default function App() {
             target_price: Number(data.targetPrice || 0),
             fulfilledWagons: 0,
             fulfilledTons: 0,
-            shipperInn: userProfile.inn,
+            shipperInn: sbUser.id,
             status: 'open'
         };
         const { error, data: insertedReq } = await supabase.from('requests').insert([reqData]).select().single();
@@ -1098,7 +1094,7 @@ export default function App() {
                 setRequests(prev => [insertedReq, ...prev]);
             }
             // Ensure current user profile is in the profiles list for exchange filtering
-            setProfiles(prev => prev.some(p => p.inn === userProfile.inn) ? prev : [...prev, userProfile]);
+            setProfiles(prev => prev.some(p => p.id === sbUser.id) ? prev : [...prev, userProfile]);
             showToast("Заявка успешно опубликована на бирже!", 'success');
             setView('my-requests');
         }
@@ -1113,30 +1109,36 @@ export default function App() {
         if (!sbUser) return;
 
         // Сначала создаём демо-профили обеих ролей, чтобы фильтрация по ролям на бирже работала
+        // Фиксированные ID для демо-профилей (используются в shipperInn заявок)
+        const demoShipper1Id = '00000000-0000-0000-0000-000000000001';
+        const demoShipper2Id = '00000000-0000-0000-0000-000000000002';
+        const demoOwner1Id   = '00000000-0000-0000-0000-000000000003';
+        const demoOwner2Id   = '00000000-0000-0000-0000-000000000004';
+
         const demoProfiles = [
-            { id: crypto.randomUUID(), name: 'Иван Петров', company: 'ДемоГруз ООО', inn: '7700000000', role: 'shipper', phone: '+7 (999) 100-00-01' },
-            { id: crypto.randomUUID(), name: 'Мария Сидорова', company: 'ДемоГруз-2 ОАО', inn: '7711111111', role: 'shipper', phone: '+7 (999) 100-00-02' },
-            { id: crypto.randomUUID(), name: 'Алексей Козлов', company: 'ТрансВагон ЗАО', inn: '7722222222', role: 'owner', phone: '+7 (999) 200-00-01' },
-            { id: crypto.randomUUID(), name: 'Дмитрий Волков', company: 'ВагонПарк ООО', inn: '7733333333', role: 'owner', phone: '+7 (999) 200-00-02' },
+            { id: demoShipper1Id, name: 'Иван Петров', company: 'ДемоГруз ООО', inn: '7700000000', role: 'shipper', phone: '+7 (999) 100-00-01' },
+            { id: demoShipper2Id, name: 'Мария Сидорова', company: 'ДемоГруз-2 ОАО', inn: '7711111111', role: 'shipper', phone: '+7 (999) 100-00-02' },
+            { id: demoOwner1Id, name: 'Алексей Козлов', company: 'ТрансВагон ЗАО', inn: '7722222222', role: 'owner', phone: '+7 (999) 200-00-01' },
+            { id: demoOwner2Id, name: 'Дмитрий Волков', company: 'ВагонПарк ООО', inn: '7733333333', role: 'owner', phone: '+7 (999) 200-00-02' },
         ];
         // Upsert чтобы не дублировать
         for (const dp of demoProfiles) {
-            await supabase.from('profiles').upsert(dp, { onConflict: 'inn', ignoreDuplicates: true });
+            await supabase.from('profiles').upsert(dp, { onConflict: 'id', ignoreDuplicates: true });
         }
 
-        // Заявки от грузоотправителей (видны владельцам)
+        // Заявки от грузоотправителей (видны владельцам) — shipperInn = user ID создателя
         const shipperRequests = [
-            { stationFrom: 'Москва', stationTo: 'Екатеринбург', cargoType: 'Металл', wagonType: 'Полувагон', totalWagons: 20, totalTons: 1200, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
-            { stationFrom: 'Санкт-Петербург', stationTo: 'Казань', cargoType: 'Уголь', wagonType: 'Полувагон', totalWagons: 50, totalTons: 3500, target_price: 120000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
-            { stationFrom: 'Краснодар', stationTo: 'Москва', cargoType: 'Зерно', wagonType: 'Хоппер', totalWagons: 30, totalTons: 2100, target_price: 95000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7700000000', status: 'open' },
-            { stationFrom: 'Новосибирск', stationTo: 'Челябинск', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 8, totalTons: 480, target_price: 140000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7711111111', status: 'open' },
+            { stationFrom: 'Москва', stationTo: 'Екатеринбург', cargoType: 'Металл', wagonType: 'Полувагон', totalWagons: 20, totalTons: 1200, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: demoShipper1Id, status: 'open' },
+            { stationFrom: 'Санкт-Петербург', stationTo: 'Казань', cargoType: 'Уголь', wagonType: 'Полувагон', totalWagons: 50, totalTons: 3500, target_price: 120000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: demoShipper1Id, status: 'open' },
+            { stationFrom: 'Краснодар', stationTo: 'Москва', cargoType: 'Зерно', wagonType: 'Хоппер', totalWagons: 30, totalTons: 2100, target_price: 95000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: demoShipper1Id, status: 'open' },
+            { stationFrom: 'Новосибирск', stationTo: 'Челябинск', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 8, totalTons: 480, target_price: 140000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: demoShipper2Id, status: 'open' },
         ];
         // Заявки от владельцев (видны отправителям)
         const ownerRequests = [
-            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 10, totalTons: 600, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7722222222', status: 'open' },
-            { stationFrom: 'Москва', stationTo: 'Челябинск', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 15, totalTons: 900, target_price: 150000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7722222222', status: 'open' },
-            { stationFrom: 'Казань', stationTo: 'Санкт-Петербург', cargoType: 'Нефть', wagonType: 'Цистерна', totalWagons: 25, totalTons: 1500, target_price: 200000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7733333333', status: 'open' },
-            { stationFrom: 'Самара', stationTo: 'Воронеж', cargoType: 'Щебень', wagonType: 'Полувагон', totalWagons: 40, totalTons: 2800, target_price: 85000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: '7733333333', status: 'open' },
+            { stationFrom: 'Екатеринбург', stationTo: 'Москва', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 10, totalTons: 600, target_price: 180000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: demoOwner1Id, status: 'open' },
+            { stationFrom: 'Москва', stationTo: 'Челябинск', cargoType: 'ТНП', wagonType: 'Крытый', totalWagons: 15, totalTons: 900, target_price: 150000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: demoOwner1Id, status: 'open' },
+            { stationFrom: 'Казань', stationTo: 'Санкт-Петербург', cargoType: 'Нефть', wagonType: 'Цистерна', totalWagons: 25, totalTons: 1500, target_price: 200000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: demoOwner2Id, status: 'open' },
+            { stationFrom: 'Самара', stationTo: 'Воронеж', cargoType: 'Щебень', wagonType: 'Полувагон', totalWagons: 40, totalTons: 2800, target_price: 85000, fulfilledWagons: 0, fulfilledTons: 0, shipperInn: demoOwner2Id, status: 'open' },
         ];
         const allRequests = [...shipperRequests, ...ownerRequests];
         const { error } = await supabase.from('requests').insert(allRequests);
@@ -1181,10 +1183,10 @@ export default function App() {
         // Проверка ролей: владельцы видят заявки отправителей, а отправители — предложения владельцев
         if (userProfile && userProfile.role !== 'demo' && userProfile.role !== 'admin') {
             // Скрываем свои заявки с биржи — они видны во вкладке «Мои заявки»
-            if (req.shipperInn === userProfile.inn) return false;
+            if (req.shipperInn === sbUser?.id) return false;
             // Пока профили не загрузились — не показываем ничего (убираем мерцание)
             if (profiles.length === 0) return false;
-            const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
+            const creatorProfile = profiles.find(p => p.id === req.shipperInn);
             const creatorRole = creatorProfile?.role;
             // Если профиль создателя не найден — скрываем заявку (нет данных для проверки роли)
             if (!creatorRole) return false;
@@ -1210,9 +1212,9 @@ export default function App() {
     // Memoize unread indicator — only chats this user participates in, excluding system messages
     const myBidIds = useMemo(() => new Set(
         bids
-            .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
+            .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === sbUser?.id))
             .map(b => b.id)
-    ), [bids, sbUser, requests, userProfile?.inn]);
+    ), [bids, sbUser, requests]);
 
     const hasUnread = useMemo(() =>
         messages.some(m => myBidIds.has(m.chat_id) && m.sender_id !== sbUser?.id && m.sender_id !== 'system'),
@@ -1400,7 +1402,7 @@ export default function App() {
                                             </button>
                                         </div>
                                     ) : sortedCatalogRequests.map((req, idx) => {
-                                        const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
+                                        const creatorProfile = profiles.find(p => p.id === req.shipperInn);
                                         return (
                                             <div key={req.id} className={idx < 3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
                                                 <RequestCard
@@ -1434,7 +1436,7 @@ export default function App() {
                             </h2>
                             <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar">
                                 {(bids || [])
-                                    .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
+                                    .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === sbUser?.id))
                                     .slice()
                                     .sort((a, b) => {
                                         const lastA = lastMsgTimeByChatId[a.id] ?? a.created_at;
@@ -1444,7 +1446,7 @@ export default function App() {
                                     .map(chatBid => {
                                     const req = requests.find(r => r.id === chatBid.requestId);
                                     const isMeOwner = chatBid.ownerId === sbUser?.id;
-                                    const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
+                                    const creatorProfile = profiles.find(p => p.id === req?.shipperInn);
                                     const ownerProfile = profiles.find(p => p.id === chatBid.ownerId);
                                     const partnerName = isMeOwner
                                         ? (creatorProfile?.name || req?.stationTo || 'Заявка')
@@ -1516,7 +1518,7 @@ export default function App() {
                     <MyRequestsView
                         requests={requests}
                         bids={bids}
-                        userInn={userProfile?.inn}
+                        userInn={sbUser?.id}
                         userRole={userProfile?.role}
                         userId={sbUser?.id}
                         profiles={profiles}
@@ -1542,7 +1544,7 @@ export default function App() {
 
                 {view === 'profile' && (
                     <ProfileSettings
-                        user={userProfile || { name: 'Загрузка...', company: '', inn: '' }}
+                        user={userProfile || { name: 'Загрузка...', company: '' }}
                         onLogout={handleLogout}
                         bids={bids}
                         requests={requests}
