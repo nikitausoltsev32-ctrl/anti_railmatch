@@ -383,12 +383,12 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                                             <Copy className="w-4 h-4" /> Копировать команду
                                         </button>
                                         <a
-                                            href="https://t.me/RailMatchBot"
+                                            href={`https://t.me/RailMatchBot?start=${tgToken}`}
                                             target="_blank"
                                             rel="noreferrer"
                                             className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all"
                                         >
-                                            <ExternalLink className="w-4 h-4" /> Открыть бот
+                                            <ExternalLink className="w-4 h-4" /> Привязать одним кликом
                                         </a>
                                     </div>
                                     {tgPolling && (
