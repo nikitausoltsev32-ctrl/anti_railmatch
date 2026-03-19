@@ -417,12 +417,12 @@ export default function App() {
     useEffect(() => {
         if (userProfile?.role !== 'demo') return;
         const fetchDemoData = async () => {
-            const [{ data: demoRequests }, { data: demoProfiles }] = await Promise.all([
-                supabase.from('requests').select('*').order('created_at', { ascending: false }),
-                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
-            ]);
-            if (demoRequests) setRequests(demoRequests);
-            if (demoProfiles) setProfiles(demoProfiles);
+            // Используем Edge Function с service role для обхода RLS (демо не авторизован)
+            const { data, error } = await supabase.functions.invoke('get-demo-data');
+            if (!error && data) {
+                if (data.requests) setRequests(data.requests);
+                if (data.profiles) setProfiles(data.profiles);
+            }
         };
         fetchDemoData();
     }, [userProfile?.role]);
@@ -1173,13 +1173,17 @@ export default function App() {
         if (req.status === 'completed' || req.status === 'closed' || req.status === 'cancelled') return false;
 
         // Проверка ролей: владельцы видят заявки отправителей, а отправители — предложения владельцев
-        if (userProfile && userProfile.role !== 'demo') {
+        if (userProfile && userProfile.role !== 'demo' && userProfile.role !== 'admin') {
             // Пока профили не загрузились — не показываем ничего (убираем мерцание)
             if (profiles.length === 0) return false;
             const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
             const creatorRole = creatorProfile?.role;
-            if (userProfile.role === 'shipper' && creatorRole !== 'owner') return false;
-            if (userProfile.role === 'owner' && creatorRole !== 'shipper') return false;
+            // Если роль создателя определена — применяем фильтр
+            // Если не определена (профиль не найден) — показываем заявку
+            if (creatorRole) {
+                if (userProfile.role === 'shipper' && creatorRole !== 'owner') return false;
+                if (userProfile.role === 'owner' && creatorRole !== 'shipper') return false;
+            }
         }
 
         // Быстрые фильтры
