@@ -1597,7 +1597,7 @@ export default function App() {
                 />
             )}{showDemoAlert && <DemoModal onClose={() => setShowDemoAlert(false)} onReg={() => { setShowDemoAlert(false); setScreen('auth'); }} />}
             {showOnboarding && userProfile && (
-                <OnboardingModal role={userProfile.role} onComplete={handleOnboardingComplete} />
+                <OnboardingModal role={userProfile.role} name={userProfile.name || userProfile.company} onComplete={handleOnboardingComplete} />
             )}
             {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
 
