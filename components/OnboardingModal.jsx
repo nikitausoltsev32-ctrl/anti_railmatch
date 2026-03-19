@@ -4,7 +4,7 @@ import {
     Package, CreditCard, Phone, Sparkles
 } from 'lucide-react';
 
-export default function OnboardingModal({ role, onComplete }) {
+export default function OnboardingModal({ role, name, onComplete }) {
     const [step, setStep] = useState(0);
     const isOwner = role === 'owner';
 
@@ -12,7 +12,7 @@ export default function OnboardingModal({ role, onComplete }) {
         {
             icon: <TrainFront className="w-10 h-10" />,
             color: 'blue',
-            title: isOwner ? 'Добро пожаловать, владелец вагонов!' : 'Добро пожаловать, грузоотправитель!',
+            title: name ? `Добро пожаловать, ${name}!` : 'Добро пожаловать!',
             desc: isOwner
                 ? 'На RailMatch вы видите заявки грузоотправителей. Делайте ставки на интересные грузы и выходите на прямые сделки без посредников.'
                 : 'На RailMatch вы видите предложения владельцев вагонов. Публикуйте заявки и получайте ставки от десятков перевозчиков.',
