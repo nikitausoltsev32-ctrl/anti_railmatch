@@ -354,7 +354,7 @@ export default function App() {
 
         const requestChannel = supabase.channel('public:requests')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, (payload) => {
-                if (payload.eventType === 'INSERT') setRequests(prev => [payload.new, ...prev]);
+                if (payload.eventType === 'INSERT') setRequests(prev => prev.some(r => r.id === payload.new.id) ? prev : [payload.new, ...prev]);
                 else if (payload.eventType === 'UPDATE') setRequests(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
                 else if (payload.eventType === 'DELETE') setRequests(prev => prev.filter(r => r.id !== payload.old.id));
             }).subscribe();
@@ -1070,6 +1070,10 @@ export default function App() {
     };
     const handleCreateRequest = async (data) => {
         if (!sbUser || !userProfile) return;
+        if (!userProfile.inn) {
+            showToast("Ошибка: ИНН не найден в профиле. Попробуйте перезайти.", 'error');
+            return;
+        }
         const reqData = {
             stationFrom: data.stationFrom,
             stationTo: data.stationTo,
@@ -1077,10 +1081,10 @@ export default function App() {
             wagonType: data.wagonType || 'Крытый',
             totalWagons: Number(data.totalWagons || 0),
             totalTons: Number(data.totalTons || 0),
-            target_price: Number(data.targetPrice || 0), // Default to 0 instead of NaN if empty
+            target_price: Number(data.targetPrice || 0),
             fulfilledWagons: 0,
             fulfilledTons: 0,
-            shipperInn: userProfile.inn || '000000',
+            shipperInn: userProfile.inn,
             status: 'open'
         };
         const { error, data: insertedReq } = await supabase.from('requests').insert([reqData]).select().single();
@@ -1093,6 +1097,8 @@ export default function App() {
             if (insertedReq) {
                 setRequests(prev => [insertedReq, ...prev]);
             }
+            // Ensure current user profile is in the profiles list for exchange filtering
+            setProfiles(prev => prev.some(p => p.inn === userProfile.inn) ? prev : [...prev, userProfile]);
             showToast("Заявка успешно опубликована на бирже!", 'success');
             setView('my-requests');
         }
@@ -1108,10 +1114,10 @@ export default function App() {
 
         // Сначала создаём демо-профили обеих ролей, чтобы фильтрация по ролям на бирже работала
         const demoProfiles = [
-            { id: crypto.randomUUID(), company: 'ДемоГруз ООО', inn: '7700000000', role: 'shipper', phone: '+7 (999) 100-00-01' },
-            { id: crypto.randomUUID(), company: 'ДемоГруз-2 ОАО', inn: '7711111111', role: 'shipper', phone: '+7 (999) 100-00-02' },
-            { id: crypto.randomUUID(), company: 'ТрансВагон ЗАО', inn: '7722222222', role: 'owner', phone: '+7 (999) 200-00-01' },
-            { id: crypto.randomUUID(), company: 'ВагонПарк ООО', inn: '7733333333', role: 'owner', phone: '+7 (999) 200-00-02' },
+            { id: crypto.randomUUID(), name: 'Иван Петров', company: 'ДемоГруз ООО', inn: '7700000000', role: 'shipper', phone: '+7 (999) 100-00-01' },
+            { id: crypto.randomUUID(), name: 'Мария Сидорова', company: 'ДемоГруз-2 ОАО', inn: '7711111111', role: 'shipper', phone: '+7 (999) 100-00-02' },
+            { id: crypto.randomUUID(), name: 'Алексей Козлов', company: 'ТрансВагон ЗАО', inn: '7722222222', role: 'owner', phone: '+7 (999) 200-00-01' },
+            { id: crypto.randomUUID(), name: 'Дмитрий Волков', company: 'ВагонПарк ООО', inn: '7733333333', role: 'owner', phone: '+7 (999) 200-00-02' },
         ];
         // Upsert чтобы не дублировать
         for (const dp of demoProfiles) {
@@ -1174,16 +1180,16 @@ export default function App() {
 
         // Проверка ролей: владельцы видят заявки отправителей, а отправители — предложения владельцев
         if (userProfile && userProfile.role !== 'demo' && userProfile.role !== 'admin') {
+            // Скрываем свои заявки с биржи — они видны во вкладке «Мои заявки»
+            if (req.shipperInn === userProfile.inn) return false;
             // Пока профили не загрузились — не показываем ничего (убираем мерцание)
             if (profiles.length === 0) return false;
             const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
             const creatorRole = creatorProfile?.role;
-            // Если роль создателя определена — применяем фильтр
-            // Если не определена (профиль не найден) — показываем заявку
-            if (creatorRole) {
-                if (userProfile.role === 'shipper' && creatorRole !== 'owner') return false;
-                if (userProfile.role === 'owner' && creatorRole !== 'shipper') return false;
-            }
+            // Если профиль создателя не найден — скрываем заявку (нет данных для проверки роли)
+            if (!creatorRole) return false;
+            if (userProfile.role === 'shipper' && creatorRole !== 'owner') return false;
+            if (userProfile.role === 'owner' && creatorRole !== 'shipper') return false;
         }
 
         // Быстрые фильтры
@@ -1296,7 +1302,7 @@ export default function App() {
 
                         <div onClick={() => requireAuth(() => setView('profile'))} className="flex items-center gap-3 cursor-pointer pl-6 border-l dark:border-slate-800 group">
                             <div className="text-right hidden sm:block">
-                                <div className="text-sm font-bold group-hover:text-blue-600 transition-colors dark:text-white">{userProfile?.company || "Аноним"}</div>
+                                <div className="text-sm font-bold group-hover:text-blue-600 transition-colors dark:text-white">{userProfile?.name || "Аноним"}</div>
                                 <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{userProfile?.role === 'shipper' ? 'Грузоотправитель' : userProfile?.role === 'owner' ? 'Владелец вагонов' : 'Гость'}</div>
                             </div>
                             <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-full flex items-center justify-center font-bold border border-slate-300 dark:border-slate-600 dark:text-white shadow-sm"><User className="w-5 h-5 text-slate-400" /></div>
@@ -1406,7 +1412,7 @@ export default function App() {
                                                     })}
                                                     rank={idx}
                                                     creatorRole={creatorProfile?.role}
-                                                    creatorCompany={creatorProfile?.company || creatorProfile?.name}
+                                                    creatorName={creatorProfile?.name}
                                                 />
                                             </div>
                                         );
