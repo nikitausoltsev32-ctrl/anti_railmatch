@@ -88,6 +88,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
     const validate = () => {
         if (mode !== 'register') return true;
         const errs = {};
+        if (!role) errs.role = 'Выберите вашу роль';
         if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
         else if (!validatePersonName(formData.name.trim())) errs.name = 'Укажите имя человека, а не название компании';
         if (!formData.company.trim()) errs.company = 'Укажите название компании';
@@ -108,9 +109,13 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                         <p className="text-slate-400 mb-8 font-medium text-sm">Введите данные вашей компании</p>
 
                         {mode === 'register' && (
-                            <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6 shadow-inner border border-slate-200/70 dark:border-slate-700/70">
-                                <button onClick={() => setRole('owner')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Владелец вагонов</button>
-                                <button onClick={() => setRole('shipper')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Грузоотправитель</button>
+                            <div className="mb-6">
+                                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-widest">Кто вы на платформе?</p>
+                                <div className={`flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-inner border transition-all ${errors.role ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200/70 dark:border-slate-700/70'}`}>
+                                    <button type="button" onClick={() => { setRole('owner'); setErrors(prev => ({ ...prev, role: null })); }} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Владелец вагонов</button>
+                                    <button type="button" onClick={() => { setRole('shipper'); setErrors(prev => ({ ...prev, role: null })); }} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Грузоотправитель</button>
+                                </div>
+                                {errors.role && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.role}</p>}
                             </div>
                         )}
 
