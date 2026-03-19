@@ -1,7 +1,7 @@
 import React from 'react';
 import { Package, TrainFront, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
-function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorCompany }) {
+function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorName }) {
     const isOwnerCreated = creatorRole === 'owner';
     const isCompleted = req.status === 'completed';
     const isLimitReached = bidCount >= 15;
@@ -41,7 +41,7 @@ function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorCompa
                     <span>{req.stationTo}</span>
                 </h3>
                 <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-slate-500">{creatorCompany || (isOwnerCreated ? 'Владелец вагонов' : 'Грузоотправитель')}</span>
+                    <span className="text-[11px] font-bold text-slate-500">{creatorName ? `${creatorName} · ` : ''}{isOwnerCreated ? 'Владелец вагонов' : 'Грузоотправитель'}</span>
                     {req.profiles?.is_verified && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" title="Проверен" />}
                 </div>
             </div>
