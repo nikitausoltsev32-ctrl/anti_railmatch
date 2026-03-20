@@ -151,13 +151,14 @@ serve(async (req: Request) => {
 
     const userId = userData.user.id;
 
-    // Insert profile — if this fails, delete the auth user so registration can be retried cleanly
+    // Upsert profile — the DB trigger on_auth_user_created may have already created
+    // a profile row, so we use upsert to ensure the correct role and fields are set.
     const registrationInn = `9${Date.now().toString().slice(-9)}`;
     const { error: profileError } = await adminClient
         .from('profiles')
-        .insert([{ id: userId, name, company, email, inn: registrationInn, phone, role, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }]);
+        .upsert([{ id: userId, name, company, email, inn: registrationInn, phone, role, plan: 'Free', leakage_attempts: 0, daily_profile_views: 0 }], { onConflict: 'id' });
     if (profileError) {
-        console.error('Profile insert error:', profileError);
+        console.error('Profile upsert error:', profileError);
         await adminClient.auth.admin.deleteUser(userId);
         return new Response(JSON.stringify({ error: 'Ошибка при создании профиля. Попробуйте зарегистрироваться снова.' }), {
             status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

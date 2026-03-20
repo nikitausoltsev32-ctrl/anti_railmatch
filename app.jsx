@@ -162,12 +162,16 @@ export default function App() {
 
         const fetchProfile = async (userId, isInitialLogin = false, userMeta = null, userEmail = null, onSuccess = null) => {
             const ensureProfileExists = async () => {
+                // First, re-check if profile exists (it may have been created by DB trigger
+                // or edge function between the initial SELECT and this call)
+                const { data: existingProfile } = await supabase.from('profiles').select('*').eq('id', userId).single();
+                if (existingProfile) return existingProfile;
+
                 const meta = userMeta || sbUser?.user_metadata || {};
                 const metaName = meta.name || 'Пользователь';
                 const metaCompany = meta.company || null;
                 const metaPhone = meta.phone || null;
                 const metaRole = (meta.role === 'shipper' || meta.role === 'owner') ? meta.role : 'owner';
-                const metaEmail = userEmail || sbUser?.email || null;
                 const registrationInn = `9${Date.now().toString().slice(-9)}`;
 
                 const { error: createProfileError } = await supabase
@@ -448,6 +452,8 @@ export default function App() {
         const email = formData.email?.trim();
         const password = formData.password?.trim();
         const { name, company, phone } = formData;
+        // Use role from formData (passed directly by AuthScreen) to avoid stale closure issues
+        const submittedRole = formData.role || regRole;
 
         if (!email || !password) {
             showToast("Пожалуйста, заполните все поля", 'warning');
@@ -464,7 +470,7 @@ export default function App() {
                 const { data: regData, error: regError } = await supabase.functions.invoke('send-confirmation-email', {
                     body: {
                         email, password, name, company, phone,
-                        role: regRole,
+                        role: submittedRole,
                         redirectTo: window.location.origin + window.location.pathname,
                     },
                 });
