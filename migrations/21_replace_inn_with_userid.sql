@@ -1,5 +1,6 @@
 -- Migration: Replace INN-based matching with direct user ID matching in RLS policies
 -- shipperInn field (TEXT) now stores auth.uid()::text (user ID) instead of profiles.inn
+-- All comparisons explicitly cast both sides to text to avoid uuid/text mismatch
 
 -- Fix 1: Requests update policy
 DROP POLICY IF EXISTS "Users can update own requests" ON public.requests;
@@ -10,7 +11,7 @@ CREATE POLICY "Users can update own requests" ON public.requests FOR UPDATE USIN
 -- Fix 2: Bids update policy
 DROP POLICY IF EXISTS "Owners and Shippers can update bids" ON public.bids;
 CREATE POLICY "Owners and Shippers can update bids" ON public.bids FOR UPDATE USING (
-    "ownerId" = auth.uid()
+    "ownerId"::text = auth.uid()::text
     OR "requestId"::text IN (
         SELECT id::text FROM public.requests WHERE "shipperInn" = auth.uid()::text
     )
@@ -21,7 +22,7 @@ DROP POLICY IF EXISTS "Deal participants can insert documents" ON public.deal_do
 CREATE POLICY "Deal participants can insert documents" ON public.deal_documents FOR INSERT WITH CHECK (
     bid_id::text IN (
         SELECT b.id::text FROM public.bids b
-        WHERE b."ownerId" = auth.uid()
+        WHERE b."ownerId"::text = auth.uid()::text
         OR b."requestId"::text IN (SELECT r.id::text FROM public.requests r WHERE r."shipperInn" = auth.uid()::text)
     )
 );
@@ -31,7 +32,7 @@ DROP POLICY IF EXISTS "Deal participants can update documents" ON public.deal_do
 CREATE POLICY "Deal participants can update documents" ON public.deal_documents FOR UPDATE USING (
     bid_id::text IN (
         SELECT b.id::text FROM public.bids b
-        WHERE b."ownerId" = auth.uid()
+        WHERE b."ownerId"::text = auth.uid()::text
         OR b."requestId"::text IN (SELECT r.id::text FROM public.requests r WHERE r."shipperInn" = auth.uid()::text)
     )
 );
