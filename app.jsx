@@ -166,7 +166,7 @@ export default function App() {
                 const metaName = meta.name || 'Пользователь';
                 const metaCompany = meta.company || null;
                 const metaPhone = meta.phone || null;
-                const metaRole = meta.role === 'shipper' ? 'shipper' : 'owner';
+                const metaRole = (meta.role === 'shipper' || meta.role === 'owner') ? meta.role : 'owner';
                 const metaEmail = userEmail || sbUser?.email || null;
                 const registrationInn = `9${Date.now().toString().slice(-9)}`;
 
@@ -181,7 +181,7 @@ export default function App() {
                             role: metaRole,
                             inn: registrationInn,
                         },
-                    ], { onConflict: 'id' });
+                    ], { onConflict: 'id', ignoreDuplicates: true });
 
                 if (createProfileError) {
                     console.error('Auto profile creation failed (trying server-side recovery):', createProfileError);
