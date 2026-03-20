@@ -151,11 +151,11 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                             {user.verification_status === 'verified' ? 'Верифицирован' : user.verification_status === 'pending' ? 'В проверке' : 'Не проверен'}
                         </div>
                         <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-[2rem] flex items-center justify-center text-3xl font-black mx-auto mb-6 mt-6 shadow-xl group-hover:scale-110 transition-transform duration-500">
-                            {user.company?.[0] || 'RM'}
+                            {user.name?.[0] || 'RM'}
                         </div>
-                        <h2 className="text-2xl font-black dark:text-white uppercase tracking-tight">{user.company}</h2>
-                        <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mt-2 flex items-center justify-center gap-2">
-                            <Building2 className="w-3 h-3" /> ИНН: {user.inn}
+                        <h2 className="text-2xl font-black dark:text-white uppercase tracking-tight">{user.name || 'Пользователь'}</h2>
+                        <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mt-2">
+                            {user.role === 'shipper' ? 'Грузоотправитель' : user.role === 'owner' ? 'Владелец вагонов' : 'Гость'}
                         </p>
                         <button onClick={onLogout} className="w-full mt-10 py-4 border border-red-100 dark:border-red-900/30 text-red-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-95">Выйти из системы</button>
 
@@ -239,9 +239,8 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                                     )}
                                 </div>
                                 <div className="space-y-2 p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Основной ИНН</p>
-                                    <p className="text-xl font-black dark:text-white">{user.inn}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold">ИНН изменению не подлежит</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Роль</p>
+                                    <p className="text-xl font-black dark:text-white">{user.role === 'shipper' ? 'Грузоотправитель' : user.role === 'owner' ? 'Владелец вагонов' : 'Гость'}</p>
                                 </div>
                                 <div className="space-y-2 p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Телефон организации</p>
