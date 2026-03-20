@@ -13,7 +13,7 @@ CREATE POLICY "Users can update own requests" ON public.requests FOR UPDATE USIN
 );
 
 CREATE POLICY "Owners and Shippers can update bids" ON public.bids FOR UPDATE USING (
-    "ownerId" = auth.uid()
+    "ownerId" = auth.uid()::text
     OR "requestId" IN (
         SELECT id FROM public.requests WHERE "shipperInn" = auth.uid()::text
     )
@@ -22,7 +22,7 @@ CREATE POLICY "Owners and Shippers can update bids" ON public.bids FOR UPDATE US
 CREATE POLICY "Deal participants can insert documents" ON public.deal_documents FOR INSERT WITH CHECK (
     bid_id IN (
         SELECT b.id FROM public.bids b
-        WHERE b."ownerId" = auth.uid()
+        WHERE b."ownerId" = auth.uid()::text
            OR b."requestId" IN (SELECT r.id FROM public.requests r WHERE r."shipperInn" = auth.uid()::text)
     )
 );
@@ -30,7 +30,7 @@ CREATE POLICY "Deal participants can insert documents" ON public.deal_documents 
 CREATE POLICY "Deal participants can update documents" ON public.deal_documents FOR UPDATE USING (
     bid_id IN (
         SELECT b.id FROM public.bids b
-        WHERE b."ownerId" = auth.uid()
+        WHERE b."ownerId" = auth.uid()::text
            OR b."requestId" IN (SELECT r.id FROM public.requests r WHERE r."shipperInn" = auth.uid()::text)
     )
 );
