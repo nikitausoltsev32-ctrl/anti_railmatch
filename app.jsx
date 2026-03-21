@@ -21,6 +21,9 @@ import OnboardingModal from './components/OnboardingModal.jsx';
 import TermsModal from './components/TermsModal.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
+import UserDashboard from './components/UserDashboard';
+import MyBidsView from './components/MyBidsView';
+import FleetDislocation from './components/FleetDislocation';
 
 import { supabase } from './src/supabaseClient';
 import {
@@ -1234,7 +1237,7 @@ export default function App() {
 
     if (showResetPassword) return <ResetPasswordScreen isDark={isDark} onDone={() => { setShowResetPassword(false); setScreen('app'); }} />;
 
-    if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
+    if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onStartShipper={() => { setRegRole('shipper'); setAuthMode('register'); setScreen('auth'); }} onStartOwner={() => { setRegRole('owner'); setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
     if (screen === 'auth') return (
         <>
@@ -1271,6 +1274,9 @@ export default function App() {
                         <button onClick={() => setView('catalog')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'catalog' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Биржа</button>
                         <button onClick={() => setView('my-requests')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'my-requests' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>
                             Мои заявки
+                        </button>
+                        <button onClick={() => setView('my-bids')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'my-bids' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>
+                          Мои ставки
                         </button>
                         <button onClick={() => setView('analytics')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'analytics' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Аналитика</button>
                         <button onClick={() => setView('messenger')} className={`text-sm font-black uppercase tracking-widest transition-all flex items-center gap-2 ${view === 'messenger' || view === 'chat' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>
@@ -1568,6 +1574,28 @@ export default function App() {
                             onBack={() => setView('messenger')}
                         />
                     </div>
+                )}
+
+                {view === 'my-bids' && (
+                  <MyBidsView
+                    bids={bids}
+                    requests={requests}
+                    userId={sbUser?.id}
+                    userRole={userProfile?.role}
+                    onChat={(chat) => { setActiveChat(chat); setView('chat'); }}
+                    setView={setView}
+                    onAiCreate={(parsed) => { setAiCreateData(parsed); setView('create'); }}
+                  />
+                )}
+
+                {view === 'fleet' && <FleetDislocation />}
+
+                {view === 'my-dashboard' && userProfile && (
+                  <UserDashboard
+                    userProfile={userProfile}
+                    onLogout={handleLogout}
+                    setView={setView}
+                  />
                 )}
             </main>
 
