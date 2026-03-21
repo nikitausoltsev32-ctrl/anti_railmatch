@@ -447,7 +447,7 @@ export default function App() {
         if (authLoading) return;
         const email = formData.email?.trim();
         const password = formData.password?.trim();
-        const { name, company, phone } = formData;
+        const { name, company, phone, role } = formData;
 
         if (!email || !password) {
             showToast("Пожалуйста, заполните все поля", 'warning');
@@ -464,7 +464,7 @@ export default function App() {
                 const { data: regData, error: regError } = await supabase.functions.invoke('send-confirmation-email', {
                     body: {
                         email, password, name, company, phone,
-                        role: regRole,
+                        role,
                         redirectTo: window.location.origin + window.location.pathname,
                     },
                 });

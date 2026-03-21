@@ -119,7 +119,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                             </div>
                         )}
 
-                        <form onSubmit={(e) => { e.preventDefault(); if (validate()) onSubmit(formData); }} className="space-y-4">
+                        <form onSubmit={(e) => { e.preventDefault(); if (validate()) onSubmit({ ...formData, role }); }} className="space-y-4">
                             <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required />
                             <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Пароль (минимум 6 символов)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
 
