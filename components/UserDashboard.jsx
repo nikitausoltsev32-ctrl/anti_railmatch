@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, Package, TrainFront, ArrowRight, ShieldCheck, Clock, FileText, Settings, MessageSquare, CreditCard, Sparkles } from 'lucide-react';
 
-export default function UserDashboard({ userProfile, onLogout }) {
+export default function UserDashboard({ userProfile, onLogout, setView }) {
     const getDashboardStats = () => {
         const stats = [];
         
@@ -84,51 +84,37 @@ export default function UserDashboard({ userProfile, onLogout }) {
 
     const getQuickActions = () => {
         const actions = [];
-        
+
         if (userProfile.role === 'shipper') {
             actions.push({
                 title: 'Создать заявку',
                 icon: <Package className="w-6 h-6" />,
                 color: 'bg-gradient-to-r from-blue-500 to-indigo-500',
-                action: () => console.log('Create request')
+                action: () => setView('create')
             });
-            
+
             actions.push({
                 title: 'Мои заявки',
                 icon: <FileText className="w-6 h-6" />,
                 color: 'bg-gradient-to-r from-emerald-500 to-teal-500',
-                action: () => console.log('My requests')
-            });
-            
-            actions.push({
-                title: 'Документы',
-                icon: <Settings className="w-6 h-6" />,
-                color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-                action: () => console.log('Documents')
+                action: () => setView('my-requests')
             });
         } else if (userProfile.role === 'owner') {
             actions.push({
                 title: 'Флот онлайн',
                 icon: <TrainFront className="w-6 h-6" />,
                 color: 'bg-gradient-to-r from-blue-500 to-indigo-500',
-                action: () => console.log('Fleet online')
+                action: () => setView('fleet')
             });
-            
+
             actions.push({
                 title: 'Мои ставки',
                 icon: <MessageSquare className="w-6 h-6" />,
                 color: 'bg-gradient-to-r from-emerald-500 to-teal-500',
-                action: () => console.log('My bids')
-            });
-            
-            actions.push({
-                title: 'Пополнить баланс',
-                icon: <CreditCard className="w-6 h-6" />,
-                color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-                action: () => console.log('Add credit')
+                action: () => setView('my-bids')
             });
         }
-        
+
         return actions;
     };
 
