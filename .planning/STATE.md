@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-21T19:55:41.766Z"
+stopped_at: Completed 01-stabilizaciya-01-PLAN.md
+last_updated: "2026-03-21T20:13:41.855Z"
 last_activity: 2026-03-21 — GSD инициализирован, roadmap утверждён. Исправлен баг регистрации (роль всегда owner). Edge Function send-confirmation-email задеплоена v3 с UPSERT.
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
   percent: 0
 ---
 
@@ -39,6 +39,8 @@ Progress: ░░░░░░░░░░ 0% (Milestone 1)
 - **2026-03-21**: Регистрация через Edge Function `send-confirmation-email` вместо `supabase.auth.signUp` — устранение бага с ролью
 - **2026-03-21**: UPSERT вместо INSERT в Edge Function — триггер `on_auth_user_created` создаёт профиль раньше
 - **2026-03-21**: `role` передаётся через `formData` из AuthScreen, не из `regRole` closure
+- [Phase 01-stabilizaciya]: Migration 22 uses DROP POLICY IF EXISTS + CREATE pattern for idempotent policy management across all 4 core tables
+- [Phase 01-stabilizaciya]: auth.uid()::text used for shipperInn comparison; subquery joins allow shipper access to bids/messages without denormalizing data
 
 ### Известные проблемы
 
@@ -55,6 +57,6 @@ Progress: ░░░░░░░░░░ 0% (Milestone 1)
 
 ## Session Continuity
 
-Last session: 2026-03-21T19:55:41.749Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-stabilizaciya/01-CONTEXT.md
+Last session: 2026-03-21T20:13:41.846Z
+Stopped at: Completed 01-stabilizaciya-01-PLAN.md
+Resume file: None
