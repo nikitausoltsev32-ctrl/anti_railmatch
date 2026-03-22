@@ -27,9 +27,9 @@
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Write migration 22: canonical RLS policies for all 4 tables + Realtime
-- [ ] 01-02-PLAN.md — Wire UserDashboard, MyBidsView, FleetDislocation into app.jsx navigation
-- [ ] 01-03-PLAN.md — Apply migration in Supabase, verify RLS + Realtime, E2E pipeline test
+- [x] 01-01-PLAN.md — Write migration 22: canonical RLS policies for all 4 tables + Realtime
+- [x] 01-02-PLAN.md — Wire UserDashboard, MyBidsView, FleetDislocation into app.jsx navigation
+- [~] 01-03-PLAN.md — Apply migration in Supabase, verify RLS + Realtime, E2E pipeline test [PARTIAL: 3 pipeline failures — cancellation broken, bid price logic wrong, chat missing for shipper]
 
 ### Phase 2: Telegram уведомления
 **Goal**: Пользователи получают Telegram-уведомления о ключевых событиях своих сделок
