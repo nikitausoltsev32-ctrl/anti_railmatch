@@ -1,55 +1,92 @@
 import React, { useState } from 'react';
 import {
     ArrowRight, TrainFront, MessageSquare, CheckCircle,
-    Package, CreditCard, Phone, Sparkles
+    Package, Sparkles, Search, FileText, ShieldCheck, CreditCard
 } from 'lucide-react';
+
+const colorMap = {
+    blue:    { bg: 'bg-blue-50 dark:bg-blue-900/30',    text: 'text-blue-600 dark:text-blue-400',    btn: 'bg-blue-600 hover:bg-blue-700',    bar: 'bg-blue-600' },
+    indigo:  { bg: 'bg-indigo-50 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400', btn: 'bg-indigo-600 hover:bg-indigo-700', bar: 'bg-indigo-600' },
+    emerald: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', btn: 'bg-emerald-600 hover:bg-emerald-700', bar: 'bg-emerald-600' },
+    violet:  { bg: 'bg-violet-50 dark:bg-violet-900/30', text: 'text-violet-600 dark:text-violet-400', btn: 'bg-violet-600 hover:bg-violet-700', bar: 'bg-violet-600' },
+};
+
+const shipperSteps = [
+    {
+        icon: <Package className="w-10 h-10" />,
+        color: 'blue',
+        title: 'Добро пожаловать, грузоотправитель!',
+        desc: 'RailMatch — биржа, где вы публикуете заявки на перевозку и получаете ставки от десятков владельцев вагонов. Прямые сделки без посредников.',
+    },
+    {
+        icon: <FileText className="w-10 h-10" />,
+        color: 'indigo',
+        title: 'Как разместить заявку',
+        list: [
+            { num: 1, label: 'Нажмите «+ Заявка»', sub: 'Кнопка в верхнем правом углу или через AI-агент' },
+            { num: 2, label: 'Укажите маршрут и груз', sub: 'Станция отправления, назначения, тип вагона, тоннаж' },
+            { num: 3, label: 'Получайте ставки', sub: 'Владельцы вагонов откликаются — вы выбираете лучшее предложение' },
+        ],
+    },
+    {
+        icon: <ShieldCheck className="w-10 h-10" />,
+        color: 'emerald',
+        title: 'Безопасная сделка',
+        list: [
+            { num: 1, label: 'Переговоры в защищённом чате', sub: 'Контакты скрыты до оплаты комиссии' },
+            { num: 2, label: 'Комиссия 2.5%', sub: 'Только при успешной сделке — после оплаты открываются прямые контакты' },
+            { num: 3, label: 'Документы', sub: 'Счёт, Договор-заявка, УПД, Реестр вагонов, Акт — всё автоматически' },
+        ],
+    },
+    {
+        icon: <CreditCard className="w-10 h-10" />,
+        color: 'violet',
+        title: 'Готовы к первой заявке?',
+        desc: 'Воспользуйтесь AI-агентом для автозаполнения — опишите груз и маршрут текстом, и заявка создастся за 30 секунд.',
+    },
+];
+
+const ownerSteps = [
+    {
+        icon: <TrainFront className="w-10 h-10" />,
+        color: 'blue',
+        title: 'Добро пожаловать, владелец вагонов!',
+        desc: 'RailMatch — биржа, где вы находите грузы и делаете ставки на заявки грузоотправителей. Прямые сделки, без посредников.',
+    },
+    {
+        icon: <Search className="w-10 h-10" />,
+        color: 'indigo',
+        title: 'Как найти груз',
+        list: [
+            { num: 1, label: 'Откройте биржу', sub: 'Каталог заявок грузоотправителей — по маршруту, типу вагона, тоннажу' },
+            { num: 2, label: 'Нажмите «Откликнуться»', sub: 'Укажите вашу цену за вагон и количество вагонов' },
+            { num: 3, label: 'Или разместите свои вагоны', sub: 'Опубликуйте свободный парк — грузоотправители сами вас найдут' },
+        ],
+    },
+    {
+        icon: <ShieldCheck className="w-10 h-10" />,
+        color: 'emerald',
+        title: 'Как проходит сделка',
+        list: [
+            { num: 1, label: 'Переговоры в чате', sub: 'Обсуждайте условия — контакты раскрываются после оплаты комиссии' },
+            { num: 2, label: 'Комиссия 2.5%', sub: 'Только при успешной сделке. Способ оплаты согласуется с партнёром' },
+            { num: 3, label: 'Подтверждение этапов', sub: 'Подача вагонов → Погрузка → Доставка → деньги разморожены' },
+        ],
+    },
+    {
+        icon: <Sparkles className="w-10 h-10" />,
+        color: 'violet',
+        title: 'Начните зарабатывать',
+        desc: 'Найдите первую заявку в каталоге и нажмите «Откликнуться». Или разместите свободные вагоны — и пусть грузы приходят к вам.',
+    },
+];
 
 export default function OnboardingModal({ role, onComplete }) {
     const [step, setStep] = useState(0);
-    const isOwner = role === 'owner';
-
-    const steps = [
-        {
-            icon: <TrainFront className="w-10 h-10" />,
-            color: 'blue',
-            title: isOwner ? 'Добро пожаловать, владелец вагонов!' : 'Добро пожаловать, грузоотправитель!',
-            desc: isOwner
-                ? 'На RailMatch вы видите заявки грузоотправителей. Делайте ставки на интересные грузы и выходите на прямые сделки без посредников.'
-                : 'На RailMatch вы видите предложения владельцев вагонов. Публикуйте заявки и получайте ставки от десятков перевозчиков.',
-        },
-        {
-            icon: <MessageSquare className="w-10 h-10" />,
-            color: 'indigo',
-            title: 'Как проходит сделка',
-            desc: null,
-            flow: true,
-        },
-        {
-            icon: isOwner ? <Sparkles className="w-10 h-10" /> : <Package className="w-10 h-10" />,
-            color: 'emerald',
-            title: isOwner ? 'Сделайте первую ставку' : 'Разместите первую заявку',
-            desc: isOwner
-                ? 'Найдите подходящую заявку в каталоге и нажмите «Откликнуться». Комиссия 2.5% — только при успешной сделке.'
-                : 'Нажмите «+ Заявка» в верхнем углу или воспользуйтесь AI-агентом для автозаполнения за 30 секунд.',
-        },
-    ];
-
+    const steps = role === 'owner' ? ownerSteps : shipperSteps;
     const current = steps[step];
     const isLast = step === steps.length - 1;
-
-    const colorMap = {
-        blue:    { bg: 'bg-blue-50 dark:bg-blue-900/30',    text: 'text-blue-600 dark:text-blue-400',    btn: 'bg-blue-600 hover:bg-blue-700',    bar: 'bg-blue-600' },
-        indigo:  { bg: 'bg-indigo-50 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400', btn: 'bg-indigo-600 hover:bg-indigo-700', bar: 'bg-indigo-600' },
-        emerald: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', btn: 'bg-emerald-600 hover:bg-emerald-700', bar: 'bg-emerald-600' },
-    };
     const colors = colorMap[current.color];
-
-    const flowSteps = [
-        { label: 'Заявка опубликована',      sub: 'Грузоотправитель или владелец размещает объявление',       num: 1 },
-        { label: 'Отклик → Переговоры',       sub: 'Стороны обсуждают условия в защищённом чате',              num: 2 },
-        { label: 'Оплата комиссии 2.5%',      sub: 'Согласуется способ оплаты (50/50 или одна сторона)',        num: 3 },
-        { label: 'Контакты открыты',          sub: 'После оплаты — прямая связь и подписание документов',       num: 4 },
-    ];
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-300">
@@ -80,12 +117,12 @@ export default function OnboardingModal({ role, onComplete }) {
                     <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-5 sm:mb-8">{current.desc}</p>
                 )}
 
-                {/* Flow diagram (step 2) */}
-                {current.flow && (
+                {/* List steps */}
+                {current.list && (
                     <div className="mb-5 sm:mb-8 space-y-2 sm:space-y-3">
-                        {flowSteps.map((item) => (
+                        {current.list.map((item) => (
                             <div key={item.num} className="flex items-start gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-                                <span className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                                <span className={`w-7 h-7 rounded-full ${colors.bg} ${colors.text} text-xs font-black flex items-center justify-center shrink-0 mt-0.5`}>
                                     {item.num}
                                 </span>
                                 <div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ShieldCheck, Settings, Bot, Users, FileText, Upload, Check, X, Mail, Phone, Building2, User, History, ArrowRight, Clock, TrendingUp, Wallet, Pencil, Save, Copy, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Settings, Bot, Users, FileText, Upload, Check, X, Mail, Phone, Building2, User, History, ArrowRight, Clock, TrendingUp, Wallet, Pencil, Save, Copy, ExternalLink, Package, TrainFront } from 'lucide-react';
 import { supabase as defaultSupabase } from '../src/supabaseClient';
 import { PLATFORM_COMMISSION_RATE, ALLOWED_DOC_TYPES, MAX_DOC_SIZE_BYTES } from '../src/constants.js';
 
@@ -157,6 +157,10 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                         <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mt-2 flex items-center justify-center gap-2">
                             <Building2 className="w-3 h-3" /> ИНН: {user.inn}
                         </p>
+                        <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${user.role === 'shipper' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'}`}>
+                            {user.role === 'shipper' ? <Package className="w-3 h-3" /> : <TrainFront className="w-3 h-3" />}
+                            {user.role === 'shipper' ? 'Грузоотправитель' : 'Владелец вагонов'}
+                        </div>
                         <button onClick={onLogout} className="w-full mt-10 py-4 border border-red-100 dark:border-red-900/30 text-red-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-95">Выйти из системы</button>
 
                         {/* Счётчик нарушений */}

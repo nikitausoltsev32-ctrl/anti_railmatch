@@ -1,7 +1,7 @@
 import React from 'react';
 import { TrainFront, Sun, Moon, Sparkles, Package, Zap, Check, ArrowRight, ShieldCheck, Activity, MessageSquare, BarChart3, Search, FileText, Users, Lock, UserCheck } from 'lucide-react';
 
-export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsDark, onShowTerms }) {
+export default function LandingScreen({ onStart, onStartShipper, onStartOwner, onLogin, onDemo, isDark, setIsDark, onShowTerms }) {
     return (
         <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white overflow-hidden bg-grid-pattern">
 
@@ -121,6 +121,9 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><Check className="text-emerald-600 w-5 h-5" /></div> Несколько ставок сразу — выбирайте лучшее предложение</li>
                         <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><ShieldCheck className="text-emerald-600 w-5 h-5" /></div> Комиссия 2.5% — и контакты партнёра открыты для расчётов</li>
                     </ul>
+                    <button onClick={onStartShipper || onStart} className="mt-8 w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-lg shadow-blue-500/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        Зарегистрироваться как грузоотправитель <ArrowRight className="w-4 h-4" />
+                    </button>
                 </div>
 
                 {/* Owners */}
@@ -140,6 +143,9 @@ export default function LandingScreen({ onStart, onLogin, onDemo, isDark, setIsD
                         <li className="flex items-center gap-4"><div className="p-2 bg-slate-800 border border-slate-700 rounded-xl"><Check className="text-blue-400 w-5 h-5" /></div> AI-агент: один запрос — лучшие совпадения сразу</li>
                         <li className="flex items-center gap-4"><div className="p-2 bg-slate-800 border border-slate-700 rounded-xl"><Sparkles className="text-blue-400 w-5 h-5" /></div> Нет подписки — платите 2.5% только за результат</li>
                     </ul>
+                    <button onClick={onStartOwner || onStart} className="mt-8 w-full py-4 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-black uppercase tracking-widest text-xs rounded-2xl border border-white/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 relative z-10">
+                        Зарегистрироваться как владелец вагонов <ArrowRight className="w-4 h-4" />
+                    </button>
                 </div>
             </section>
 

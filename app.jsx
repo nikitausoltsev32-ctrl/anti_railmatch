@@ -1408,7 +1408,6 @@ export default function App() {
                                                     })}
                                                     rank={idx}
                                                     creatorRole={creatorProfile?.role}
-                                                    creatorCompany={creatorProfile?.company || creatorProfile?.name}
                                                 />
                                             </div>
                                         );
