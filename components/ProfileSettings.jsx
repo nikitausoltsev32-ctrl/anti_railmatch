@@ -417,7 +417,7 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                         const userDeals = bids.filter(b => {
                             const isOwner = b.ownerId === user.id;
                             const relatedReq = requests.find(r => r.id === b.requestId);
-                            const isShipper = relatedReq?.shipperInn === user.inn;
+                            const isShipper = relatedReq?.shipperInn === user.id;
                             return isOwner || isShipper;
                         });
 

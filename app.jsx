@@ -372,7 +372,7 @@ export default function App() {
                             const req = currentRequests.find(r => r.id === payload.new.requestId);
                             if (req) {
                                 setUserProfile(currentProfile => {
-                                    if (currentProfile && req.shipperInn === currentProfile.inn) {
+                                    if (currentProfile && req.shipperInn === sbUser.id) {
                                         showToast(`Новый отклик на вашу заявку`, 'info');
                                     }
                                     return currentProfile;
@@ -523,7 +523,7 @@ export default function App() {
      */
     const buildChatObject = useCallback((bid, req, profilesList) => {
         const list = profilesList || profiles;
-        const shipperProfile = list.find(p => p.inn === req?.shipperInn);
+        const shipperProfile = list.find(p => p.id === req?.shipperInn);
         const ownerProfile = list.find(p => p.id === bid.ownerId);
         return {
             ...bid,
@@ -598,7 +598,7 @@ export default function App() {
         setIsModalOpen(false);
 
         // Уведомление грузоотправителю о новой ставке
-        const shipperProfile = profiles.find(p => p.inn === selectedRequest.shipperInn);
+        const shipperProfile = profiles.find(p => p.id === selectedRequest.shipperInn);
         if (shipperProfile?.id) {
             sendNotification(
                 shipperProfile.id,
@@ -734,7 +734,7 @@ export default function App() {
     const handleCancelRequest = async (reqId) => {
         if (!sbUser || !userProfile) return;
         const req = requests.find(r => r.id === reqId);
-        if (!req || req.shipperInn !== userProfile.inn) return;
+        if (!req || req.shipperInn !== sbUser.id) return;
 
         // Нельзя отменить заявку с принятыми сделками
         const hasAccepted = bids.some(b => b.requestId === reqId && b.status === 'accepted');
@@ -777,7 +777,7 @@ export default function App() {
 
             const fullyConfirmed = updatedBid.shipper_confirmed && updatedBid.owner_confirmed;
 
-            const partnerId = isShipper ? bid.ownerId : profiles.find(p => p.inn === bid.shipperInn)?.id;
+            const partnerId = isShipper ? bid.ownerId : bid.shipperInn;
 
             if (fullyConfirmed && updatedBid.status === 'pending') {
                 await supabase.from('bids').update({ status: 'commission_pending' }).eq('id', bid.id);
@@ -840,7 +840,7 @@ export default function App() {
             showToast('Предложение отправлено партнёру', 'info');
             // Уведомление партнёру
             const bid = bids.find(b => b.id === bidId) || activeChat;
-            const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : profiles.find(p => p.inn === bid?.shipperInn)?.id;
+            const partnerId = userProfile.role === 'shipper' ? bid?.ownerId : bid?.shipperInn;
             if (partnerId) {
                 sendNotification(
                     partnerId,
@@ -962,7 +962,7 @@ export default function App() {
             await supabase.from('messages').insert([{ chat_id: bidId, sender_id: 'system', text: msg }]);
 
             // Уведомление партнёру об оплате
-            const partnerId = isShipper ? currentBid.ownerId : profiles.find(p => p.inn === currentBid.shipperInn)?.id;
+            const partnerId = isShipper ? currentBid.ownerId : currentBid.shipperInn;
             if (partnerId) {
                 const notifText = willReveal
                     ? `Комиссия полностью оплачена! Контакты партнёра открыты.\n\nОткройте платформу, чтобы увидеть контакты и подписать документы.`
@@ -1003,7 +1003,7 @@ export default function App() {
             const isShipperUpload = userProfile?.role === 'shipper';
             const docPartnerId = isShipperUpload
                 ? uploadBid?.ownerId
-                : profiles.find(p => p.inn === uploadBid?.shipperInn)?.id;
+                : uploadBid?.shipperInn;
             if (docPartnerId) {
                 sendNotification(
                     docPartnerId,
@@ -1083,7 +1083,7 @@ export default function App() {
             target_price: Number(data.targetPrice || 0), // Default to 0 instead of NaN if empty
             fulfilledWagons: 0,
             fulfilledTons: 0,
-            shipperInn: userProfile.inn || '000000',
+            shipperInn: sbUser.id,
             status: 'open'
         };
         const { error, data: insertedReq } = await supabase.from('requests').insert([reqData]).select().single();
@@ -1179,7 +1179,8 @@ export default function App() {
         if (userProfile && userProfile.role !== 'demo') {
             // Пока профили не загрузились — не показываем ничего (убираем мерцание)
             if (profiles.length === 0) return false;
-            const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
+            if (req.shipperInn === sbUser?.id) return false;
+            const creatorProfile = profiles.find(p => p.id === req.shipperInn);
             const creatorRole = creatorProfile?.role;
             if (userProfile.role === 'shipper' && creatorRole !== 'owner') return false;
             if (userProfile.role === 'owner' && creatorRole !== 'shipper') return false;
@@ -1203,9 +1204,9 @@ export default function App() {
     // Memoize unread indicator — only chats this user participates in, excluding system messages
     const myBidIds = useMemo(() => new Set(
         bids
-            .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
+            .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === sbUser?.id))
             .map(b => b.id)
-    ), [bids, sbUser, requests, userProfile?.inn]);
+    ), [bids, sbUser, requests]);
 
     const hasUnread = useMemo(() =>
         messages.some(m => myBidIds.has(m.chat_id) && m.sender_id !== sbUser?.id && m.sender_id !== 'system'),
@@ -1396,7 +1397,7 @@ export default function App() {
                                             </button>
                                         </div>
                                     ) : sortedCatalogRequests.map((req, idx) => {
-                                        const creatorProfile = profiles.find(p => p.inn === req.shipperInn);
+                                        const creatorProfile = profiles.find(p => p.id === req.shipperInn);
                                         return (
                                             <div key={req.id} className={idx < 3 ? 'md:col-span-2 xl:col-span-1 relative group animate-in zoom-in-95 duration-500' : 'animate-in fade-in slide-in-from-bottom-4'}>
                                                 <RequestCard
@@ -1429,7 +1430,7 @@ export default function App() {
                             </h2>
                             <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar">
                                 {(bids || [])
-                                    .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === userProfile?.inn))
+                                    .filter(b => b.ownerId === sbUser?.id || requests.find(r => r.id === b.requestId && r.shipperInn === sbUser?.id))
                                     .slice()
                                     .sort((a, b) => {
                                         const lastA = lastMsgTimeByChatId[a.id] ?? a.created_at;
@@ -1439,7 +1440,7 @@ export default function App() {
                                     .map(chatBid => {
                                     const req = requests.find(r => r.id === chatBid.requestId);
                                     const isMeOwner = chatBid.ownerId === sbUser?.id;
-                                    const creatorProfile = profiles.find(p => p.inn === req?.shipperInn);
+                                    const creatorProfile = profiles.find(p => p.id === req?.shipperInn);
                                     const ownerProfile = profiles.find(p => p.id === chatBid.ownerId);
                                     const partnerName = isMeOwner
                                         ? (creatorProfile?.name || req?.stationTo || 'Заявка')
@@ -1511,7 +1512,7 @@ export default function App() {
                     <MyRequestsView
                         requests={requests}
                         bids={bids}
-                        userInn={userProfile?.inn}
+                        userInn={sbUser?.id}
                         userRole={userProfile?.role}
                         userId={sbUser?.id}
                         profiles={profiles}
