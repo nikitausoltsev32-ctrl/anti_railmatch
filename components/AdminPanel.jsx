@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, TrendingUp, Send, Clock, CheckCircle, MessageSquare, Wifi } from 'lucide-react';
+import { Users, FileText, TrendingUp, Send, Clock, CheckCircle, MessageSquare, Wifi, Trash2 } from 'lucide-react';
 
 export default function AdminPanel({ supabase, sbUser, isDark }) {
     const [stats, setStats] = useState(null);
@@ -8,6 +8,8 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
     const [sending, setSending] = useState(false);
     const [sendResult, setSendResult] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
+    const [deletingRequests, setDeletingRequests] = useState(false);
+    const [deleteResult, setDeleteResult] = useState(null);
 
     useEffect(() => {
         fetchStats();
@@ -52,6 +54,23 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
             .order('sent_at', { ascending: false })
             .limit(10);
         if (data) setBroadcasts(data);
+    };
+
+    const handleDeleteAllRequests = async () => {
+        if (!window.confirm('Удалить ВСЕ заявки? Это действие необратимо.')) return;
+        setDeletingRequests(true);
+        setDeleteResult(null);
+        const { error, count } = await supabase
+            .from('requests')
+            .delete({ count: 'exact' })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+        if (error) {
+            setDeleteResult({ success: false, error: error.message });
+        } else {
+            setDeleteResult({ success: true, count });
+            fetchStats();
+        }
+        setDeletingRequests(false);
     };
 
     const handleBroadcast = async () => {
@@ -123,6 +142,33 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
                     <StatCard icon={TrendingUp} label="Выручка" value={`${(stats.revenue / 1000).toFixed(0)}к ₽`} color="green" />
                 </div>
             )}
+
+            {/* Dev tools */}
+            <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-200 dark:border-red-800/40 p-5">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                        <h3 className="font-black uppercase tracking-widest text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
+                            <Trash2 className="w-4 h-4" /> Dev tools
+                        </h3>
+                        <p className="text-xs text-red-500 dark:text-red-400/70 mt-0.5">Только для разработки</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {deleteResult && (
+                            <span className={`text-sm font-bold ${deleteResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                                {deleteResult.success ? `Удалено ${deleteResult.count} заявок` : deleteResult.error}
+                            </span>
+                        )}
+                        <button
+                            onClick={handleDeleteAllRequests}
+                            disabled={deletingRequests}
+                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-black uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            {deletingRequests ? 'Удаление...' : 'Удалить все заявки'}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             {/* Last registrations */}
             {stats?.lastRegs?.length > 0 && (

@@ -34,18 +34,18 @@ DROP POLICY IF EXISTS "Bid participants can update bids" ON public.bids;
 
 CREATE POLICY "Bid participants can view bids" ON public.bids
   FOR SELECT USING (
-    auth.uid() = "ownerId"
+    auth.uid()::text = "ownerId"
     OR "requestId" IN (
       SELECT id FROM public.requests WHERE "shipperInn" = auth.uid()::text
     )
   );
 
 CREATE POLICY "Authenticated users can insert bids" ON public.bids
-  FOR INSERT WITH CHECK (auth.uid() = "ownerId");
+  FOR INSERT WITH CHECK (auth.uid()::text = "ownerId");
 
 CREATE POLICY "Bid participants can update bids" ON public.bids
   FOR UPDATE USING (
-    auth.uid() = "ownerId"
+    auth.uid()::text = "ownerId"
     OR "requestId" IN (
       SELECT id FROM public.requests WHERE "shipperInn" = auth.uid()::text
     )
@@ -79,7 +79,7 @@ CREATE POLICY "Deal participants can view messages" ON public.messages
     OR sender_id = 'system'
     OR chat_id IN (
       SELECT b.id FROM public.bids b
-      WHERE b."ownerId" = auth.uid()
+      WHERE b."ownerId" = auth.uid()::text
         OR b."requestId" IN (
           SELECT id FROM public.requests WHERE "shipperInn" = auth.uid()::text
         )
