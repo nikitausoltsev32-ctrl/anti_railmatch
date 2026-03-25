@@ -279,7 +279,7 @@ export default function MyRequestsView({ requests, bids, userInn, userRole, user
                                                                 <div className="flex justify-between items-start mb-4">
                                                                     <div className="font-black text-slate-800 dark:text-white text-base">
                                                                         {bid.ownerName}
-                                                                        <div className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">ИНН: {bid.ownerInn || '---'}</div>
+                                                                        <div className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Владелец вагонов</div>
                                                                     </div>
                                                                     <div className="flex flex-col items-end">
                                                                         <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold">{bid.wagons} ваг.</div>
@@ -312,7 +312,7 @@ export default function MyRequestsView({ requests, bids, userInn, userRole, user
                             </div>
                         ) : myBids.map(bid => {
                             const req = requests.find(r => r.id === bid.requestId) || {};
-                            const creatorProfile = profiles?.find(p => p.inn === req.shipperInn);
+                            const creatorProfile = profiles?.find(p => p.id === req.shipperInn);
                             return (
                                 <div key={bid.id} className={`bg-white dark:bg-[#111827] p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border shadow-sm flex flex-col md:flex-row items-center gap-4 sm:gap-6 hover:shadow-xl transition-all group relative overflow-hidden
                                     ${bid.status === 'accepted'
@@ -329,8 +329,8 @@ export default function MyRequestsView({ requests, bids, userInn, userRole, user
                                                 {bid.status === 'pending' ? 'Ожидает решения' : 'Сделка заключена'}
                                             </span>
                                             <span className="text-xs font-bold text-slate-400 border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-lg">{new Date(bid.created_at).toLocaleDateString()}</span>
-                                            {creatorProfile?.company && (
-                                                <span className="text-xs font-bold text-slate-500">{creatorProfile.company}</span>
+                                            {creatorProfile && (
+                                                <span className="text-xs font-bold text-slate-500">{creatorProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец вагонов'}{creatorProfile.name ? ` · ${creatorProfile.name}` : ''}</span>
                                             )}
                                         </div>
                                         <div className="text-lg sm:text-2xl font-black dark:text-white flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">

@@ -88,6 +88,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
     const validate = () => {
         if (mode !== 'register') return true;
         const errs = {};
+        if (!role) errs.role = 'Выберите вашу роль';
         if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
         else if (!validatePersonName(formData.name.trim())) errs.name = 'Укажите имя человека, а не название компании';
         if (!formData.company.trim()) errs.company = 'Укажите название компании';
@@ -108,13 +109,17 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                         <p className="text-slate-400 mb-8 font-medium text-sm">Введите данные вашей компании</p>
 
                         {mode === 'register' && (
-                            <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6 shadow-inner border border-slate-200/70 dark:border-slate-700/70">
-                                <button onClick={() => setRole('owner')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Владелец вагонов</button>
-                                <button onClick={() => setRole('shipper')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Грузоотправитель</button>
+                            <div className="mb-6">
+                                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-widest">Кто вы на платформе?</p>
+                                <div className={`flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-inner border transition-all ${errors.role ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200/70 dark:border-slate-700/70'}`}>
+                                    <button type="button" onClick={() => { setRole('owner'); setErrors(prev => ({ ...prev, role: null })); }} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Владелец вагонов</button>
+                                    <button type="button" onClick={() => { setRole('shipper'); setErrors(prev => ({ ...prev, role: null })); }} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Грузоотправитель</button>
+                                </div>
+                                {errors.role && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.role}</p>}
                             </div>
                         )}
 
-                        <form onSubmit={(e) => { e.preventDefault(); if (validate()) onSubmit(formData); }} className="space-y-4">
+                        <form onSubmit={(e) => { e.preventDefault(); if (validate()) onSubmit({ ...formData, role }); }} className="space-y-4">
                             <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required />
                             <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Пароль (минимум 6 символов)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
 
@@ -128,9 +133,6 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                                         <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.company ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
                                         {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
                                     </div>
-                                    <p className="rounded-2xl border border-blue-100 dark:border-blue-900/70 bg-blue-50/70 dark:bg-blue-950/30 px-4 py-3 text-xs font-semibold text-blue-700 dark:text-blue-300">
-                                        ИНН временно заполняется автоматически на этапе регистрации.
-                                    </p>
                                     <div>
                                         <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.phone ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
                                         {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}

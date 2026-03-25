@@ -116,7 +116,7 @@ serve(async (req: Request) => {
         name = body.name?.trim() || 'Пользователь';
         company = body.company?.trim() || '';
         phone = body.phone?.trim() || '';
-        role = body.role === 'shipper' ? 'shipper' : 'owner';
+        role = (body.role === 'shipper' || body.role === 'owner') ? body.role : 'owner';
         redirectTo = body.redirectTo?.trim() || 'https://railmatch.ru';
     } catch {
         return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
