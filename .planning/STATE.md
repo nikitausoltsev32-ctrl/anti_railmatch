@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: blocked
-stopped_at: "01-03-PLAN.md — PARTIAL: 3 pipeline failures found, Phase 1 cannot close"
-last_updated: "2026-03-23T00:00:00Z"
-last_activity: 2026-03-23 — E2E pipeline tested. Migration 22 + RLS confirmed. 3 critical failures in pipeline (cancellation, bid price logic, chat for shipper side).
+status: Blocked — awaiting fix plans for 3 critical failures
+stopped_at: "01-05-PLAN.md — CHECKPOINT: Task 1 verified (no code change needed), awaiting human browser verify for Task 2"
+last_updated: "2026-03-26T10:41:40.534Z"
+last_activity: 2026-03-23 — E2E pipeline tested. Migration 22 + RLS confirmed active. 3 critical pipeline failures found during manual testing.
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 3
-  completed_plans: 2
+  total_plans: 6
+  completed_plans: 5
   percent: 0
 ---
 
@@ -45,6 +45,8 @@ Progress: ░░░░░░░░░░ 0% (Milestone 1)
 - [Phase 01-stabilizaciya]: Documents and Add credit buttons removed entirely from UserDashboard (deferred Phase 6+)
 - **2026-03-23**: Minimum bid price rule: 1 wagon → 45,000 min; >3 wagons → 10,000/wagon min. Old flat 100,000 rule is wrong and must be removed.
 - **2026-03-23**: Plan 01-03 outcome: PARTIAL. 3 critical pipeline failures found. Phase 1 stays open until all 3 are fixed and pipeline re-tested.
+- [Phase 01-stabilizaciya]: Plan 04: Removed .select() after .update() in handleCancelRequest — eliminates false-negative error path under RLS (bbba780)
+- [Phase 01-stabilizaciya]: Plan 05: BidModal.jsx already had correct validation (1 wagon->45k, 2+->10k). No 100,000 flat rule found anywhere. Pipeline test was stale.
 
 ### Известные проблемы
 
@@ -54,7 +56,7 @@ Progress: ░░░░░░░░░░ 0% (Milestone 1)
 
 ### Blockers/Concerns
 
-- **[CRITICAL] Отмена заявки не работает** — Shipper не может отменить поданную заявку. Нужен fix plan.
+- **[CRITICAL - FIXED in 01-04] Отмена заявки не работает** — Fixed: removed .select() false-negative from handleCancelRequest. Awaiting human verification (checkpoint Task 2).
 - **[CRITICAL] Минимальная цена ставки — неверная логика** — Старое правило 100,000 flat активно. Нужна замена: 1 вагон → 45,000; >3 вагонов → 10,000/вагон. Нужен fix plan.
 - **[CRITICAL] Чат недоступен для грузоотправителя** — После отклика Owner, чат видит только Owner. Shipper не видит чат, не получает уведомления, не видит сообщения. Нужен fix plan.
 - RESEND_API_KEY не добавлен в Supabase secrets → email уведомления не работают
@@ -62,7 +64,7 @@ Progress: ░░░░░░░░░░ 0% (Milestone 1)
 
 ## Session Continuity
 
-Last session: 2026-03-23T00:00:00Z
-Stopped at: 01-03-PLAN.md — PARTIAL outcome documented in 01-03-SUMMARY.md
+Last session: 2026-03-26T10:41:35.686Z
+Stopped at: 01-05-PLAN.md — CHECKPOINT: Task 1 verified (no code change needed), awaiting human browser verify for Task 2
 Resume file: None
 Next action: Create fix plans for the 3 critical pipeline failures before Phase 1 can close
