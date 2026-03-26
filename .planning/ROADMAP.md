@@ -30,9 +30,9 @@ Plans:
 - [x] 01-01-PLAN.md — Write migration 22: canonical RLS policies for all 4 tables + Realtime
 - [x] 01-02-PLAN.md — Wire UserDashboard, MyBidsView, FleetDislocation into app.jsx navigation
 - [~] 01-03-PLAN.md — Apply migration in Supabase, verify RLS + Realtime, E2E pipeline test [PARTIAL: 3 pipeline failures — cancellation broken, bid price logic wrong, chat missing for shipper]
-- [ ] 01-04-PLAN.md — Fix request cancellation (gap closure)
-- [ ] 01-05-PLAN.md — Fix minimum bid price validation (gap closure)
-- [ ] 01-06-PLAN.md — Fix chat/messaging for Shipper side (gap closure)
+- [~] 01-04-PLAN.md — Fix request cancellation (gap closure) [Task 1 done, awaiting human-verify Task 2]
+- [~] 01-05-PLAN.md — Fix minimum bid price validation (gap closure) [Task 1 done, awaiting human-verify Task 2]
+- [~] 01-06-PLAN.md — Fix chat/messaging for Shipper side (gap closure) [Task 1 done, awaiting human-verify Task 2]
 
 ### Phase 2: Telegram уведомления
 **Goal**: Пользователи получают Telegram-уведомления о ключевых событиях своих сделок
