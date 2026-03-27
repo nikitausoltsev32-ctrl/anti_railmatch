@@ -36,7 +36,7 @@ key-decisions:
 patterns-established:
   - "supabase functions deploy requires --workdir flag on Windows when CLI workdir defaults to home directory"
 
-requirements-completed: []
+requirements-completed: [NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04]
 
 # Metrics
 duration: 15min
@@ -52,21 +52,23 @@ completed: 2026-03-28
 - **Duration:** ~15 min
 - **Started:** 2026-03-28T~09:37:00Z
 - **Completed:** 2026-03-28T~09:52:00Z
-- **Tasks:** 1 of 2 complete (Task 2 awaiting human verification)
-- **Files modified:** 0 (deployment-only task)
+- **Tasks:** 2 of 2 complete
+- **Files modified:** 0 (deployment-only plan)
 
 ## Accomplishments
 - Deployed `telegram-notify` (v4), `telegram-bot` (v4), `verify-linking-code` (v2) — all ACTIVE
 - Registered Telegram webhook for `telegram-bot` — setWebhook returned `{"ok":true,"result":true,"description":"Webhook was set"}`
 - Confirmed TELEGRAM_BOT_TOKEN and BOT_WEBHOOK_SECRET present in Supabase secrets
+- Human smoke test passed: account linked via /start TOKEN, telegram-notify delivered live message to Telegram inbox
 
 ## Task Commits
 
 Each task was committed atomically:
 
 1. **Task 1: Deploy Edge Functions and register Telegram webhook** - `4249bea` (chore)
+2. **Task 2: Smoke-test Telegram account linking and notification delivery** - human-verified, no code commit (checkpoint)
 
-**Plan metadata:** TBD (after human verification)
+**Plan metadata:** TBD (final docs commit)
 
 ## Files Created/Modified
 
@@ -101,19 +103,15 @@ None — Task 1 was pure deployment via Supabase CLI. No source files were creat
 
 ## User Setup Required
 
-**Task 2 smoke test required.** See plan Task 2 for exact steps:
-1. Open app → Profile Settings → click "Привязать Telegram" → get token
-2. Send `/start <TOKEN>` to the Telegram bot
-3. Verify telegram_id saved in profile
-4. Run: `supabase functions invoke telegram-notify --body '{"user_id":"<your-uuid>","message":"Тест уведомлений RailMatch"}'`
-5. Verify Telegram message received
+None — smoke test complete. All external configuration (TELEGRAM_BOT_TOKEN, BOT_WEBHOOK_SECRET, webhook registration) was completed during Task 1.
 
 ## Next Phase Readiness
 
-- All three Edge Functions deployed and active
-- Telegram webhook registered — `/start TOKEN` linking flow operational
-- Ready for NOTIF-02 and NOTIF-03 code changes (Plan 02-02 and 02-03)
-- Blocked on: human smoke test (Task 2) to confirm end-to-end delivery
+- All three Edge Functions deployed, active, and smoke-tested
+- Telegram webhook registered — `/start TOKEN` linking flow operational and verified
+- NOTIF-01 and NOTIF-04 complete (sendNotification was already wired in app.jsx)
+- Plan 02-02 already complete (NOTIF-02 message notification, NOTIF-03 bid acceptance wired)
+- Ready for Plan 02-03: commission payment flow
 
 ---
 *Phase: 02-telegram-notifications*
