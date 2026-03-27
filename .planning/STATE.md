@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 02-02-PLAN.md — Phase 2 Plan 2 complete
-last_updated: "2026-03-28T00:15:00Z"
-last_activity: 2026-03-28 — Plan 02-02 complete. NOTIF-02 and NOTIF-03 wired.
+status: completed
+stopped_at: Completed 02-01 Task 1 — awaiting human smoke test (Task 2 checkpoint)
+last_updated: "2026-03-27T20:23:18.600Z"
+last_activity: 2026-03-28 — Plan 02-02 complete. sendNotification wired to chat messages and bid acceptance.
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 8
+  total_plans: 9
   completed_plans: 8
   percent: 25
 ---
@@ -51,6 +51,7 @@ Progress: [███░░░░░░░] 25% (1 of 5 phases complete + 2 plans
 - [Phase 01-stabilizaciya]: Plan 05 Task 2: Browser verification approved via orchestrator code review — BidModal validation confirmed correct
 - [Phase 02-telegram-notifications]: Plan 02-02: handleAcceptBid is distinct from handleConfirmDeal — bid status flow: pending -> accepted (handleAcceptBid) -> commission_pending (handleConfirmDeal)
 - [Phase 02-telegram-notifications]: Plan 02-02: partnerId derived from userProfile.role + activeChat state, consistent with existing pattern used 4+ places in codebase
+- [Phase 02-telegram-notifications]: Temporary register-webhook Edge Function used to call setWebhook from Supabase runtime (TELEGRAM_BOT_TOKEN not available locally)
 
 ### Известные проблемы
 
@@ -68,7 +69,7 @@ Progress: [███░░░░░░░] 25% (1 of 5 phases complete + 2 plans
 
 ## Session Continuity
 
-Last session: 2026-03-28T00:15:00Z
-Stopped at: Completed 02-02-PLAN.md — NOTIF-02 and NOTIF-03 wired
+Last session: 2026-03-27T20:23:18.581Z
+Stopped at: Completed 02-01 Task 1 — awaiting human smoke test (Task 2 checkpoint)
 Resume file: None
 Next action: Continue Phase 2 — Plan 02-03 (commission payment flow, split payments, escrow logic).
