@@ -43,7 +43,12 @@ Plans:
   2. Участник чата получает уведомление о новом сообщении
   3. Владелец получает уведомление о принятии/отклонении ставки
   4. Обе стороны получают уведомление при раскрытии контактов
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Deploy telegram-notify, telegram-bot, verify-linking-code; register webhook; smoke-test linking + delivery
+- [ ] 02-02-PLAN.md — Add sendNotification to handleSendMessage (NOTIF-02) + handleAcceptBid + "Принять ставку" button (NOTIF-03)
+- [ ] 02-03-PLAN.md — Human verify all 4 NOTIF requirements end-to-end with real Telegram accounts
 
 ### Phase 3: Email уведомления
 **Goal**: Ключевые события дублируются на email через Resend
