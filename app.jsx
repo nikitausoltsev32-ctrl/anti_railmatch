@@ -382,7 +382,10 @@ export default function App() {
                         });
                     }
                 }
-                else if (payload.eventType === 'UPDATE') setBids(prev => prev.map(b => b.id === payload.new.id ? payload.new : b));
+                else if (payload.eventType === 'UPDATE') {
+                    setBids(prev => prev.map(b => b.id === payload.new.id ? payload.new : b));
+                    setActiveChat(prev => prev && prev.id === payload.new.id ? { ...prev, ...payload.new } : prev);
+                }
                 else if (payload.eventType === 'DELETE') setBids(prev => prev.filter(b => b.id !== payload.old.id));
             }).subscribe();
 
@@ -725,6 +728,17 @@ export default function App() {
                 text: text.trim(),
             }]);
             if (error) throw error;
+
+            const partnerId = userProfile.role === 'shipper'
+                ? activeChat?.ownerId
+                : activeChat?.shipperInn;
+            if (partnerId && partnerId !== sbUser.id) {
+                sendNotification(
+                    partnerId,
+                    'Новое сообщение — RailMatch',
+                    'У вас новое сообщение на платформе RailMatch.\n\nОткройте платформу, чтобы ответить.'
+                );
+            }
         } catch (err) {
             console.error("Error sending message:", err);
             showToast('Ошибка при отправке сообщения', 'error');
@@ -824,11 +838,13 @@ export default function App() {
 
     const handleProposeCommission = async (bidId, mode) => {
         if (!sbUser || !userProfile) return;
-        const VALID_COMMISSION_MODES = ['split', 'full'];
+        const VALID_COMMISSION_MODES = ['split', 'full', 'i_pay'];
         if (!VALID_COMMISSION_MODES.includes(mode)) return;
         const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
         const modeText = mode === 'split' ? 'разделить комиссию 50/50' : 'оплатить комиссию полностью';
-        const updates = { commission_mode: mode, commission_proposer_id: sbUser.id, commission_agreed: false };
+        const currentBid = bids.find(b => b.id === bidId) || activeChat;
+        const nextRound = (currentBid?.commission_round || 0) + 1;
+        const updates = { commission_mode: mode, commission_proposer_id: sbUser.id, commission_agreed: false, commission_round: nextRound };
         const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
         if (!error) {
             setActiveChat(prev => ({ ...prev, ...updates }));
@@ -856,7 +872,7 @@ export default function App() {
         const roleName = userProfile.role === 'shipper' ? 'Грузоотправитель' : 'Владелец';
         const currentBid = bids.find(b => b.id === bidId) || activeChat;
         const mode = currentBid?.commission_mode;
-        const modeText = mode === 'split' ? 'разделение 50/50' : 'полную оплату';
+        const modeText = mode === 'split' ? 'разделение 50/50' : 'полную оплату одной стороной';
         const updates = { commission_agreed: true };
         const { error } = await supabase.from('bids').update(updates).eq('id', bidId);
         if (!error) {
@@ -931,9 +947,10 @@ export default function App() {
             [myPaidAtField]: now,
         };
 
-        const willReveal = mode === 'full' || otherAlreadyPaid;
+        const isFullPayment = mode === 'full' || mode === 'i_pay';
+        const willReveal = isFullPayment || otherAlreadyPaid;
 
-        if (mode === 'full') {
+        if (isFullPayment) {
             // Paying full commission upfront — mark other side as paid too
             updates[otherPaidField] = true;
             updates[otherPaidAtField] = now;
