@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 01-06-PLAN.md — Phase 1 fully closed
-last_updated: "2026-03-26T12:24:42.733Z"
-last_activity: 2026-03-26 — Plan 06 Task 2 approved. Phase 1 fully closed.
+stopped_at: Completed 02-02-PLAN.md — Phase 2 Plan 2 complete
+last_updated: "2026-03-28T00:15:00Z"
+last_activity: 2026-03-28 — Plan 02-02 complete. NOTIF-02 and NOTIF-03 wired.
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
-  percent: 20
+  total_plans: 8
+  completed_plans: 8
+  percent: 25
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 
 ## Current Position
 
-Phase: 1 of 5 (Стабилизация) — COMPLETE
-Plan: 6 of 6 — DONE
-Status: Phase 1 closed. All 6 plans executed and verified.
-Last activity: 2026-03-26 — Plan 06 Task 2 approved. Phase 1 fully closed.
+Phase: 2 of 5 (Telegram Notifications) — IN PROGRESS
+Plan: 2 of 4 — Plan 02-02 DONE
+Status: Phase 1 complete. Phase 2 Plan 02 complete (NOTIF-02, NOTIF-03 wired).
+Last activity: 2026-03-28 — Plan 02-02 complete. sendNotification wired to chat messages and bid acceptance.
 
-Progress: [██░░░░░░░░] 20% (1 of 5 phases complete)
+Progress: [███░░░░░░░] 25% (1 of 5 phases complete + 2 plans of phase 2)
 
 ## Accumulated Context
 
@@ -49,6 +49,8 @@ Progress: [██░░░░░░░░] 20% (1 of 5 phases complete)
 - [Phase 01-stabilizaciya]: Plan 05: BidModal.jsx already had correct validation (1 wagon->45k, 2+->10k). No 100,000 flat rule found anywhere. Pipeline test was stale.
 - [Phase 01-stabilizaciya]: Plan 06: All shipper chat fixes were pre-implemented in ae08f8d (UUID shipperInn fix). myBidIds and messenger filter both use OR condition covering owner and shipper roles.
 - [Phase 01-stabilizaciya]: Plan 05 Task 2: Browser verification approved via orchestrator code review — BidModal validation confirmed correct
+- [Phase 02-telegram-notifications]: Plan 02-02: handleAcceptBid is distinct from handleConfirmDeal — bid status flow: pending -> accepted (handleAcceptBid) -> commission_pending (handleConfirmDeal)
+- [Phase 02-telegram-notifications]: Plan 02-02: partnerId derived from userProfile.role + activeChat state, consistent with existing pattern used 4+ places in codebase
 
 ### Известные проблемы
 
@@ -66,7 +68,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 phases complete)
 
 ## Session Continuity
 
-Last session: 2026-03-26T11:00:00Z
-Stopped at: Completed 01-06-PLAN.md — Phase 1 fully closed
+Last session: 2026-03-28T00:15:00Z
+Stopped at: Completed 02-02-PLAN.md — NOTIF-02 and NOTIF-03 wired
 Resume file: None
-Next action: Begin Phase 2 (Монетизация) — commission payment flow, split payments, escrow logic.
+Next action: Continue Phase 2 — Plan 02-03 (commission payment flow, split payments, escrow logic).
