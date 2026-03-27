@@ -745,6 +745,37 @@ export default function App() {
         }
     };
 
+    const handleAcceptBid = async (bidId) => {
+        if (!sbUser || userProfile?.role !== 'shipper') return;
+
+        const bid = bids.find(b => b.id === bidId);
+        if (!bid) return;
+
+        const { data: updatedBid, error } = await supabase
+            .from('bids')
+            .update({ status: 'accepted' })
+            .eq('id', bidId)
+            .select()
+            .single();
+
+        if (error) {
+            showToast('Ошибка при принятии ставки', 'error');
+            return;
+        }
+
+        setBids(prev => prev.map(b => b.id === bidId ? { ...b, status: 'accepted' } : b));
+
+        sendNotification(
+            bid.ownerId,
+            'Ваша ставка принята — RailMatch',
+            `Компания «${userProfile.company}» приняла вашу ставку.\n\nОткройте платформу, чтобы перейти в чат.`
+        );
+
+        const req = requests.find(r => r.id === bid.requestId);
+        setActiveChat(buildChatObject(updatedBid, req, profiles));
+        setView('chat');
+    };
+
     const handleCancelRequest = async (reqId) => {
         if (!sbUser || !userProfile) return;
         const req = requests.find(r => r.id === reqId);
@@ -1542,6 +1573,7 @@ export default function App() {
                         }}
                         onAiCreate={handleAiCreate}
                         onCancelRequest={handleCancelRequest}
+                        onAcceptBid={(bidId) => handleAcceptBid(bidId)}
                     />
                 )}
 

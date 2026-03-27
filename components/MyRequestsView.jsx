@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, Plus, Check, CheckCircle, Sparkles, TrendingUp, Package, Clock, ShieldCheck, MapPin, Truck, AlertCircle, Activity, Award, MessageSquare, Briefcase, BarChart2, XCircle } from 'lucide-react';
 import { parsePrompt } from '../src/aiService';
 
-export default function MyRequestsView({ requests, bids, userInn, userRole, userId, profiles, setView, onAccept, onChat, onAiCreate, onCancelRequest }) {
+export default function MyRequestsView({ requests, bids, userInn, userRole, userId, profiles, setView, onAccept, onChat, onAiCreate, onCancelRequest, onAcceptBid }) {
     const myReqs = requests.filter(r => r.shipperInn === userInn);
     const myBids = bids.filter(b => b.ownerId === userId);
     const [aiPrompt, setAiPrompt] = useState("");
@@ -287,9 +287,22 @@ export default function MyRequestsView({ requests, bids, userInn, userRole, user
                                                                     </div>
                                                                 </div>
                                                                 <div className="text-2xl font-black text-slate-900 dark:text-white mb-6 bg-slate-50 dark:bg-[#0B1120] p-3 rounded-xl border border-slate-100 dark:border-slate-800">{bid.price.toLocaleString()} <span className="text-sm text-slate-400 font-bold">₽/шт</span></div>
-                                                                <button onClick={() => onChat && onChat(bid)} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2">
-                                                                    <MessageSquare className="w-4 h-4" /> Начать обсуждение
-                                                                </button>
+                                                                {bid.status === 'pending' && onAcceptBid && (
+                                                                    <button
+                                                                        onClick={() => onAcceptBid(bid.id)}
+                                                                        className="mt-4 w-full px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
+                                                                    >
+                                                                        Принять ставку
+                                                                    </button>
+                                                                )}
+                                                                {bid.status === 'accepted' && (
+                                                                    <button
+                                                                        onClick={() => onChat && onChat(bid)}
+                                                                        className="mt-4 w-full px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
+                                                                    >
+                                                                        <MessageSquare className="w-4 h-4" /> Открыть чат
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         );
                                                     });
