@@ -34,6 +34,9 @@ Progress: [████░░░░░░] 40% (2 of 5 phases complete)
 
 ## Accumulated Context
 
+### Roadmap Evolution
+- Phase 7 added: Рейтинг пользователей — система оценок по звёздам (1–5) после завершения сделки
+
 ### Decisions
 
 - **2026-03-21**: Регистрация через Edge Function `send-confirmation-email` вместо `supabase.auth.signUp` — устранение бага с ролью
