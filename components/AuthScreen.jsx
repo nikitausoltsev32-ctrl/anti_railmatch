@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { supabase } from '../src/supabaseClient';
 
@@ -73,12 +73,111 @@ function ForgotPasswordView({ onBack, isDark }) {
     );
 }
 
-export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading }) {
+export function TelegramOnboarding({ onSubmit, isDark }) {
+    const [role, setRole] = useState('owner');
+    const [formData, setFormData] = useState({ name: '', company: '', phone: '' });
+    const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (errors[e.target.name]) setErrors(prev => ({ ...prev, [e.target.name]: null }));
+    };
+
+    const validate = () => {
+        const errs = {};
+        if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
+        else if (!validatePersonName(formData.name.trim())) errs.name = 'Укажите имя человека, а не название компании';
+        if (!formData.company.trim()) errs.company = 'Укажите название компании';
+        if (!validatePhone(formData.phone)) errs.phone = 'Укажите корректный номер телефона';
+        setErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!validate()) return;
+        setLoading(true);
+        try {
+            await onSubmit({ role, ...formData });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen animate-in fade-in duration-500 bg-slate-50 dark:bg-[#0B1120] flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl border border-white dark:border-slate-800">
+                <h2 className="text-3xl font-black mb-2 dark:text-white">Расскажите о себе</h2>
+                <p className="text-slate-400 mb-8 font-medium text-sm">Заполните профиль для начала работы</p>
+
+                <div className="mb-6">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-widest">Кто вы на платформе?</p>
+                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-inner border border-slate-200/70 dark:border-slate-700/70">
+                        <button type="button" onClick={() => setRole('owner')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Владелец вагонов</button>
+                        <button type="button" onClick={() => setRole('shipper')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Грузоотправитель</button>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ваше имя" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.name ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} />
+                        {errors.name && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.name}</p>}
+                    </div>
+                    <div>
+                        <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.company ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} />
+                        {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
+                    </div>
+                    <div>
+                        <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.phone ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} />
+                        {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-600/25 mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale-[0.5]"
+                    >
+                        {loading ? 'Сохранение...' : 'Продолжить'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onBack, isDark, loading, onTelegramAuth }) {
     const [formData, setFormData] = useState({
         email: '', password: '', name: '', company: '', phone: ''
     });
     const [errors, setErrors] = useState({});
     const [showForgot, setShowForgot] = useState(false);
+
+    const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME;
+    const isDev = import.meta.env.DEV;
+
+    useEffect(() => {
+        if (isDev || !botUsername || !onTelegramAuth) return;
+        const container = document.getElementById('tg-widget-container');
+        if (!container || container.querySelector('script')) return;
+
+        window.onTelegramAuthCallback = (user) => {
+            if (onTelegramAuth) onTelegramAuth(user);
+        };
+
+        const script = document.createElement('script');
+        script.src = 'https://telegram.org/js/telegram-widget.js?22';
+        script.setAttribute('data-telegram-login', botUsername);
+        script.setAttribute('data-size', 'large');
+        script.setAttribute('data-radius', '12');
+        script.setAttribute('data-onauth', 'onTelegramAuthCallback(user)');
+        script.setAttribute('data-request-access', 'write');
+        script.async = true;
+        container.appendChild(script);
+
+        return () => {
+            delete window.onTelegramAuthCallback;
+        };
+    }, [onTelegramAuth, botUsername, isDev]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -106,7 +205,26 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                     <>
                         <button onClick={onBack} className="text-slate-400 font-bold text-sm mb-8 flex items-center gap-2 hover:text-blue-600 transition-colors"><ArrowRight className="w-4 h-4 rotate-180" /> Назад</button>
                         <h2 className="text-3xl font-black mb-2 dark:text-white">{mode === 'login' ? 'Вход' : 'Регистрация'}</h2>
-                        <p className="text-slate-400 mb-8 font-medium text-sm">Введите данные вашей компании</p>
+                        <p className="text-slate-400 mb-6 font-medium text-sm">Введите данные вашей компании</p>
+
+                        {onTelegramAuth && (
+                            <>
+                                {isDev ? (
+                                    <div className="flex justify-center my-4">
+                                        <div className="px-5 py-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs text-slate-400 font-semibold text-center">
+                                            Telegram Login Widget доступен только в production
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div id="tg-widget-container" className="flex justify-center my-4"></div>
+                                )}
+                                <div className="flex items-center gap-3 my-4">
+                                    <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                                    <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">или</span>
+                                    <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                                </div>
+                            </>
+                        )}
 
                         {mode === 'register' && (
                             <div className="mb-6">
