@@ -3,12 +3,13 @@ import {
     ArrowLeft, ShieldCheck, MoreVertical, MessageSquare, Send, CheckCircle2,
     FileText, Wallet, Phone, Download, Loader2, Clock, Lock, Unlock,
     Info, PenTool, CreditCard, X, ChevronRight, ThumbsUp, SplitSquareHorizontal,
-    Shield, AlertTriangle, Ban
+    Shield, AlertTriangle, Ban, Star
 } from 'lucide-react';
 import { downloadDocument } from './DocumentGenerator';
 import DocumentSigningModal from './DocumentSigningModal';
 import { PLATFORM_COMMISSION_RATE, MAX_COMMISSION_ROUNDS } from '../src/constants.js';
 import { validateMessageIntent } from '../src/security.js';
+import { supabase } from '../src/supabaseClient.js';
 
 export default function ChatWindow({
     chat, messages, currentUserId, userRole, userProfile,
@@ -26,6 +27,12 @@ export default function ChatWindow({
     const [docSigningType, setDocSigningType] = useState(null);
     const [timeLeft, setTimeLeft] = useState(null);
     const [inputWarning, setInputWarning] = useState(false); // pre-send validation hint
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const [selectedStars, setSelectedStars] = useState(0);
+    const [selectedTags, setSelectedTags] = useState([]);
+    const [reviewComment, setReviewComment] = useState('');
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewSubmitted, setReviewSubmitted] = useState(false);
     const scrollRef = useRef(null);
     const inputWarningTimer = useRef(null);
 
@@ -129,6 +136,17 @@ export default function ChatWindow({
     // Stage index: 0=переговоры, 1=комиссия, 2=контакты открыты
     const stageIndex = contactsRevealed ? 2 : isCommissionPending ? 1 : 0;
 
+    const POSITIVE_TAGS = ['Надёжный', 'Оперативный', 'Честный', 'Рекомендую'];
+    const NEGATIVE_TAGS = ['Медлительный', 'Не отвечал', 'Проблемы с оплатой', 'Не рекомендую'];
+    const getTagsForRating = (stars) => {
+        if (stars >= 4) return POSITIVE_TAGS;
+        if (stars <= 2) return NEGATIVE_TAGS;
+        return [...POSITIVE_TAGS, ...NEGATIVE_TAGS];
+    };
+
+    const hasCompleted = isShipper ? chat.completed_by_shipper : chat.completed_by_owner;
+    const partnerId = isMyBid ? chat.shipperInn : chat.ownerId;
+
     // Commission proposal state
     const commissionRound = chat.commission_round || 0;
     const roundsExhausted = commissionRound >= MAX_COMMISSION_ROUNDS;
@@ -153,6 +171,37 @@ export default function ChatWindow({
     // Who should pay in i_pay mode — only the proposer
     const iAmPayer = isFullMode && chat.commission_proposer_id === currentUserId;
     const partnerIsPayer = isFullMode && chat.commission_proposer_id && chat.commission_proposer_id !== currentUserId;
+
+    const handleConfirmDealCompletion = async () => {
+        const completionField = isShipper ? 'completed_by_shipper' : 'completed_by_owner';
+        const { error } = await supabase.from('bids')
+            .update({ [completionField]: true })
+            .eq('id', chat.id);
+        if (!error) {
+            setSelectedStars(0);
+            setSelectedTags([]);
+            setReviewComment('');
+            setShowRatingModal(true);
+        }
+    };
+
+    const handleSubmitReview = async () => {
+        if (selectedStars === 0 || isSubmittingReview) return;
+        setIsSubmittingReview(true);
+        const { error } = await supabase.from('reviews').insert([{
+            from_user_id: currentUserId,
+            to_user_id: partnerId,
+            bid_id: chat.id,
+            rating: selectedStars,
+            tags: selectedTags,
+            comment: reviewComment.trim() || null,
+        }]);
+        setIsSubmittingReview(false);
+        if (!error || error.code === '23505') {
+            setShowRatingModal(false);
+            setReviewSubmitted(true);
+        }
+    };
 
     // Amount to show in Tinkoff stub
     const tinkoffAmount = (() => {
@@ -786,6 +835,21 @@ export default function ChatWindow({
                         </div>
                     )}
 
+                    {contactsRevealed && (
+                        <div className="px-0 pb-3">
+                            {reviewSubmitted || hasCompleted ? (
+                                <div className="text-center text-[11px] text-slate-400 py-2">Вы оценили партнёра</div>
+                            ) : (
+                                <button
+                                    onClick={handleConfirmDealCompletion}
+                                    className="w-full py-2 rounded-xl text-[12px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                                >
+                                    Подтвердить завершение сделки
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {/* Pre-send warning */}
                     {inputWarning && (
                         <div className="mb-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 rounded-xl flex items-center gap-2">
@@ -845,6 +909,65 @@ export default function ChatWindow({
                     />
                 )}
             </div>
+
+            {/* ===== RATING MODAL ===== */}
+            {showRatingModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+                        <div className="flex justify-between items-center mb-5">
+                            <h2 className="text-base font-black dark:text-white">Оцените партнёра</h2>
+                            <button onClick={() => setShowRatingModal(false)} className="text-slate-400 hover:text-slate-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="flex justify-center gap-2 mb-5">
+                            {[1,2,3,4,5].map(n => (
+                                <button key={n} onClick={() => { setSelectedStars(n); setSelectedTags([]); }}>
+                                    <Star className={`w-9 h-9 transition-colors ${n <= selectedStars ? 'text-amber-400 fill-current' : 'text-slate-200 dark:text-slate-700'}`} />
+                                </button>
+                            ))}
+                        </div>
+
+                        {selectedStars > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                {getTagsForRating(selectedStars).map(tag => (
+                                    <button
+                                        key={tag}
+                                        onClick={() => setSelectedTags(prev =>
+                                            prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+                                        )}
+                                        className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
+                                            selectedTags.includes(tag)
+                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-blue-400 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                                        }`}
+                                    >
+                                        {tag}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <textarea
+                            value={reviewComment}
+                            onChange={e => setReviewComment(e.target.value)}
+                            placeholder="Комментарий (необязательно)"
+                            maxLength={300}
+                            rows={3}
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[13px] text-slate-700 dark:text-slate-200 px-3 py-2 mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+
+                        <button
+                            onClick={handleSubmitReview}
+                            disabled={selectedStars === 0 || isSubmittingReview}
+                            className="w-full py-3 rounded-2xl text-[13px] font-black bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {isSubmittingReview ? 'Отправка...' : 'Отправить оценку'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
