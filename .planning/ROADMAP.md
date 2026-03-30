@@ -89,7 +89,7 @@ Plans:
 **Goal**: После завершения сделки обе стороны могут оставить оценку (1–5 звёзд) партнёру. Рейтинг отображается в профиле и на бирже заявок.
 **Requirements**: RATING-01, RATING-02, RATING-03, RATING-04, RATING-05, RATING-06
 **Depends on:** Phase 1
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 07-01-PLAN.md — Migration 26: reviews table, bids completion columns, profiles aggregates, trigger + RLS

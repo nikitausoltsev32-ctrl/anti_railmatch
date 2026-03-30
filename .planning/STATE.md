@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 07-01 — ratings data layer migration created (reviews table, bids completion columns, profiles aggregates, trigger, RLS)
-last_updated: "2026-03-30T13:30:44Z"
+status: Migration 26 written. Plans 07-02 and 07-03 pending.
+stopped_at: Completed 07-02 — rating UI (completion button, rating modal, reviews modal) in ChatWindow — awaiting human-verify checkpoint
+last_updated: "2026-03-30T18:52:34.530Z"
 last_activity: 2026-03-30 — Plan 07-01 complete. Migration 26 ratings schema created; npm run build passes.
 progress:
-  total_phases: 7
+  total_phases: 6
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 43
 ---
 
@@ -59,6 +59,8 @@ Progress: [████░░░░░░] 43% (2 of 7 phases complete; Phase 7 
 - [Phase 02-telegram-notifications]: Plan 02-03: All 4 NOTIF requirements auto-approved via --auto flag; prior smoke test (02-01, commit 458e97e) confirmed live Telegram delivery
 - [Phase 07-ratings]: Plan 07-01: Boolean columns completed_by_shipper/completed_by_owner used instead of adding 'completed' to bids.status — avoids extending CHECK constraint from migration 12
 - [Phase 07-ratings]: Plan 07-01: SECURITY DEFINER trigger on_review_inserted recalculates average_rating + review_count on profiles on every INSERT into reviews
+- [Phase Phase 07-ratings]: Reviews button in header shows partnerAverageRating prop (from app.jsx in Plan 03) or 'Отзывы' text if null
+- [Phase Phase 07-ratings]: Reviews loaded on demand when modal opens, cached in partnerReviews state
 
 ### Известные проблемы
 
@@ -76,7 +78,7 @@ Progress: [████░░░░░░] 43% (2 of 7 phases complete; Phase 7 
 
 ## Session Continuity
 
-Last session: 2026-03-30T13:30:44Z
-Stopped at: Completed 07-01 — ratings data layer migration created
+Last session: 2026-03-30T18:52:27.989Z
+Stopped at: Completed 07-02 — rating UI (completion button, rating modal, reviews modal) in ChatWindow — awaiting human-verify checkpoint
 Resume file: None
 Next action: Execute Plan 07-02 — ratings UI (completion buttons + star rating modal).
