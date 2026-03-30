@@ -345,7 +345,7 @@ export default function App() {
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
                 supabase.from('bids').select('*').order('created_at', { ascending: false }),
                 supabase.from('messages').select('*').order('created_at', { ascending: true }),
-                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
+                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone, average_rating, review_count'),
             ]);
             if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
@@ -425,7 +425,7 @@ export default function App() {
         const fetchDemoData = async () => {
             const [{ data: demoRequests }, { data: demoProfiles }] = await Promise.all([
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
-                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
+                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone, average_rating, review_count'),
             ]);
             if (demoRequests) setRequests(demoRequests);
             if (demoProfiles) setProfiles(demoProfiles);
@@ -1464,6 +1464,9 @@ export default function App() {
                                                     })}
                                                     rank={idx}
                                                     creatorRole={creatorProfile?.role}
+                                                    creatorName={creatorProfile?.name}
+                                                    creatorAverageRating={creatorProfile?.average_rating ?? null}
+                                                    creatorReviewCount={creatorProfile?.review_count ?? 0}
                                                 />
                                             </div>
                                         );
@@ -1545,6 +1548,8 @@ export default function App() {
                                     onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
                                     onDocSign={handleDocumentSign}
                                     onBack={() => setActiveChat(null)}
+                                    partnerAverageRating={(() => { const pid = userProfile?.role === 'owner' ? activeChat?.shipperInn : activeChat?.ownerId; return profiles.find(p => p.id === pid)?.average_rating ?? null; })()}
+                                    partnerReviewCount={(() => { const pid = userProfile?.role === 'owner' ? activeChat?.shipperInn : activeChat?.ownerId; return profiles.find(p => p.id === pid)?.review_count ?? 0; })()}
                                 />
                             ) : (
                                 <div className="h-full bg-white dark:bg-[#111827] rounded-[3.5rem] border-2 border-dashed dark:border-slate-800 flex flex-col items-center justify-center text-center p-10">
@@ -1628,6 +1633,8 @@ export default function App() {
                             onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
                             onDocSign={handleDocumentSign}
                             onBack={() => setView('messenger')}
+                            partnerAverageRating={(() => { const pid = userProfile?.role === 'owner' ? activeChat?.shipperInn : activeChat?.ownerId; return profiles.find(p => p.id === pid)?.average_rating ?? null; })()}
+                            partnerReviewCount={(() => { const pid = userProfile?.role === 'owner' ? activeChat?.shipperInn : activeChat?.ownerId; return profiles.find(p => p.id === pid)?.review_count ?? 0; })()}
                         />
                     </div>
                 )}
