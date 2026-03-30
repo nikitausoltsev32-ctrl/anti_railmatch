@@ -1,7 +1,7 @@
 import React from 'react';
-import { Package, TrainFront, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Package, TrainFront, ArrowRight, ShieldCheck, Sparkles, Star } from 'lucide-react';
 
-function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorName }) {
+function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorName, creatorAverageRating = null, creatorReviewCount = 0 }) {
     const isOwnerCreated = creatorRole === 'owner';
     const isCompleted = req.status === 'completed';
     const isLimitReached = bidCount >= 15;
@@ -43,6 +43,12 @@ function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorName 
                 <div className="flex items-center gap-2">
                     <span className="text-[11px] font-bold text-slate-500">{creatorName ? `${creatorName} · ` : ''}{isOwnerCreated ? 'Владелец вагонов' : 'Грузоотправитель'}</span>
                     {req.profiles?.is_verified && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" title="Проверен" />}
+                    {creatorReviewCount > 0 && creatorAverageRating != null && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-500">
+                            <Star className="w-3 h-3 fill-current" />
+                            {Number(creatorAverageRating).toFixed(1)}
+                        </span>
+                    )}
                 </div>
             </div>
 
