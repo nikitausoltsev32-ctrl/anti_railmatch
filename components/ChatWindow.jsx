@@ -14,7 +14,8 @@ import { supabase } from '../src/supabaseClient.js';
 export default function ChatWindow({
     chat, messages, currentUserId, userRole, userProfile,
     violationInfo, onDismissViolation,
-    onSend, onAccept, onPayCommission, onProposeCommission, onApproveCommission, onDocSign, onBack
+    onSend, onAccept, onPayCommission, onProposeCommission, onApproveCommission, onDocSign, onBack,
+    partnerAverageRating = null, partnerReviewCount = 0
 }) {
     const [showCommissionModal, setShowCommissionModal] = useState(false);
     const [showTinkoffModal, setShowTinkoffModal] = useState(false);
@@ -33,6 +34,9 @@ export default function ChatWindow({
     const [reviewComment, setReviewComment] = useState('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [reviewSubmitted, setReviewSubmitted] = useState(false);
+    const [showReviewsModal, setShowReviewsModal] = useState(false);
+    const [partnerReviews, setPartnerReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
     const scrollRef = useRef(null);
     const inputWarningTimer = useRef(null);
 
@@ -203,6 +207,19 @@ export default function ChatWindow({
         }
     };
 
+    const handleOpenReviewsModal = async () => {
+        setShowReviewsModal(true);
+        if (partnerReviews.length > 0) return;
+        setReviewsLoading(true);
+        const { data } = await supabase
+            .from('reviews')
+            .select('id, rating, tags, comment, created_at, from_user_id')
+            .eq('to_user_id', partnerId)
+            .order('created_at', { ascending: false });
+        setPartnerReviews(data || []);
+        setReviewsLoading(false);
+    };
+
     // Amount to show in Tinkoff stub
     const tinkoffAmount = (() => {
         if (isFullMode) return commissionTotal;
@@ -257,6 +274,15 @@ export default function ChatWindow({
                         </div>
 
                         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                            {contactsRevealed && (
+                                <button
+                                    onClick={handleOpenReviewsModal}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                                >
+                                    <Star className="w-3.5 h-3.5 fill-current" />
+                                    {partnerAverageRating != null ? partnerAverageRating.toFixed(1) : 'Отзывы'}
+                                </button>
+                            )}
                             <button
                                 onClick={() => setShowDocsModal(true)}
                                 className="p-2 sm:px-4 sm:py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 transition-all"
@@ -909,6 +935,79 @@ export default function ChatWindow({
                     />
                 )}
             </div>
+
+            {/* ===== REVIEWS MODAL ===== */}
+            {showReviewsModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl max-h-[80vh] flex flex-col">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-base font-black dark:text-white">Отзывы о партнёре</h2>
+                            <button onClick={() => setShowReviewsModal(false)} className="text-slate-400 hover:text-slate-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {reviewsLoading ? (
+                            <div className="text-center text-slate-400 py-8 text-[13px]">Загрузка...</div>
+                        ) : partnerReviews.length === 0 ? (
+                            <div className="text-center text-slate-400 py-8 text-[13px]">Отзывов пока нет</div>
+                        ) : (() => {
+                            const avg = partnerReviews.reduce((s, r) => s + r.rating, 0) / partnerReviews.length;
+                            const positive = partnerReviews.filter(r => r.rating >= 4).length;
+                            const negative = partnerReviews.filter(r => r.rating <= 2).length;
+                            return (
+                                <>
+                                    <div className="flex items-center gap-4 mb-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-black text-amber-500">{avg.toFixed(1)}</div>
+                                            <div className="flex gap-0.5 justify-center mt-0.5">
+                                                {[1,2,3,4,5].map(n => (
+                                                    <Star key={n} className={`w-3 h-3 ${n <= Math.round(avg) ? 'text-amber-400 fill-current' : 'text-slate-200'}`} />
+                                                ))}
+                                            </div>
+                                            <div className="text-[10px] text-slate-400 mt-0.5">{partnerReviews.length} отзывов</div>
+                                        </div>
+                                        <div className="flex flex-col gap-1 text-[11px]">
+                                            <span className="text-emerald-600 font-bold">+ {positive} положительных</span>
+                                            <span className="text-red-500 font-bold">- {negative} отрицательных</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="overflow-y-auto flex-1 flex flex-col gap-3">
+                                        {partnerReviews.map(review => {
+                                            const isOwn = review.from_user_id === currentUserId;
+                                            return (
+                                                <div key={review.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl">
+                                                    <div className="flex justify-between items-start mb-1.5">
+                                                        <div className="flex gap-0.5">
+                                                            {[1,2,3,4,5].map(n => (
+                                                                <Star key={n} className={`w-3.5 h-3.5 ${n <= review.rating ? 'text-amber-400 fill-current' : 'text-slate-200'}`} />
+                                                            ))}
+                                                        </div>
+                                                        <span className="text-[10px] text-slate-400">
+                                                            {isOwn ? 'Ваш отзыв · ' : ''}{new Date(review.created_at).toLocaleDateString('ru-RU')}
+                                                        </span>
+                                                    </div>
+                                                    {review.tags?.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mb-1.5">
+                                                            {review.tags.map(tag => (
+                                                                <span key={tag} className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300">{tag}</span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    {review.comment && (
+                                                        <p className="text-[12px] text-slate-600 dark:text-slate-300">{review.comment}</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
+                </div>
+            )}
 
             {/* ===== RATING MODAL ===== */}
             {showRatingModal && (
