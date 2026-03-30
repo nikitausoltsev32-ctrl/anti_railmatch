@@ -92,6 +92,6 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Migration 26: reviews table, bids completion columns, profiles aggregates, trigger + RLS
+- [x] 07-01-PLAN.md — Migration 26: reviews table, bids completion columns, profiles aggregates, trigger + RLS
 - [ ] 07-02-PLAN.md — ChatWindow: completion button, rating modal (stars + tags + text), reviews viewer modal
 - [ ] 07-03-PLAN.md — app.jsx + RequestCard: wire average_rating to listing badge and chat header

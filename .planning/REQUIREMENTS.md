@@ -76,4 +76,4 @@
 | VERIF-01..03 | Phase 4 | Pending |
 | ANAL-01..03 | Phase 5 | Pending |
 | PAY-01..02 | Phase 6 | Pending |
-| RATING-01..06 | Phase 7 | Pending |
+| RATING-01..06 | Phase 7 | In Progress — 07-01 (schema) done; 07-02 and 07-03 pending |
