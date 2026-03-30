@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Plans 07-01 and 07-02 complete. Plan 07-03 pending.
-stopped_at: Completed 07-02 — rating UI checkpoint approved by user; Plan 07-03 (app.jsx wiring) is next
-last_updated: "2026-03-30T19:10:00.000Z"
-last_activity: 2026-03-30 — Plan 07-02 complete. Rating UI (completion button, modals) approved in human smoke test.
+status: completed
+stopped_at: Completed 07-03 tasks 1-2; checkpoint pending human verification
+last_updated: "2026-03-30T19:09:10.111Z"
+last_activity: 2026-03-30 — Plan 07-02 complete. Rating UI approved in human smoke test.
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
   completed_plans: 12
   percent: 46
@@ -61,6 +61,8 @@ Progress: [█████░░░░░] 46% (2 of 7 phases complete; Phase 7 
 - [Phase 07-ratings]: Plan 07-01: SECURITY DEFINER trigger on_review_inserted recalculates average_rating + review_count on profiles on every INSERT into reviews
 - [Phase Phase 07-ratings]: Reviews button in header shows partnerAverageRating prop (from app.jsx in Plan 03) or 'Отзывы' text if null
 - [Phase Phase 07-ratings]: Reviews loaded on demand when modal opens, cached in partnerReviews state
+- [Phase 07-ratings]: Two ChatWindow render sites exist (messenger panel + view='chat'); both updated with partner rating props
+- [Phase 07-ratings]: Demo profiles fetch also updated to include average_rating/review_count (ensures demo mode sees ratings)
 
 ### Известные проблемы
 
@@ -78,7 +80,7 @@ Progress: [█████░░░░░] 46% (2 of 7 phases complete; Phase 7 
 
 ## Session Continuity
 
-Last session: 2026-03-30T19:10:00.000Z
-Stopped at: Completed 07-02 — rating UI checkpoint approved; ready for Plan 07-03
+Last session: 2026-03-30T19:09:04.714Z
+Stopped at: Completed 07-03 tasks 1-2; checkpoint pending human verification
 Resume file: None
 Next action: Execute Plan 07-03 — wire partnerAverageRating to app.jsx and RequestCard badge.
