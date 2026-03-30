@@ -23,9 +23,9 @@ decisions:
   - Widget disabled in dev (import.meta.env.DEV check) — Telegram widget requires production domain
   - needsTelegramOnboarding state in app.jsx gates TelegramOnboarding screen rendering
 metrics:
-  duration: ~15min
-  completed_date: "2026-03-30"
-  tasks_completed: 2
+  duration: ~20min
+  completed_date: "2026-03-31"
+  tasks_completed: 3
   tasks_total: 3
   files_created: 1
   files_modified: 3
@@ -87,6 +87,16 @@ Before the checkpoint verification:
 
 None — plan executed exactly as written.
 
+## Checkpoint Verification
+
+**Task 3 (checkpoint:human-verify) — APPROVED 2026-03-31**
+
+Human confirmed:
+- Edge Function `telegram-auth` deployed to Supabase
+- `TELEGRAM_BOT_TOKEN` secret set in Supabase
+- Production domain registered in BotFather
+- Full Telegram login flow verified in production
+
 ## Status
 
-**Paused at checkpoint:human-verify** — awaiting deploy + production smoke test.
+**COMPLETE** — All 3 tasks done, production verified.
