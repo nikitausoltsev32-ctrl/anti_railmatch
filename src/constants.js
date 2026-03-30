@@ -23,3 +23,6 @@ export const VIOLATION_BAN = 4;
 export const CHAT_BLOCK_HOURS = 24;
 /** Дней без нарушений для сброса баллов */
 export const VIOLATION_RESET_DAYS = 30;
+
+/** Максимальное количество раундов переговоров по комиссии */
+export const MAX_COMMISSION_ROUNDS = 4;

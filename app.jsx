@@ -1021,6 +1021,13 @@ export default function App() {
                     notifText
                 );
             }
+            if (willReveal && sbUser?.id) {
+                sendNotification(
+                    sbUser.id,
+                    'Контакты открыты — сделка завершена! RailMatch',
+                    `Контакты партнёра теперь открыты.\n\nОткройте платформу, чтобы увидеть контакты и подписать документы.`
+                );
+            }
         }
     };
 
