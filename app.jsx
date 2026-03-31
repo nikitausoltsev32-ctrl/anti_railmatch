@@ -31,7 +31,7 @@ import {
     VIOLATION_WARNING, VIOLATION_CHAT_BLOCK, VIOLATION_UNVERIFY, VIOLATION_BAN,
     CHAT_BLOCK_HOURS, VIOLATION_RESET_DAYS
 } from './src/constants.js';
-import { validateMessageIntent } from './src/security.js';
+import { validateMessageIntent, validateMessageSequence } from './src/security.js';
 
 // --- ЭКРАН СБРОСА ПАРОЛЯ ---
 function ResetPasswordScreen({ isDark, onDone }) {
@@ -688,7 +688,11 @@ export default function App() {
             }
         }
 
-        const validation = validateMessageIntent(text);
+        const recentSenderTexts = messages
+            .filter(m => m.chat_id === chatId && m.sender_id === sbUser.id && m.text)
+            .slice(-2)
+            .map(m => m.text);
+        const validation = validateMessageSequence(recentSenderTexts, text);
 
         try {
             if (validation.isViolation) {

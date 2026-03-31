@@ -7,7 +7,7 @@ export default function BidModal({ request, onClose, onConfirm }) {
     const [wagons, setWagons] = useState(maxWagons);
     const [tons, setTons] = useState("");
 
-    const MIN_PRICE = Number(wagons) === 1 ? 45_000 : 10_000;
+    const MIN_PRICE = 45_000;
     const MAX_PRICE = 10_000_000;
     const isValid = Number(price) >= MIN_PRICE && Number(price) <= MAX_PRICE && Number(wagons) > 0 && Number(wagons) <= maxWagons;
     const totalSum = Number(price) * Number(wagons) || 0;

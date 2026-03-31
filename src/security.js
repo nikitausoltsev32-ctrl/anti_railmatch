@@ -131,13 +131,16 @@ function detectMessenger(text) {
     // Ключевые слова мессенджеров (английские)
     if (/\b(telegram|whats\s*app|viber|signal)\b/i.test(lower)) return true;
 
+    // Standalone мессенджер-аббревиатуры без username — тг, ТГ, tg, Max, Вотсапп и т.д.
+    if (/\b(тг|т\.г\.?|тлг|телега|tg|вотсапп|ватсапп|max)\b/i.test(lower)) return true;
+
     // Аббревиатуры "тг" / "tg" + username (с @ или без)
     // Ловит: "тг onemonba", "tg username", "тг: onemonba", "тг- username"
     if (/\b(тг|т\.г\.?|телега|тлг)\s*[:\-]?\s*@?[a-zA-Z][a-zA-Z0-9_.]{1,}/i.test(lower)) return true;
     if (/\btg\s*[:\-]?\s*@?[a-zA-Z][a-zA-Z0-9_.]{1,}/i.test(lower)) return true;
 
     // Любой мессенджер-keyword + username без @ (напр. "телеграм onemonba")
-    if (/\b(telegram|телеграм|whatsapp|вотсап|ватсап|viber|вайбер|signal|тг|tg|телега)\s*[:\-–]?\s*[a-zA-Z][a-zA-Z0-9_.]{2,}/i.test(lower)) return true;
+    if (/\b(telegram|телеграм|whatsapp|вотсап|ватсап|вотсапп|ватсапп|viber|вайбер|signal|тг|tg|телега|max)\s*[:\-–]?\s*[a-zA-Z][a-zA-Z0-9_.]{2,}/i.test(lower)) return true;
 
     // Username-подобный паттерн после любого слова-триггера (латинские слова 4+ симв. после пробела)
     // Ловит скрытые передачи типа "пишите мне username123"
@@ -158,11 +161,12 @@ const LATIN_WHITELIST = new Set([
 
 /** Username-подобные строки на латинице (без @ и без мессенджер-префикса) */
 function detectLatinUsername(text) {
-    // Ищем латинские слова 5-32 символа: буква + буквы/цифры/underscore
-    const latinWords = text.match(/\b[a-zA-Z][a-zA-Z0-9_]{4,31}\b/g);
+    // Ищем латинские слова 4-32 символа: буква + буквы/цифры/underscore
+    const latinWords = text.match(/\b[a-zA-Z][a-zA-Z0-9_]{3,31}\b/g);
     if (!latinWords) return false;
 
     const hasCyrillic = /[а-яёА-ЯЁ]/.test(text);
+    const trimmed = text.trim();
 
     for (const word of latinWords) {
         const lower = word.toLowerCase();
@@ -171,8 +175,11 @@ function detectLatinUsername(text) {
         // Содержит цифры или underscore — явный признак username (user_name, nick123)
         if (/[0-9_]/.test(word)) return true;
 
-        // Длинное латинское слово (8+) в кириллическом контексте — подозрительно
-        if (word.length >= 8 && hasCyrillic) return true;
+        // Латинское слово 6+ символов в кириллическом контексте — подозрительно
+        if (word.length >= 6 && hasCyrillic) return true;
+
+        // Короткое сообщение (≤35 символов) без кириллицы целиком — похоже на переданный username
+        if (!hasCyrillic && word.length >= 6 && trimmed.length <= 35) return true;
     }
     return false;
 }
@@ -296,3 +303,25 @@ function violation(text, type) {
         violationType: type,
     };
 }
+
+/**
+ * Проверяет новое сообщение с учётом последних сообщений того же отправителя.
+ * Ловит попытки разбить контакт на несколько сообщений.
+ * @param {string[]} recentSenderTexts - последние 1-2 сообщения от того же пользователя
+ * @param {string} newText - новое сообщение
+ */
+export const validateMessageSequence = (recentSenderTexts, newText) => {
+    const single = validateMessageIntent(newText);
+    if (single.isViolation) return single;
+
+    // Проверяем комбинацию последних N сообщений + новое
+    for (let n = 1; n <= Math.min(2, recentSenderTexts.length); n++) {
+        const slice = recentSenderTexts.slice(-n);
+        const combined = [...slice, newText].join(' ');
+        if (validateMessageIntent(combined).isViolation) {
+            return violation(newText, 'split_contact');
+        }
+    }
+
+    return single;
+};
