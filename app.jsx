@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import LandingScreen from './components/LandingScreen';
-import AuthScreen from './components/AuthScreen';
+import AuthScreen, { TelegramOnboarding } from './components/AuthScreen';
 import RequestCard from './components/RequestCard';
 import MyRequestsView from './components/MyRequestsView';
 import BidModal from './components/BidModal';
@@ -31,7 +31,7 @@ import {
     VIOLATION_WARNING, VIOLATION_CHAT_BLOCK, VIOLATION_UNVERIFY, VIOLATION_BAN,
     CHAT_BLOCK_HOURS, VIOLATION_RESET_DAYS
 } from './src/constants.js';
-import { validateMessageIntent } from './src/security.js';
+import { validateMessageIntent, validateMessageSequence } from './src/security.js';
 
 // --- ЭКРАН СБРОСА ПАРОЛЯ ---
 function ResetPasswordScreen({ isDark, onDone }) {
@@ -103,6 +103,7 @@ export default function App() {
     const [authMode, setAuthMode] = useState('login');
     const [authLoading, setAuthLoading] = useState(false);
     const [regRole, setRegRole] = useState('owner');
+    const [needsTelegramOnboarding, setNeedsTelegramOnboarding] = useState(false);
 
     // UI стейты
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -345,7 +346,7 @@ export default function App() {
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
                 supabase.from('bids').select('*').order('created_at', { ascending: false }),
                 supabase.from('messages').select('*').order('created_at', { ascending: true }),
-                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
+                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone, average_rating, review_count'),
             ]);
             if (reqError) console.error("Error fetching requests:", reqError);
             if (initialRequests) setRequests(initialRequests);
@@ -425,7 +426,7 @@ export default function App() {
         const fetchDemoData = async () => {
             const [{ data: demoRequests }, { data: demoProfiles }] = await Promise.all([
                 supabase.from('requests').select('*').order('created_at', { ascending: false }),
-                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone'),
+                supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone, average_rating, review_count'),
             ]);
             if (demoRequests) setRequests(demoRequests);
             if (demoProfiles) setProfiles(demoProfiles);
@@ -505,6 +506,41 @@ export default function App() {
         } finally {
             setAuthLoading(false);
         }
+    };
+
+    const handleTelegramAuth = async (tgData) => {
+        if (authLoading) return;
+        setAuthLoading(true);
+        try {
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-auth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tgData),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Telegram auth failed');
+
+            await supabase.auth.setSession({
+                access_token: data.access_token,
+                refresh_token: data.refresh_token,
+            });
+
+            if (data.needs_onboarding) {
+                setNeedsTelegramOnboarding(true);
+            }
+        } catch (err) {
+            showToast(err.message || 'Ошибка входа через Telegram', 'error');
+        } finally {
+            setAuthLoading(false);
+        }
+    };
+
+    const handleTelegramOnboarding = async ({ role, name, company, phone }) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase.from('profiles').update({ role, name, company, phone }).eq('id', user.id);
+        setNeedsTelegramOnboarding(false);
+        setScreen('app');
     };
 
     const handleLogout = async () => {
@@ -652,7 +688,11 @@ export default function App() {
             }
         }
 
-        const validation = validateMessageIntent(text);
+        const recentSenderTexts = messages
+            .filter(m => m.chat_id === chatId && m.sender_id === sbUser.id && m.text)
+            .slice(-2)
+            .map(m => m.text);
+        const validation = validateMessageSequence(recentSenderTexts, text);
 
         try {
             if (validation.isViolation) {
@@ -1295,9 +1335,11 @@ export default function App() {
 
     if (screen === 'landing') return <LandingScreen onStart={() => { setAuthMode('register'); setScreen('auth'); }} onStartShipper={() => { setRegRole('shipper'); setAuthMode('register'); setScreen('auth'); }} onStartOwner={() => { setRegRole('owner'); setAuthMode('register'); setScreen('auth'); }} onDemo={handleEnterDemo} isDark={isDark} setIsDark={setIsDark} onLogin={() => { setAuthMode('login'); setScreen('auth'); }} onShowTerms={() => setShowTerms(true)} />;
 
+    if (needsTelegramOnboarding) return <TelegramOnboarding onSubmit={handleTelegramOnboarding} isDark={isDark} />;
+
     if (screen === 'auth') return (
         <>
-            <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} />
+            <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} onTelegramAuth={handleTelegramAuth} />
             <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[200] flex flex-col gap-3 pointer-events-none max-w-[calc(100vw-2rem)] sm:max-w-sm w-full">
                 {toasts.map(toast => (
                     <div key={toast.id} className={`flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border pointer-events-auto animate-in slide-in-from-right-4 fade-in duration-300 ${
@@ -1464,6 +1506,9 @@ export default function App() {
                                                     })}
                                                     rank={idx}
                                                     creatorRole={creatorProfile?.role}
+                                                    creatorName={creatorProfile?.name}
+                                                    creatorAverageRating={creatorProfile?.average_rating ?? null}
+                                                    creatorReviewCount={creatorProfile?.review_count ?? 0}
                                                 />
                                             </div>
                                         );
@@ -1545,6 +1590,8 @@ export default function App() {
                                     onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
                                     onDocSign={handleDocumentSign}
                                     onBack={() => setActiveChat(null)}
+                                    partnerAverageRating={(() => { const pid = userProfile?.role === 'owner' ? activeChat?.shipperInn : activeChat?.ownerId; return profiles.find(p => p.id === pid)?.average_rating ?? null; })()}
+                                    partnerReviewCount={(() => { const pid = userProfile?.role === 'owner' ? activeChat?.shipperInn : activeChat?.ownerId; return profiles.find(p => p.id === pid)?.review_count ?? 0; })()}
                                 />
                             ) : (
                                 <div className="h-full bg-white dark:bg-[#111827] rounded-[3.5rem] border-2 border-dashed dark:border-slate-800 flex flex-col items-center justify-center text-center p-10">
@@ -1628,6 +1675,8 @@ export default function App() {
                             onDocUpload={(stage) => handleDocUpload(activeChat.id, stage)}
                             onDocSign={handleDocumentSign}
                             onBack={() => setView('messenger')}
+                            partnerAverageRating={(() => { const pid = userProfile?.role === 'owner' ? activeChat?.shipperInn : activeChat?.ownerId; return profiles.find(p => p.id === pid)?.average_rating ?? null; })()}
+                            partnerReviewCount={(() => { const pid = userProfile?.role === 'owner' ? activeChat?.shipperInn : activeChat?.ownerId; return profiles.find(p => p.id === pid)?.review_count ?? 0; })()}
                         />
                     </div>
                 )}

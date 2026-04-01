@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 02-03 — all 4 NOTIF requirements verified, Phase 2 gate cleared
-last_updated: "2026-03-28T00:02:00Z"
-last_activity: 2026-03-28 — Plan 02-03 complete. All 4 NOTIF requirements auto-approved, Phase 2 verification gate cleared.
+status: completed
+stopped_at: Completed 07-03 — Phase 7 ratings system fully complete
+last_updated: "2026-03-31T00:00:00Z"
+last_activity: 2026-03-31 — Quick task 1 (Telegram auth): fully complete. Human-verify approved. Edge Function deployed, BOT_TOKEN set, domain registered in BotFather.
 progress:
-  total_phases: 5
-  completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
-  percent: 40
+  total_phases: 7
+  completed_phases: 4
+  total_plans: 15
+  completed_plans: 15
+  percent: 57
 ---
 
 # Project State
@@ -21,18 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Защищённый чат с антиутечкой, гарантирующий монетизацию через платформу
-**Current focus:** Phase 2 — Монетизация (Phase 1 complete)
+**Current focus:** Phase 7 — Рейтинг пользователей
 
 ## Current Position
 
-Phase: 2 of 5 (Telegram Notifications) — COMPLETE
-Plan: 3 of 3 — Plan 02-03 DONE
-Status: Phase 2 complete. All 4 NOTIF requirements verified end-to-end (NOTIF-01..04).
-Last activity: 2026-03-28 — Plan 02-03 complete. All 4 NOTIF requirements auto-approved, Phase 2 verification gate cleared.
+Phase: 7 of 7 (Ratings) — COMPLETE
+Plan: 3 of 3 — All plans DONE
+Status: Phase 7 fully complete. All 3 plans executed and verified.
+Last activity: 2026-03-30 — Plan 07-03 complete. Rating display wiring approved in human smoke test.
 
-Progress: [████░░░░░░] 40% (2 of 5 phases complete)
+Progress: [██████░░░░] 57% (Phase 7 complete; all 7 phases planned, 4 with code complete)
 
 ## Accumulated Context
+
+### Roadmap Evolution
+- Phase 7 added: Рейтинг пользователей — система оценок по звёздам (1–5) после завершения сделки
 
 ### Decisions
 
@@ -54,6 +57,12 @@ Progress: [████░░░░░░] 40% (2 of 5 phases complete)
 - [Phase 02-telegram-notifications]: Temporary register-webhook Edge Function used to call setWebhook from Supabase runtime (TELEGRAM_BOT_TOKEN not available locally)
 - [Phase 02-telegram-notifications]: Smoke test passed: telegram-notify delivers live messages; account linking via /start TOKEN confirmed working
 - [Phase 02-telegram-notifications]: Plan 02-03: All 4 NOTIF requirements auto-approved via --auto flag; prior smoke test (02-01, commit 458e97e) confirmed live Telegram delivery
+- [Phase 07-ratings]: Plan 07-01: Boolean columns completed_by_shipper/completed_by_owner used instead of adding 'completed' to bids.status — avoids extending CHECK constraint from migration 12
+- [Phase 07-ratings]: Plan 07-01: SECURITY DEFINER trigger on_review_inserted recalculates average_rating + review_count on profiles on every INSERT into reviews
+- [Phase Phase 07-ratings]: Reviews button in header shows partnerAverageRating prop (from app.jsx in Plan 03) or 'Отзывы' text if null
+- [Phase Phase 07-ratings]: Reviews loaded on demand when modal opens, cached in partnerReviews state
+- [Phase 07-ratings]: Two ChatWindow render sites exist (messenger panel + view='chat'); both updated with partner rating props
+- [Phase 07-ratings]: Demo profiles fetch also updated to include average_rating/review_count (ensures demo mode sees ratings)
 
 ### Известные проблемы
 
@@ -71,7 +80,6 @@ Progress: [████░░░░░░] 40% (2 of 5 phases complete)
 
 ## Session Continuity
 
-Last session: 2026-03-28T00:02:00Z
-Stopped at: Completed 02-03 — all 4 NOTIF requirements verified, Phase 2 complete
-Resume file: None
-Next action: Begin Phase 3 — Commission Payments.
+Last session: 2026-03-30T21:02:32Z
+Stopped at: Quick task quick-1-telegram-1 — COMPLETE (all 3 tasks, production verified)
+Next action: Next quick task or new planning work.

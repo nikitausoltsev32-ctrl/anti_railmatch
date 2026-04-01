@@ -82,3 +82,16 @@ Plans:
 ## Milestone 2: Monetization
 
 - [ ] **Phase 6: Платежи** — Tinkoff / ЮKassa интеграция для комиссии платформы
+- [x] **Phase 7: Рейтинг пользователей** — Система оценок по звёздам (1–5) после завершения сделки (completed 2026-03-30)
+
+### Phase 7: Рейтинг пользователей
+
+**Goal**: После завершения сделки обе стороны могут оставить оценку (1–5 звёзд) партнёру. Рейтинг отображается в профиле и на бирже заявок.
+**Requirements**: RATING-01, RATING-02, RATING-03, RATING-04, RATING-05, RATING-06
+**Depends on:** Phase 1
+**Plans:** 3/3 plans complete
+
+Plans:
+- [x] 07-01-PLAN.md — Migration 26: reviews table, bids completion columns, profiles aggregates, trigger + RLS
+- [x] 07-02-PLAN.md — ChatWindow: completion button, rating modal (stars + tags + text), reviews viewer modal
+- [x] 07-03-PLAN.md — app.jsx + RequestCard: wire average_rating to listing badge and chat header

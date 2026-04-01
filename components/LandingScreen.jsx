@@ -76,7 +76,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                         Смотреть демо <Zap className="w-5 h-5 text-amber-500 group-hover:scale-125 transition-transform" />
                     </button>
                     <a
-                        href="https://t.me/RailMatchBot"
+                        href="https://t.me/rail_match_bot"
                         target="_blank"
                         rel="noreferrer"
                         className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-[#229ED9] hover:bg-[#1a8bbf] text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all flex items-center justify-center gap-3 whitespace-nowrap"
