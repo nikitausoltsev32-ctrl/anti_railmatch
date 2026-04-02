@@ -3,7 +3,7 @@ import {
     TrainFront, ArrowRight, AlertCircle, User,
     MessageSquare, Sparkles, Moon, Sun, Ban, TrendingUp,
     CheckCircle2, XCircle, AlertTriangle, Info, Bell,
-    FileText, MessageCircle, ShieldCheck, ShieldX, LogIn, LogOut
+    FileText, MessageCircle, ShieldCheck, ShieldX, LogIn, LogOut, Code2
 } from 'lucide-react';
 
 import LandingScreen from './components/LandingScreen';
@@ -24,6 +24,7 @@ import AdminPanel from './components/AdminPanel.jsx';
 import UserDashboard from './components/UserDashboard';
 import MyBidsView from './components/MyBidsView';
 import FleetDislocation from './components/FleetDislocation';
+import DeveloperDashboard from './components/DeveloperDashboard';
 
 import { supabase } from './src/supabaseClient';
 import {
@@ -331,6 +332,34 @@ export default function App() {
                 });
         }
     }, [sbUser, userProfile]);
+
+    // 2c. ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ОШИБОК → error_logs
+    useEffect(() => {
+        const logToSupabase = async (errorType, message, stack) => {
+            try {
+                await supabase.from('error_logs').insert({
+                    error_type: errorType,
+                    message: String(message || '').slice(0, 1000),
+                    user_id: sbUser?.id || null,
+                    url: window.location.href,
+                    stack: String(stack || '').slice(0, 3000),
+                });
+            } catch (_) { /* silent */ }
+        };
+        const handleError = (event) => {
+            logToSupabase('js_error', event.error?.message || event.message, event.error?.stack);
+        };
+        const handleUnhandledRejection = (event) => {
+            const reason = event.reason;
+            logToSupabase('api_error', reason?.message || String(reason), reason?.stack);
+        };
+        window.addEventListener('error', handleError);
+        window.addEventListener('unhandledrejection', handleUnhandledRejection);
+        return () => {
+            window.removeEventListener('error', handleError);
+            window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+        };
+    }, [sbUser]);
 
     // 3. СИНХРОНИЗАЦИЯ С БД (Supabase Realtime)
     useEffect(() => {
@@ -1386,6 +1415,12 @@ export default function App() {
                         {userProfile?.role === 'admin' && (
                             <button onClick={() => setView('admin')} className={`text-sm font-black uppercase tracking-widest transition-all ${view === 'admin' ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}>Админ</button>
                         )}
+                        {userProfile?.role === 'developer' && (
+                            <button onClick={() => setView('dev-dashboard')} className={`text-sm font-black uppercase tracking-widest transition-all flex items-center gap-2 ${view === 'dev-dashboard' ? 'text-violet-600' : 'text-slate-500 hover:text-violet-600'}`}>
+                                <Code2 className="w-4 h-4" />
+                                Dev Panel
+                            </button>
+                        )}
                     </nav>
                     <div className="flex items-center gap-4">
                         <button onClick={() => setIsDark(!isDark)} className="p-3 text-slate-400 hover:text-blue-600 hover:rotate-[360deg] hover:scale-110 active:scale-95 transition-all duration-700 ease-out rounded-2xl bg-slate-100 dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-blue-900/40 border border-transparent dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800 shadow-sm">
@@ -1397,7 +1432,7 @@ export default function App() {
                         <div onClick={() => requireAuth(() => setView('profile'))} className="flex items-center gap-3 cursor-pointer pl-6 border-l dark:border-slate-800 group">
                             <div className="text-right hidden sm:block">
                                 <div className="text-sm font-bold group-hover:text-blue-600 transition-colors dark:text-white">{userProfile?.company || "Аноним"}</div>
-                                <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{userProfile?.role === 'shipper' ? 'Грузоотправитель' : userProfile?.role === 'owner' ? 'Владелец вагонов' : 'Гость'}</div>
+                                <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{userProfile?.role === 'shipper' ? 'Грузоотправитель' : userProfile?.role === 'owner' ? 'Владелец вагонов' : userProfile?.role === 'developer' ? 'Разработчик' : 'Гость'}</div>
                             </div>
                             <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-full flex items-center justify-center font-bold border border-slate-300 dark:border-slate-600 dark:text-white shadow-sm"><User className="w-5 h-5 text-slate-400" /></div>
                         </div>
@@ -1521,6 +1556,10 @@ export default function App() {
 
                 {view === 'analytics' && <AnalyticsDashboard requests={requests} bids={bids} />}
 
+
+                {view === 'dev-dashboard' && userProfile?.role === 'developer' && (
+                    <DeveloperDashboard user={userProfile} supabase={supabase} />
+                )}
 
                 {view === 'messenger' && (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-8 min-h-[500px] sm:min-h-[700px] animate-in fade-in slide-in-from-bottom-4 duration-700">
