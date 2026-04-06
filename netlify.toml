@@ -2,6 +2,11 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  VITE_SUPABASE_URL = "https://xakyjvlxypivrmuehsxl.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhha3lqdmx4eXBpdnJtdWVoc3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODE2NjQsImV4cCI6MjA4NzI1NzY2NH0.EVSIXlO5yd5SHPwlcUDeR3m7pNXKV5-hu1UfJjPE-EE"
+  VITE_TELEGRAM_BOT_USERNAME = "rail_match_bot"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
