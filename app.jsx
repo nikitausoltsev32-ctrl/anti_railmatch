@@ -286,6 +286,8 @@ export default function App() {
             } else {
                 setAuthChecking(false);
             }
+        }).catch(() => {
+            if (mounted) setAuthChecking(false);
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
