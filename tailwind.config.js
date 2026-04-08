@@ -7,7 +7,12 @@ export default {
     ],
     darkMode: 'class',
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                display: ['"Exo 2"', 'system-ui', 'sans-serif'],
+                body: ['"Golos Text"', 'system-ui', 'sans-serif'],
+            },
+        },
     },
     plugins: [
         require("tailwindcss-animate"),
