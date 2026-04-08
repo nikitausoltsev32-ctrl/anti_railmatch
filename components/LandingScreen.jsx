@@ -17,7 +17,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                         <TrainFront className="text-white w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
-                    <span className="text-xl sm:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">RailMatch</span>
+                    <span className="text-xl sm:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 font-display">RailMatch</span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-6">
                     <button onClick={() => setIsDark(!isDark)} className="p-2 sm:p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm hover:rotate-180 hover:shadow-lg transition-all duration-500 text-slate-400">
@@ -59,7 +59,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                 </div>
 
                 {/* H1 */}
-                <h1 className="text-3xl sm:text-5xl md:text-8xl font-black mb-6 sm:mb-8 leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <h1 className="text-3xl sm:text-5xl md:text-8xl font-black mb-6 sm:mb-8 leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700 font-display">
                     Грузы и вагоны.<br />
                     <span className="relative inline-block mt-2">
                         <span className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 blur-2xl opacity-20"></span>
@@ -74,21 +74,21 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                 </p>
 
                 {/* CTA buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md sm:max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-300">
-                    <button onClick={onStart} className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all group flex items-center justify-center gap-3 whitespace-nowrap">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md sm:max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-300">
+                    <button onClick={onStart} className="w-full sm:flex-[2] h-12 sm:h-16 px-5 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all group flex items-center justify-center gap-3 whitespace-nowrap">
                         Начать бесплатно <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <button onClick={onDemo} className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 shadow-xl hover:-translate-y-1.5 active:scale-95 transition-all flex items-center justify-center gap-3 group whitespace-nowrap">
-                        Смотреть демо <Zap className="w-5 h-5 text-amber-500 group-hover:scale-125 transition-transform" />
+                    <button onClick={onDemo} className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 font-bold text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 shadow-md hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 group whitespace-nowrap">
+                        Демо <Zap className="w-4 h-4 text-amber-500 group-hover:scale-125 transition-transform" />
                     </button>
                     <a
                         href="https://t.me/rail_match_bot"
                         target="_blank"
                         rel="noreferrer"
-                        className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-[#229ED9] hover:bg-[#1a8bbf] text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all flex items-center justify-center gap-3 whitespace-nowrap"
+                        className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-[#229ED9]/10 hover:bg-[#229ED9]/20 text-[#229ED9] font-bold text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl border border-[#229ED9]/30 hover:border-[#229ED9]/60 hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
                     >
-                        <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
-                        Открыть в Telegram
+                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+                        Telegram
                     </a>
                 </div>
             </section>
@@ -103,7 +103,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                         { value: '0 ₽', label: 'Абонентская плата', sub: 'платите только за результат', color: 'text-amber-600 dark:text-amber-400' },
                     ].map((stat, idx) => (
                         <div key={idx} className="group cursor-default">
-                            <div className={`text-2xl sm:text-4xl md:text-5xl font-black mb-1 sm:mb-2 ${stat.color} group-hover:scale-110 transition-transform inline-block`}>{stat.value}</div>
+                            <div className={`text-2xl sm:text-4xl md:text-5xl font-black mb-1 sm:mb-2 ${stat.color} group-hover:scale-110 transition-transform inline-block font-display`}>{stat.value}</div>
                             <div className="text-sm font-extrabold text-slate-700 dark:text-slate-200 mb-1">{stat.label}</div>
                             <div className="text-xs text-slate-400 font-medium">{stat.sub}</div>
                         </div>
@@ -161,7 +161,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                     <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold text-xs mb-6 border border-blue-100 dark:border-blue-800">
                         <Sparkles className="w-3.5 h-3.5" /> Три шага до сделки
                     </div>
-                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight mb-4 sm:mb-6 dark:text-white">Как это работает?</h2>
+                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight mb-4 sm:mb-6 dark:text-white font-display">Как это работает?</h2>
                     <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium">От регистрации до закрытой сделки — за считанные минуты</p>
                 </div>
 
@@ -206,7 +206,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
             {/* ═══════════════════════════════ PLATFORM FEATURES ═══════════════════════════════ */}
             <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-14 sm:py-24">
                 <div className="text-center mb-10 sm:mb-20">
-                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight mb-4 sm:mb-6 dark:text-white">Всё для эффективной работы</h2>
+                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight mb-4 sm:mb-6 dark:text-white font-display">Всё для эффективной работы</h2>
                     <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium">Инструменты, которые делают ж/д логистику быстрой, прозрачной и безопасной</p>
                 </div>
 

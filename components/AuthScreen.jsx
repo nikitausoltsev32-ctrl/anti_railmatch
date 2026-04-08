@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, TrainFront, Package } from 'lucide-react';
 import { supabase } from '../src/supabaseClient';
 
 const validatePhone = (phone) => {
@@ -40,7 +40,7 @@ function ForgotPasswordView({ onBack, isDark }) {
             <button onClick={onBack} className="text-slate-400 font-bold text-sm mb-2 flex items-center gap-2 hover:text-blue-600 transition-colors">
                 <ArrowRight className="w-4 h-4 rotate-180" /> Назад
             </button>
-            <h2 className="text-2xl font-black dark:text-white">Сброс пароля</h2>
+            <h2 className="text-2xl font-black dark:text-white font-display">Сброс пароля</h2>
             {sent ? (
                 <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-5 text-center">
                     <p className="text-green-700 dark:text-green-400 font-semibold text-sm">
@@ -56,14 +56,14 @@ function ForgotPasswordView({ onBack, isDark }) {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email"
-                        className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                        className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-colors"
                         required
                     />
                     {error && <p className="text-red-500 text-xs font-bold ml-2">{error}</p>}
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50"
+                        className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg shadow-blue-600/25 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50"
                     >
                         {loading ? 'Отправка...' : 'Отправить ссылку'}
                     </button>
@@ -108,34 +108,38 @@ export function TelegramOnboarding({ onSubmit, isDark }) {
     return (
         <div className="min-h-screen animate-in fade-in duration-500 bg-slate-50 dark:bg-[#0B1120] flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-white dark:bg-[#111827] rounded-t-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl border border-white dark:border-slate-800">
-                <h2 className="text-3xl font-black mb-2 dark:text-white">Расскажите о себе</h2>
+                <h2 className="text-3xl font-black mb-2 dark:text-white font-display">Расскажите о себе</h2>
                 <p className="text-slate-400 mb-8 font-medium text-sm">Заполните профиль для начала работы</p>
 
                 <div className="mb-6">
                     <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-widest">Кто вы на платформе?</p>
-                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-inner border border-slate-200/70 dark:border-slate-700/70">
-                        <button type="button" onClick={() => setRole('owner')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Владелец вагонов</button>
-                        <button type="button" onClick={() => setRole('shipper')} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Грузоотправитель</button>
+                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-inner border border-slate-200/70 dark:border-slate-700/70 gap-1">
+                        <button type="button" onClick={() => setRole('owner')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>
+                            <TrainFront className="w-4 h-4 shrink-0" /> Владелец вагонов
+                        </button>
+                        <button type="button" onClick={() => setRole('shipper')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>
+                            <Package className="w-4 h-4 shrink-0" /> Грузоотправитель
+                        </button>
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ваше имя" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.name ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} />
+                        <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ваше имя" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.name ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
                         {errors.name && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.name}</p>}
                     </div>
                     <div>
-                        <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.company ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} />
+                        <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.company ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
                         {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
                     </div>
                     <div>
-                        <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.phone ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} />
+                        <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.phone ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
                         {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}
                     </div>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-600/25 mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale-[0.5]"
+                        className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg shadow-blue-600/25 mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale-[0.5]"
                     >
                         {loading ? 'Сохранение...' : 'Продолжить'}
                     </button>
@@ -154,6 +158,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
 
     const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME;
     const isDev = import.meta.env.DEV;
+    const [tgWidgetError, setTgWidgetError] = useState(false);
 
     useEffect(() => {
         if (isDev || !botUsername || !onTelegramAuth) return;
@@ -172,9 +177,17 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
         script.setAttribute('data-onauth', 'onTelegramAuthCallback(user)');
         script.setAttribute('data-request-access', 'write');
         script.async = true;
+        script.onerror = () => setTgWidgetError(true);
         container.appendChild(script);
 
+        // Detect "Bot domain invalid" iframe error after short delay
+        const timer = setTimeout(() => {
+            const iframe = container.querySelector('iframe');
+            if (!iframe) setTgWidgetError(true);
+        }, 4000);
+
         return () => {
+            clearTimeout(timer);
             delete window.onTelegramAuthCallback;
         };
     }, [onTelegramAuth, botUsername, isDev]);
@@ -204,7 +217,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                 ) : (
                     <>
                         <button onClick={onBack} className="text-slate-400 font-bold text-sm mb-8 flex items-center gap-2 hover:text-blue-600 transition-colors"><ArrowRight className="w-4 h-4 rotate-180" /> Назад</button>
-                        <h2 className="text-3xl font-black mb-2 dark:text-white">{mode === 'login' ? 'Вход' : 'Регистрация'}</h2>
+                        <h2 className="text-3xl font-black mb-2 dark:text-white font-display">{mode === 'login' ? 'Вход' : 'Регистрация'}</h2>
                         <p className="text-slate-400 mb-6 font-medium text-sm">Введите данные вашей компании</p>
 
                         {onTelegramAuth && (
@@ -215,8 +228,8 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                                             Telegram Login Widget доступен только в production
                                         </div>
                                     </div>
-                                ) : (
-                                    <div id="tg-widget-container" className="flex justify-center my-4"></div>
+                                ) : tgWidgetError ? null : (
+                                    <div id="tg-widget-container" className="flex justify-center my-4 min-h-[52px]"></div>
                                 )}
                                 <div className="flex items-center gap-3 my-4">
                                     <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
@@ -229,30 +242,34 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                         {mode === 'register' && (
                             <div className="mb-6">
                                 <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-widest">Кто вы на платформе?</p>
-                                <div className={`flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-inner border transition-all ${errors.role ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200/70 dark:border-slate-700/70'}`}>
-                                    <button type="button" onClick={() => { setRole('owner'); setErrors(prev => ({ ...prev, role: null })); }} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Владелец вагонов</button>
-                                    <button type="button" onClick={() => { setRole('shipper'); setErrors(prev => ({ ...prev, role: null })); }} className={`flex-1 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>Грузоотправитель</button>
+                                <div className={`flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-inner border transition-all gap-1 ${errors.role ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200/70 dark:border-slate-700/70'}`}>
+                                    <button type="button" onClick={() => { setRole('owner'); setErrors(prev => ({ ...prev, role: null })); }} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>
+                                        <TrainFront className="w-4 h-4 shrink-0" /> Владелец вагонов
+                                    </button>
+                                    <button type="button" onClick={() => { setRole('shipper'); setErrors(prev => ({ ...prev, role: null })); }} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>
+                                        <Package className="w-4 h-4 shrink-0" /> Грузоотправитель
+                                    </button>
                                 </div>
                                 {errors.role && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.role}</p>}
                             </div>
                         )}
 
                         <form onSubmit={(e) => { e.preventDefault(); if (validate()) onSubmit({ ...formData, role }); }} className="space-y-4">
-                            <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required />
-                            <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Пароль (минимум 6 символов)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white" required minLength="6" />
+                            <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-colors" required />
+                            <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Пароль (минимум 6 символов)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-colors" required minLength="6" />
 
                             {mode === 'register' && (
                                 <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
                                     <div>
-                                        <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ваше имя" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.name ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
+                                        <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ваше имя" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.name ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} required />
                                         {errors.name && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.name}</p>}
                                     </div>
                                     <div>
-                                        <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.company ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
+                                        <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.company ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} required />
                                         {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
                                     </div>
                                     <div>
-                                        <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 dark:text-white ${errors.phone ? 'ring-2 ring-red-400' : 'focus:ring-blue-500'}`} required />
+                                        <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.phone ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} required />
                                         {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}
                                     </div>
                                 </div>
@@ -261,7 +278,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-600/25 mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale-[0.5]"
+                                className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg shadow-blue-600/25 mt-4 uppercase tracking-widest text-xs hover:shadow-blue-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale-[0.5]"
                             >
                                 {loading ? 'Обработка...' : (mode === 'login' ? 'Войти' : 'Создать аккаунт')}
                             </button>
