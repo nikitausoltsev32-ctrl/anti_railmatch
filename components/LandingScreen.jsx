@@ -5,6 +5,12 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
     return (
         <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white overflow-hidden bg-grid-pattern">
 
+            {/* ═══════════════════════════════ DEV BANNER ═══════════════════════════════ */}
+            <div className="w-full bg-amber-400 dark:bg-amber-500 text-amber-900 dark:text-amber-950 text-center py-2 px-4 text-xs sm:text-sm font-black tracking-wide z-50 flex items-center justify-center gap-2 flex-wrap">
+                <span>Сайт находится в разработке. По вопросам пишите в Telegram:</span>
+                <a href="https://t.me/onemonba" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:opacity-70 transition-opacity">@onemonba</a>
+            </div>
+
             {/* ═══════════════════════════════ HEADER ═══════════════════════════════ */}
             <header className="max-w-7xl mx-auto w-full px-4 sm:px-6 h-20 sm:h-28 flex items-center justify-between z-50">
                 <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">

@@ -2,7 +2,7 @@ import { sendMessage } from '../lib/telegram.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const BOT_SECRET = process.env.BOT_WEBHOOK_SECRET;
-const APP_URL = process.env.APP_URL || 'https://anti-railmatch-ner3.vercel.app';
+const APP_URL = process.env.APP_URL || 'https://railmatch.ru';
 
 const OPEN_BUTTON = {
     reply_markup: {

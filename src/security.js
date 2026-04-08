@@ -184,6 +184,67 @@ function detectLatinUsername(text) {
     return false;
 }
 
+/**
+ * Названия юридических лиц: ООО «Название», ИП Фамилия, АО «Компания» и т.д.
+ * Также ловит: OOO, OAO, 3АО (замена букв цифрами).
+ */
+function detectCompanyName(text) {
+    // Организационно-правовые формы + что-то после них
+    const orgForms = /\b(ООО|ОАО|ЗАО|ПАО|АО|ИП|ГУП|МУП|НКО|АНО|ФГУП|ФГБУ|ФГУ|Ltd|LLC|Inc|GmbH|Corp|OOO|OAO|3АО)\s*[«"']?[\wа-яА-ЯёЁ\s«»"']{2,}/i.test(text);
+    if (orgForms) return true;
+
+    // "Компания X", "фирма X", "организация X" + название 3+ символа
+    if (/\b(компания|фирма|организация|предприятие|холдинг|группа|концерн|трест)\s+[«"']?[\wа-яА-ЯёЁ]{3,}/i.test(text)) return true;
+
+    return false;
+}
+
+/**
+ * ФИО: три слова с заглавной буквы кириллицей подряд (Фамилия Имя Отчество).
+ * Имя + фамилия (два слова) тоже ловим если одно из них похоже на фамилию (-ов/-ев/-ин/-ых/-ский/-цкий).
+ */
+function detectFullName(text) {
+    // Три кириллических слова подряд с заглавной (ФИО)
+    if (/(?:^|[\s,])[А-ЯЁ][а-яё]{1,20}\s+[А-ЯЁ][а-яё]{1,20}\s+[А-ЯЁ][а-яё]{1,20}(?:\s|$|[,.])/u.test(text)) return true;
+
+    // Фамилия + Имя: типичные окончания фамилий
+    if (/[А-ЯЁ][а-яё]+(ов|ова|ев|ева|ин|ина|ых|их|ский|ская|цкий|цкая|зов|зова|нов|нова|лов|лова|ков|кова|гин|гина)\s+[А-ЯЁ][а-яё]{2,}/u.test(text)) return true;
+
+    // Инициалы: А.Б. Фамилия или Фамилия А.Б.
+    if (/[А-ЯЁ]\.[А-ЯЁ]\.\s*[А-ЯЁ][а-яё]{2,}/.test(text)) return true;
+    if (/[А-ЯЁ][а-яё]{2,}\s+[А-ЯЁ]\.[А-ЯЁ]\./.test(text)) return true;
+
+    return false;
+}
+
+/**
+ * Банковские и налоговые реквизиты: ИНН, ОГРН, КПП, р/с, БИК.
+ * Эти данные достаточно для установления личности / компании вне платформы.
+ */
+function detectRequisites(text) {
+    const stripped = text.replace(/[\s\-]/g, '');
+
+    // ИНН: 10 цифр (юрлицо) или 12 цифр (физлицо) — с контекстным словом
+    if (/\bинн\s*:?\s*\d{10,12}\b/i.test(text)) return true;
+    if (/\binn\s*:?\s*\d{10,12}\b/i.test(text)) return true;
+
+    // ОГРН: 13 или 15 цифр
+    if (/\bогрн\s*:?\s*\d{13,15}\b/i.test(text)) return true;
+
+    // КПП: 9 цифр с контекстом
+    if (/\bкпп\s*:?\s*\d{9}\b/i.test(text)) return true;
+
+    // БИК: 9 цифр с контекстом
+    if (/\bбик\s*:?\s*\d{9}\b/i.test(text)) return true;
+
+    // Расчётный / корр. счёт: 20 цифр
+    if (/\b(?:р\/?с|к\/?с|расч[её]тный счёт|корр?\. счёт)\s*:?\s*\d{20}\b/i.test(text)) return true;
+    // 20 цифр подряд (без пробелов) — очень похоже на р/с
+    if (/\b\d{20}\b/.test(stripped)) return true;
+
+    return false;
+}
+
 /** Email-адреса */
 function detectEmail(text) {
     const lower = text.toLowerCase();
@@ -290,6 +351,21 @@ export const validateMessageIntent = (text) => {
     // 9. Стоп-слова
     if (STOP_WORDS.some(sw => lower.includes(sw))) {
         return violation(text, 'stop_word');
+    }
+
+    // 10. Названия компаний (ООО, ИП, АО и т.д.)
+    if (detectCompanyName(text)) {
+        return violation(text, 'company_name');
+    }
+
+    // 11. ФИО / инициалы
+    if (detectFullName(text)) {
+        return violation(text, 'full_name');
+    }
+
+    // 12. Банковские / налоговые реквизиты (ИНН, ОГРН, р/с, БИК)
+    if (detectRequisites(text)) {
+        return violation(text, 'requisites');
     }
 
     return { valid: true, cleaned: text, isViolation: false, violationType: null };

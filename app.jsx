@@ -475,7 +475,13 @@ export default function App() {
         }
     }, [sbUser]);
 
-    const handleEnterDemo = () => {
+    const handleEnterDemo = async () => {
+        const [{ data: demoRequests }, { data: demoProfiles }] = await Promise.all([
+            supabase.from('requests').select('*').order('created_at', { ascending: false }),
+            supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone, average_rating, review_count'),
+        ]);
+        if (demoRequests) setRequests(demoRequests);
+        if (demoProfiles) setProfiles(demoProfiles);
         setUserProfile({ name: 'Гость', company: 'Демо режим', role: 'demo', inn: '000000' });
         setScreen('app');
         setView('catalog');
@@ -609,6 +615,7 @@ export default function App() {
             shipperPhone:   shipperProfile?.phone  ?? bid.shipperPhone ?? null,
             ownerName:      ownerProfile?.name     ?? bid.ownerName    ?? 'Владелец вагонов',
             ownerCompany:   ownerProfile?.company  ?? null,
+            ownerPhone:     ownerProfile?.phone    ?? bid.ownerPhone ?? null,
         };
     }, [profiles]);
 
@@ -1393,6 +1400,11 @@ export default function App() {
     return (
         <ErrorBoundary>
         <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top">
+            {/* DEV BANNER */}
+            <div className="w-full bg-amber-400 dark:bg-amber-500 text-amber-900 dark:text-amber-950 text-center py-2 px-4 text-xs font-black tracking-wide z-50 flex items-center justify-center gap-2 flex-wrap">
+                <span>Сайт находится в разработке. По вопросам пишите в Telegram:</span>
+                <a href="https://t.me/onemonba" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:opacity-70 transition-opacity">@onemonba</a>
+            </div>
             <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('catalog')}>

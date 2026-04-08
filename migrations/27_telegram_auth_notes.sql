@@ -1,0 +1,29 @@
+-- Migration 27: Telegram Login (notes only, no schema changes)
+--
+-- Edge Function deployed: telegram-auth
+-- URL: https://xakyjvlxypivrmuehsxl.supabase.co/functions/v1/telegram-auth
+-- verify_jwt: false (uses internal HMAC verification from Telegram widget)
+--
+-- How it works:
+--   1. Telegram Login Widget calls window.TelegramLoginCallback(tgData)
+--   2. Frontend POSTs tgData to /functions/v1/telegram-auth
+--   3. Function verifies HMAC-SHA256 hash using TELEGRAM_BOT_TOKEN secret
+--   4. Finds profile by telegram_id OR creates new user (tg_{id}@railmatch.internal)
+--   5. Returns { access_token, refresh_token, needs_onboarding }
+--   6. Frontend calls supabase.auth.setSession({ access_token, refresh_token })
+--
+-- Required Supabase secret (set if missing):
+--   supabase secrets set TELEGRAM_BOT_TOKEN=<your_bot_token>
+--
+-- Required BotFather setup:
+--   Bot Settings -> Domain -> set production domain (e.g. railmatch.ru)
+--   Without this the Telegram Login Widget will not render.
+--
+-- Existing schema used (no new columns needed):
+--   profiles.telegram_id        -- populated on first Telegram login
+--   profiles.telegram_username  -- populated on first Telegram login
+--   profiles.role               -- checked to determine needs_onboarding
+--
+-- Frontend files changed:
+--   components/AuthScreen.jsx   -- Telegram Login Widget + TelegramOnboarding form
+--   app.jsx                     -- handleTelegramAuth, handleTelegramOnboarding, needsTelegramOnboarding state

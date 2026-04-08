@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, TrainTrack, Sparkles } from 'lucide-react';
+import { MIN_PRICE_PER_WAGON } from '../src/constants.js';
 
 export default function CreateRequestForm({ onBack, onPublish, initialData }) {
     const [formData, setFormData] = useState({
@@ -41,6 +42,8 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
             errs.totalTons = 'Тоннаж не может быть отрицательным';
         if (!formData.targetPrice || Number(formData.targetPrice) <= 0)
             errs.targetPrice = 'Ставка должна быть больше 0';
+        else if (Number(formData.targetPrice) < MIN_PRICE_PER_WAGON)
+            errs.targetPrice = `Ставка не может быть ниже ${MIN_PRICE_PER_WAGON.toLocaleString('ru-RU')} ₽/ваг. — минимальный рыночный порог`;
         return errs;
     };
 
@@ -60,7 +63,7 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
 
     const isDisabled = !formData.stationFrom.trim() || !formData.stationTo.trim() ||
         !formData.cargoType.trim() || !formData.totalWagons || Number(formData.totalWagons) <= 0 ||
-        !formData.targetPrice || Number(formData.targetPrice) <= 0;
+        !formData.targetPrice || Number(formData.targetPrice) < MIN_PRICE_PER_WAGON;
 
     return (
         <div className="max-w-3xl mx-auto py-10 animate-in slide-in-from-bottom-4 duration-500">
@@ -117,7 +120,7 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4 font-bold flex items-center gap-2">Ставка (₽ / ваг.) <Sparkles className="w-3 h-3 text-blue-500" /></label>
-                            <input name="targetPrice" type="number" min="1" value={formData.targetPrice || ''} onChange={handleChange} placeholder="Напр. 15000" className={`w-full px-6 py-4 rounded-2xl outline-none focus:ring-2 dark:text-white font-black ${errors.targetPrice ? 'bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 ring-2 ring-red-400 focus:ring-red-400' : 'bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 focus:ring-blue-500'}`} />
+                            <input name="targetPrice" type="number" min={MIN_PRICE_PER_WAGON} value={formData.targetPrice || ''} onChange={handleChange} placeholder={`от ${MIN_PRICE_PER_WAGON.toLocaleString('ru-RU')}`} className={`w-full px-6 py-4 rounded-2xl outline-none focus:ring-2 dark:text-white font-black ${errors.targetPrice ? 'bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 ring-2 ring-red-400 focus:ring-red-400' : 'bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 focus:ring-blue-500'}`} />
                             {errors.targetPrice && <p className="text-red-500 text-[11px] font-bold ml-4">{errors.targetPrice}</p>}
                         </div>
                     </div>

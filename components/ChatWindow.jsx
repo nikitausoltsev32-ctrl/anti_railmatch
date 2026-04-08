@@ -157,7 +157,9 @@ export default function ChatWindow({
     const iProposed = chat.commission_proposer_id === currentUserId;
     const partnerProposed = !!chat.commission_mode && !!chat.commission_proposer_id && !iProposed;
     const commissionAgreed = !!chat.commission_agreed;
-    const modeLabel = (chat.commission_mode === 'full' || chat.commission_mode === 'i_pay') ? 'Оплатить полностью' : 'Разделить 50/50';
+    const modeLabel = (chat.commission_mode === 'full' || chat.commission_mode === 'i_pay')
+        ? (partnerProposed ? 'Партнёр готов оплатить комиссию' : 'Оплатить полностью')
+        : 'Разделить 50/50';
 
     // Timer display
     const formatTime = (ms) => {
