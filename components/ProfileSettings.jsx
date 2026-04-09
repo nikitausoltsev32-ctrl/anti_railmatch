@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ShieldCheck, Settings, Bot, Users, FileText, Upload, Check, X, Mail, Phone, Building2, User, History, ArrowRight, Clock, TrendingUp, Wallet, Pencil, Save, Copy, ExternalLink, Package, TrainFront } from 'lucide-react';
 import { supabase as defaultSupabase } from '../src/supabaseClient';
 import { PLATFORM_COMMISSION_RATE, ALLOWED_DOC_TYPES, MAX_DOC_SIZE_BYTES } from '../src/constants.js';
+import { haptic } from '../src/haptic.js';
 
 export default function ProfileSettings({ user, onLogout, bids = [], requests = [], showToast = () => {}, onProfileUpdate = () => {}, supabase: supabaseProp, sbUser }) {
     const supabase = supabaseProp || defaultSupabase;
@@ -30,10 +31,12 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
             const { error } = await supabase.from('profiles').update({ company: editData.company.trim(), phone: editData.phone.trim() }).eq('id', user.id);
             if (error) throw error;
             onProfileUpdate({ company: editData.company.trim(), phone: editData.phone.trim() });
+            haptic.notification('success');
             showToast('Профиль обновлён', 'success');
             setIsEditing(false);
         } catch (err) {
             console.error('Profile update error:', err);
+            haptic.notification('error');
             showToast('Ошибка при сохранении профиля', 'error');
         } finally {
             setSaving(false);
@@ -49,6 +52,8 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
         }).eq('id', user.id);
         setTgToken(token);
         setTgPolling(true);
+        // Сразу открываем Telegram с токеном — пользователю ничего вводить не нужно
+        window.open(`https://t.me/RailMatchBot?start=${token}`, '_blank');
         // Poll every 3s to check if telegram_id was linked by the bot
         tgPollRef.current = setInterval(async () => {
             const { data } = await supabase.from('profiles').select('telegram_id, telegram_username').eq('id', user.id).single();
@@ -57,6 +62,7 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                 setTgPolling(false);
                 setTgToken(null);
                 onProfileUpdate({ telegram_id: data.telegram_id, telegram_username: data.telegram_username });
+                haptic.notification('success');
                 showToast('Telegram успешно привязан!', 'success');
             }
         }, 3000);
@@ -196,16 +202,16 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                     </div>
 
                     <div className="bg-white dark:bg-[#111827] rounded-2xl sm:rounded-[2rem] border dark:border-slate-800 p-1.5 sm:p-2 shadow-sm flex md:flex-col gap-1 overflow-x-auto">
-                        <button onClick={() => setActiveTab('general')} className={`flex-1 md:flex-none md:w-full p-3 sm:p-4 text-left rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 sm:gap-4 transition-all whitespace-nowrap ${activeTab === 'general' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
+                        <button onClick={() => { haptic.selection(); setActiveTab('general'); }} className={`flex-1 md:flex-none md:w-full p-3 sm:p-4 text-left rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 sm:gap-4 transition-all whitespace-nowrap ${activeTab === 'general' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
                             <Settings className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Общие данные</span><span className="sm:hidden">Данные</span>
                         </button>
-                        <button onClick={() => setActiveTab('team')} className={`flex-1 md:flex-none md:w-full p-3 sm:p-4 text-left rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 sm:gap-4 transition-all whitespace-nowrap ${activeTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
+                        <button onClick={() => { haptic.selection(); setActiveTab('team'); }} className={`flex-1 md:flex-none md:w-full p-3 sm:p-4 text-left rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 sm:gap-4 transition-all whitespace-nowrap ${activeTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
                             <Users className="w-4 h-4 sm:w-5 sm:h-5" /> Команда
                         </button>
-                        <button onClick={() => setActiveTab('notif')} className={`flex-1 md:flex-none md:w-full p-3 sm:p-4 text-left rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 sm:gap-4 transition-all whitespace-nowrap ${activeTab === 'notif' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
+                        <button onClick={() => { haptic.selection(); setActiveTab('notif'); }} className={`flex-1 md:flex-none md:w-full p-3 sm:p-4 text-left rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 sm:gap-4 transition-all whitespace-nowrap ${activeTab === 'notif' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
                             <Bot className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Уведомления</span><span className="sm:hidden">Увед.</span>
                         </button>
-                        <button onClick={() => setActiveTab('deals')} className={`flex-1 md:flex-none md:w-full p-3 sm:p-4 text-left rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 sm:gap-4 transition-all whitespace-nowrap ${activeTab === 'deals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
+                        <button onClick={() => { haptic.selection(); setActiveTab('deals'); }} className={`flex-1 md:flex-none md:w-full p-3 sm:p-4 text-left rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 sm:gap-4 transition-all whitespace-nowrap ${activeTab === 'deals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-blue-600'}`}>
                             <History className="w-4 h-4 sm:w-5 sm:h-5" /> Сделки
                         </button>
                     </div>
@@ -369,37 +375,21 @@ export default function ProfileSettings({ user, onLogout, bids = [], requests = 
                                 <div className="bg-slate-50 dark:bg-[#0B1120] rounded-3xl p-8 border-2 border-dashed border-blue-200 dark:border-blue-900/40 text-center space-y-5">
                                     <Bot className="w-12 h-12 text-blue-600 mx-auto" />
                                     <div>
-                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] mb-2">Ваш код</p>
-                                        <div className="text-3xl font-black dark:text-white tracking-[0.4em]">{tgToken}</div>
+                                        <p className="font-black dark:text-white text-lg">Telegram открыт</p>
+                                        <p className="text-sm text-slate-500 mt-1">Нажмите <b>Старт</b> в боте — и аккаунт будет привязан автоматически</p>
                                     </div>
-                                    <p className="text-sm text-slate-500 font-medium">
-                                        Напишите боту{' '}
-                                        <a href="https://t.me/RailMatchBot" target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline">@RailMatchBot</a>
-                                        {' '}команду:{' '}
-                                        <code className="bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-sm font-mono dark:text-white">/start {tgToken}</code>
+                                    <a
+                                        href={`https://t.me/RailMatchBot?start=${tgToken}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all"
+                                    >
+                                        <ExternalLink className="w-4 h-4" /> Открыть бота снова
+                                    </a>
+                                    <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
+                                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse inline-block" />
+                                        Ожидаем подтверждения...
                                     </p>
-                                    <div className="flex flex-col sm:flex-row gap-3">
-                                        <button
-                                            onClick={() => { navigator.clipboard.writeText(`/start ${tgToken}`); showToast('Команда скопирована', 'success'); }}
-                                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
-                                        >
-                                            <Copy className="w-4 h-4" /> Копировать команду
-                                        </button>
-                                        <a
-                                            href={`https://t.me/RailMatchBot?start=${tgToken}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all"
-                                        >
-                                            <ExternalLink className="w-4 h-4" /> Привязать одним кликом
-                                        </a>
-                                    </div>
-                                    {tgPolling && (
-                                        <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
-                                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse inline-block" />
-                                            Ожидаем подтверждения...
-                                        </p>
-                                    )}
                                 </div>
                             ) : (
                                 <button

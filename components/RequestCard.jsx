@@ -1,5 +1,6 @@
 import React from 'react';
 import { Package, TrainFront, ArrowRight, ShieldCheck, Sparkles, Star } from 'lucide-react';
+import { haptic } from '../src/haptic.js';
 
 function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorName, creatorAverageRating = null, creatorReviewCount = 0 }) {
     const isOwnerCreated = creatorRole === 'owner';
@@ -73,7 +74,7 @@ function RequestCard({ req, onBid, bidCount = 0, rank, creatorRole, creatorName,
                     </div>
 
                     <button
-                        onClick={onBid}
+                        onClick={() => { haptic.impact('light'); onBid(); }}
                         disabled={isCompleted || isLimitReached}
                         className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${isCompleted || isLimitReached
                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'

@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrainFront, Sun, Moon, Sparkles, Package, Zap, Check, ArrowRight, ShieldCheck, Activity, MessageSquare, BarChart3, Search, FileText, Users, Lock, UserCheck } from 'lucide-react';
+import { haptic } from '../src/haptic.js';
 
 export default function LandingScreen({ onStart, onStartShipper, onStartOwner, onLogin, onDemo, isDark, setIsDark, onShowTerms }) {
     return (
@@ -24,7 +25,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                         {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
                     <button onClick={onLogin} className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Войти</button>
-                    <button onClick={onStart} className="px-3 py-2 sm:px-8 sm:py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] sm:text-sm font-black uppercase tracking-widest rounded-xl sm:rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 whitespace-nowrap">Регистрация</button>
+                    <button onClick={() => { haptic.impact('medium'); onStart(); }} className="px-3 py-2 sm:px-8 sm:py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] sm:text-sm font-black uppercase tracking-widest rounded-xl sm:rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 whitespace-nowrap">Регистрация</button>
                 </div>
             </header>
 
@@ -75,7 +76,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
 
                 {/* CTA buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md sm:max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-300">
-                    <button onClick={onStart} className="w-full sm:flex-[2] h-12 sm:h-16 px-5 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all group flex items-center justify-center gap-3 whitespace-nowrap">
+                    <button onClick={() => { haptic.impact('medium'); onStart(); }} className="w-full sm:flex-[2] h-12 sm:h-16 px-5 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all group flex items-center justify-center gap-3 whitespace-nowrap">
                         Начать бесплатно <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <button onClick={onDemo} className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 font-bold text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 shadow-md hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 group whitespace-nowrap">
@@ -127,7 +128,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                         <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><Check className="text-emerald-600 w-5 h-5" /></div> Несколько ставок сразу — выбирайте лучшее предложение</li>
                         <li className="flex items-center gap-4"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><ShieldCheck className="text-emerald-600 w-5 h-5" /></div> Комиссия 2.5% — и контакты партнёра открыты для расчётов</li>
                     </ul>
-                    <button onClick={onStartShipper || onStart} className="mt-8 w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-lg shadow-blue-500/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <button onClick={() => { haptic.impact('medium'); (onStartShipper || onStart)(); }} className="mt-8 w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-lg shadow-blue-500/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2">
                         Зарегистрироваться как грузоотправитель <ArrowRight className="w-4 h-4" />
                     </button>
                 </div>
@@ -149,7 +150,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                         <li className="flex items-center gap-4"><div className="p-2 bg-slate-800 border border-slate-700 rounded-xl"><Check className="text-blue-400 w-5 h-5" /></div> AI-агент: один запрос — лучшие совпадения сразу</li>
                         <li className="flex items-center gap-4"><div className="p-2 bg-slate-800 border border-slate-700 rounded-xl"><Sparkles className="text-blue-400 w-5 h-5" /></div> Нет подписки — платите 2.5% только за результат</li>
                     </ul>
-                    <button onClick={onStartOwner || onStart} className="mt-8 w-full py-4 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-black uppercase tracking-widest text-xs rounded-2xl border border-white/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 relative z-10">
+                    <button onClick={() => { haptic.impact('medium'); (onStartOwner || onStart)(); }} className="mt-8 w-full py-4 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-black uppercase tracking-widest text-xs rounded-2xl border border-white/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 relative z-10">
                         Зарегистрироваться как владелец вагонов <ArrowRight className="w-4 h-4" />
                     </button>
                 </div>

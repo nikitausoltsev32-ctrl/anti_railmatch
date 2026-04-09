@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, TrainTrack, Sparkles } from 'lucide-react';
 import { MIN_PRICE_PER_WAGON } from '../src/constants.js';
+import { haptic } from '../src/haptic.js';
 
 export default function CreateRequestForm({ onBack, onPublish, initialData }) {
     const [formData, setFormData] = useState({
@@ -50,9 +51,11 @@ export default function CreateRequestForm({ onBack, onPublish, initialData }) {
     const handleSubmit = () => {
         const errs = validate();
         if (Object.keys(errs).length > 0) {
+            haptic.notification('error');
             setErrors(errs);
             return;
         }
+        haptic.notification('success');
         onPublish({
             ...formData,
             stationFrom: formData.stationFrom.trim(),

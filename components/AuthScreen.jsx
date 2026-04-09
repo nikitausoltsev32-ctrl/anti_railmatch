@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, TrainFront, Package } from 'lucide-react';
 import { supabase } from '../src/supabaseClient';
+import { haptic } from '../src/haptic.js';
 
 const validatePhone = (phone) => {
     const digits = phone.replace(/\D/g, '');
@@ -114,10 +115,10 @@ export function TelegramOnboarding({ onSubmit, isDark }) {
                 <div className="mb-6">
                     <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-widest">Кто вы на платформе?</p>
                     <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-inner border border-slate-200/70 dark:border-slate-700/70 gap-1">
-                        <button type="button" onClick={() => setRole('owner')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>
+                        <button type="button" onClick={() => { haptic.selection(); setRole('owner'); }} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${role === 'owner' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>
                             <TrainFront className="w-4 h-4 shrink-0" /> Владелец вагонов
                         </button>
-                        <button type="button" onClick={() => setRole('shipper')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>
+                        <button type="button" onClick={() => { haptic.selection(); setRole('shipper'); }} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${role === 'shipper' ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600' : 'text-slate-400 hover:bg-white/70 dark:hover:bg-slate-700/60'}`}>
                             <Package className="w-4 h-4 shrink-0" /> Грузоотправитель
                         </button>
                     </div>
@@ -254,7 +255,7 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
                             </div>
                         )}
 
-                        <form onSubmit={(e) => { e.preventDefault(); if (validate()) onSubmit({ ...formData, role }); }} className="space-y-4">
+                        <form onSubmit={(e) => { e.preventDefault(); haptic.impact('medium'); if (validate()) onSubmit({ ...formData, role }); }} className="space-y-4">
                             <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-colors" required />
                             <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Пароль (минимум 6 символов)" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-colors" required minLength="6" />
 
