@@ -369,10 +369,13 @@ export default function App() {
         });
     }, []);
 
+    const tgLinkedRef = useRef(false);
     useEffect(() => {
+        if (tgLinkedRef.current) return;
         if (!window.Telegram?.WebApp) return;
         const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
         if (tgUser?.id && sbUser && userProfile && !userProfile.telegram_id) {
+            tgLinkedRef.current = true;
             supabase.from('profiles')
                 .update({ telegram_id: tgUser.id, telegram_username: tgUser.username || null })
                 .eq('id', sbUser.id)
