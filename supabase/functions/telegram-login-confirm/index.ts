@@ -17,12 +17,37 @@ function json(data: unknown, status = 200) {
   });
 }
 
+async function getSession(
+  supabase: ReturnType<typeof createClient>,
+  email: string
+) {
+  const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+  });
+  if (linkError || !linkData?.properties?.hashed_token) {
+    console.error("generateLink error:", linkError);
+    return null;
+  }
+  const { data: session, error: otpError } = await supabase.auth.verifyOtp({
+    token_hash: linkData.properties.hashed_token,
+    type: "magiclink",
+  });
+  if (otpError || !session?.session) {
+    console.error("verifyOtp error:", otpError);
+    return null;
+  }
+  return session.session;
+}
+
 async function createOrLoginUser(
   supabase: ReturnType<typeof createClient>,
   telegramId: string,
   firstName: string,
   username?: string
 ) {
+  const fakeEmail = `tg_${telegramId}@railmatch.internal`;
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, role")
@@ -30,17 +55,17 @@ async function createOrLoginUser(
     .maybeSingle();
 
   if (profile) {
-    const { data: sessionData, error } = await supabase.auth.admin.createSession({ user_id: profile.id });
-    if (error || !sessionData?.session) return { error: "Failed to create session" };
+    const session = await getSession(supabase, fakeEmail);
+    if (!session) return { error: "Failed to create session" };
     return {
       user_id: profile.id,
-      access_token: sessionData.session.access_token,
-      refresh_token: sessionData.session.refresh_token,
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
       needs_onboarding: !profile.role,
     };
   }
 
-  const fakeEmail = `tg_${telegramId}@railmatch.internal`;
+  // New user
   const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
     email: fakeEmail,
     password: crypto.randomUUID(),
@@ -48,7 +73,10 @@ async function createOrLoginUser(
     user_metadata: { telegram_id: telegramId, telegram_username: username || null, name: firstName },
   });
 
-  if (createError || !newUser?.user) return { error: "Failed to create user" };
+  if (createError || !newUser?.user) {
+    console.error("createUser error:", createError);
+    return { error: `Failed to create user: ${createError?.message || 'unknown'}` };
+  }
 
   await supabase.from("profiles").upsert([{
     id: newUser.user.id,
@@ -58,13 +86,13 @@ async function createOrLoginUser(
     inn: `9${Date.now().toString().slice(-9)}`,
   }], { onConflict: "id" });
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({ user_id: newUser.user.id });
-  if (sessionError || !sessionData?.session) return { error: "Failed to create session for new user" };
+  const session = await getSession(supabase, fakeEmail);
+  if (!session) return { error: "Failed to create session for new user" };
 
   return {
     user_id: newUser.user.id,
-    access_token: sessionData.session.access_token,
-    refresh_token: sessionData.session.refresh_token,
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
     needs_onboarding: true,
   };
 }
@@ -73,7 +101,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  // Authenticate bot request
   const secret = req.headers.get("x-bot-secret");
   if (!secret || secret !== BOT_SECRET) return json({ error: "Unauthorized" }, 401);
 
@@ -91,7 +118,6 @@ serve(async (req) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Find and validate token
   const { data: token, error: tokenError } = await supabase
     .from("telegram_login_tokens")
     .select("*")
@@ -102,17 +128,21 @@ serve(async (req) => {
 
   if (tokenError || !token) return json({ error: "Invalid or expired code" }, 404);
 
-  // Create or login user
-  const result = await createOrLoginUser(
-    supabase,
-    String(telegram_id),
-    first_name || "Пользователь",
-    telegram_username
-  );
+  let result;
+  try {
+    result = await createOrLoginUser(
+      supabase,
+      String(telegram_id),
+      first_name || "Пользователь",
+      telegram_username
+    );
+  } catch (err) {
+    console.error("createOrLoginUser threw:", err);
+    return json({ error: `Internal: ${err.message}` }, 500);
+  }
 
   if (result.error) return json({ error: result.error }, 500);
 
-  // Mark token as claimed with session
   await supabase.from("telegram_login_tokens").update({
     status: "claimed",
     telegram_id,

@@ -112,8 +112,29 @@ async function verifyWebAppData(initData: string): Promise<{ valid: boolean; use
   return { valid: true, user };
 }
 
+async function getSession(supabase: ReturnType<typeof createClient>, email: string) {
+  const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+  });
+  if (linkError || !linkData?.properties?.hashed_token) {
+    console.error("generateLink error:", linkError);
+    return null;
+  }
+  const { data: session, error: otpError } = await supabase.auth.verifyOtp({
+    token_hash: linkData.properties.hashed_token,
+    type: "magiclink",
+  });
+  if (otpError || !session?.session) {
+    console.error("verifyOtp error:", otpError);
+    return null;
+  }
+  return session.session;
+}
+
 async function createOrLoginUser(supabase: ReturnType<typeof createClient>, telegramId: string, firstName: string, username?: string) {
-  // Look up existing profile by telegram_id
+  const fakeEmail = `tg_${telegramId}@railmatch.internal`;
+
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id, role")
@@ -126,29 +147,19 @@ async function createOrLoginUser(supabase: ReturnType<typeof createClient>, tele
   }
 
   if (profile) {
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
-      user_id: profile.id,
-    });
-
-    if (sessionError || !sessionData?.session) {
-      console.error("Session creation error:", sessionError);
-      return { error: "Failed to create session" };
-    }
-
+    const session = await getSession(supabase, fakeEmail);
+    if (!session) return { error: "Failed to create session" };
     return {
-      access_token: sessionData.session.access_token,
-      refresh_token: sessionData.session.refresh_token,
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
       needs_onboarding: !profile.role,
     };
   }
 
   // New user
-  const fakeEmail = `tg_${telegramId}@railmatch.internal`;
-  const fakePassword = crypto.randomUUID();
-
   const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
     email: fakeEmail,
-    password: fakePassword,
+    password: crypto.randomUUID(),
     email_confirm: true,
     user_metadata: {
       telegram_id: telegramId,
@@ -170,18 +181,12 @@ async function createOrLoginUser(supabase: ReturnType<typeof createClient>, tele
     inn: `9${Date.now().toString().slice(-9)}`,
   }], { onConflict: "id" });
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
-    user_id: newUser.user.id,
-  });
-
-  if (sessionError || !sessionData?.session) {
-    console.error("Session creation error for new user:", sessionError);
-    return { error: "Failed to create session" };
-  }
+  const session = await getSession(supabase, fakeEmail);
+  if (!session) return { error: "Failed to create session for new user" };
 
   return {
-    access_token: sessionData.session.access_token,
-    refresh_token: sessionData.session.refresh_token,
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
     needs_onboarding: true,
   };
 }
