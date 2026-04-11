@@ -33,6 +33,8 @@ export async function handleStart(chatId, text, telegramUser) {
                     first_name: telegramUser.first_name || 'Пользователь',
                 }),
             });
+            const text_body = await res.text();
+            console.log(`telegram-login-confirm status=${res.status} body=${text_body}`);
             if (res.ok) {
                 await sendMessage(
                     chatId,
@@ -40,8 +42,9 @@ export async function handleStart(chatId, text, telegramUser) {
                     OPEN_BUTTON
                 );
             } else {
-                const data = await res.json();
-                await sendMessage(chatId, `❌ Ошибка входа: ${data.error || 'неверный или устаревший код'}.\n\nПопробуйте войти заново на сайте.`);
+                let errorMsg = 'неверный или устаревший код';
+                try { errorMsg = JSON.parse(text_body).error || errorMsg; } catch {}
+                await sendMessage(chatId, `❌ Ошибка входа: ${errorMsg}.\n\nПопробуйте войти заново на сайте.`);
             }
         } catch (err) {
             console.error('Login confirm error:', err);
