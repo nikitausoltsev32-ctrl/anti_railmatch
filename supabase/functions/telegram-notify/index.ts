@@ -62,7 +62,12 @@ serve(async (req) => {
 
     const result = await res.json();
 
-    return new Response(JSON.stringify({ ok: result.ok }), {
+    if (!result.ok) {
+      // 403 = user never started the bot; 400 = bad chat_id
+      console.error("Telegram sendMessage failed:", result.error_code, result.description, "chat_id:", telegramId);
+    }
+
+    return new Response(JSON.stringify({ ok: result.ok, tg_error: result.description }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

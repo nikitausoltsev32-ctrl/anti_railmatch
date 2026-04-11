@@ -1,0 +1,58 @@
+name: Bug Bots
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      bot:
+        description: 'Which bot to run'
+        default: 'both'
+        type: choice
+        options: [both, verifier, fixer]
+
+jobs:
+  verify:
+    name: Verify new bugs
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.bot == 'both' || github.event.inputs.bot == 'verifier' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-save @notionhq/client @google/generative-ai
+
+      - name: Run verifier bot
+        run: node scripts/bot-verifier.js
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_BUGS_DB_ID: ${{ secrets.NOTION_BUGS_DB_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+  fix:
+    name: Fix confirmed bugs
+    runs-on: ubuntu-latest
+    needs: verify
+    if: ${{ always() && (github.event_name == 'schedule' || github.event.inputs.bot == 'both' || github.event.inputs.bot == 'fixer') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-save @notionhq/client @google/generative-ai @octokit/rest
+
+      - name: Run fixer bot
+        run: node scripts/bot-fixer.js
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_BUGS_DB_ID: ${{ secrets.NOTION_BUGS_DB_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: nikitausoltsev32-ctrl/anti_railmatch
