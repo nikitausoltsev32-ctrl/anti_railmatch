@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, TrendingUp, Send, Clock, CheckCircle, MessageSquare, Wifi, Trash2 } from 'lucide-react';
+import { Users, FileText, TrendingUp, Send, Clock, CheckCircle, MessageSquare, Wifi, Trash2, AlertTriangle, Search, ShieldOff, Shield, RefreshCw } from 'lucide-react';
 
 export default function AdminPanel({ supabase, sbUser, isDark }) {
     const [stats, setStats] = useState(null);
@@ -9,11 +9,22 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
     const [sendResult, setSendResult] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
     const [deletingRequests, setDeletingRequests] = useState(false);
+    const [deletingBids, setDeletingBids] = useState(false);
     const [deleteResult, setDeleteResult] = useState(null);
+
+    const [users, setUsers] = useState([]);
+    const [usersLoading, setUsersLoading] = useState(false);
+    const [userSearch, setUserSearch] = useState('');
+    const [userActionResult, setUserActionResult] = useState(null);
+
+    const [errorLogs, setErrorLogs] = useState([]);
+    const [logsLoading, setLogsLoading] = useState(false);
 
     useEffect(() => {
         fetchStats();
         fetchBroadcasts();
+        fetchUsers();
+        fetchErrorLogs();
     }, []);
 
     const fetchStats = async () => {
@@ -23,13 +34,14 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
             { data: requests },
             { data: bids },
         ] = await Promise.all([
-            supabase.from('profiles').select('role, telegram_id, created_at'),
+            supabase.from('profiles').select('id, name, company, role, telegram_id, is_banned, created_at'),
             supabase.from('requests').select('status, created_at'),
             supabase.from('bids').select('status, commission_amount, created_at'),
         ]);
 
         const totalUsers = profiles?.length ?? 0;
         const tgUsers = profiles?.filter(p => p.telegram_id)?.length ?? 0;
+        const bannedUsers = profiles?.filter(p => p.is_banned)?.length ?? 0;
         const totalRequests = requests?.length ?? 0;
         const activeRequests = requests?.filter(r => r.status === 'open')?.length ?? 0;
         const totalBids = bids?.length ?? 0;
@@ -38,12 +50,11 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
             ?.filter(b => b.status === 'contacts_revealed' || b.status === 'accepted')
             ?.reduce((sum, b) => sum + (b.commission_amount || 0), 0) ?? 0;
 
-        // Last 5 registrations
         const lastRegs = [...(profiles || [])]
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .slice(0, 5);
 
-        setStats({ totalUsers, tgUsers, totalRequests, activeRequests, totalBids, completedDeals, revenue, lastRegs });
+        setStats({ totalUsers, tgUsers, bannedUsers, totalRequests, activeRequests, totalBids, completedDeals, revenue, lastRegs });
         setLoadingStats(false);
     };
 
@@ -54,6 +65,68 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
             .order('sent_at', { ascending: false })
             .limit(10);
         if (data) setBroadcasts(data);
+    };
+
+    const fetchUsers = async () => {
+        setUsersLoading(true);
+        const { data } = await supabase
+            .from('profiles')
+            .select('id, name, company, role, is_banned, is_verified, telegram_id, telegram_username, violation_count, created_at')
+            .order('created_at', { ascending: false })
+            .limit(100);
+        if (data) setUsers(data);
+        setUsersLoading(false);
+    };
+
+    const fetchErrorLogs = async () => {
+        setLogsLoading(true);
+        const { data } = await supabase
+            .from('error_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+        if (data) setErrorLogs(data);
+        setLogsLoading(false);
+    };
+
+    const handleBanUser = async (userId, ban) => {
+        setUserActionResult(null);
+        const { error } = await supabase
+            .from('profiles')
+            .update({ is_banned: ban, ...(ban ? {} : { violation_count: 0, chat_blocked_until: null }) })
+            .eq('id', userId);
+        if (error) {
+            setUserActionResult({ success: false, error: error.message });
+        } else {
+            setUserActionResult({ success: true, message: ban ? 'Пользователь заблокирован' : 'Блокировка снята' });
+            fetchUsers();
+            fetchStats();
+        }
+    };
+
+    const handleChangeRole = async (userId, role) => {
+        setUserActionResult(null);
+        const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
+        if (error) {
+            setUserActionResult({ success: false, error: error.message });
+        } else {
+            setUserActionResult({ success: true, message: `Роль изменена на ${role}` });
+            fetchUsers();
+        }
+    };
+
+    const handleResetViolations = async (userId) => {
+        setUserActionResult(null);
+        const { error } = await supabase
+            .from('profiles')
+            .update({ violation_count: 0, chat_blocked_until: null, sanction_level: null })
+            .eq('id', userId);
+        if (error) {
+            setUserActionResult({ success: false, error: error.message });
+        } else {
+            setUserActionResult({ success: true, message: 'Нарушения сброшены' });
+            fetchUsers();
+        }
     };
 
     const handleDeleteAllRequests = async () => {
@@ -71,6 +144,23 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
             fetchStats();
         }
         setDeletingRequests(false);
+    };
+
+    const handleDeleteAllBids = async () => {
+        if (!window.confirm('Удалить ВСЕ ставки и чаты? Это действие необратимо.')) return;
+        setDeletingBids(true);
+        setDeleteResult(null);
+        const { error, count } = await supabase
+            .from('bids')
+            .delete({ count: 'exact' })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+        if (error) {
+            setDeleteResult({ success: false, error: error.message });
+        } else {
+            setDeleteResult({ success: true, count, type: 'bids' });
+            fetchStats();
+        }
+        setDeletingBids(false);
     };
 
     const handleBroadcast = async () => {
@@ -145,28 +235,33 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
 
             {/* Dev tools */}
             <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-200 dark:border-red-800/40 p-5">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                    <div>
-                        <h3 className="font-black uppercase tracking-widest text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
-                            <Trash2 className="w-4 h-4" /> Dev tools
-                        </h3>
-                        <p className="text-xs text-red-500 dark:text-red-400/70 mt-0.5">Только для разработки</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        {deleteResult && (
-                            <span className={`text-sm font-bold ${deleteResult.success ? 'text-green-600' : 'text-red-600'}`}>
-                                {deleteResult.success ? `Удалено ${deleteResult.count} заявок` : deleteResult.error}
-                            </span>
-                        )}
-                        <button
-                            onClick={handleDeleteAllRequests}
-                            disabled={deletingRequests}
-                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-black uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            {deletingRequests ? 'Удаление...' : 'Удалить все заявки'}
-                        </button>
-                    </div>
+                <h3 className="font-black uppercase tracking-widest text-sm text-red-700 dark:text-red-400 flex items-center gap-2 mb-3">
+                    <Trash2 className="w-4 h-4" /> Dev tools
+                </h3>
+                <div className="flex flex-wrap items-center gap-3">
+                    {deleteResult && (
+                        <span className={`text-sm font-bold ${deleteResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                            {deleteResult.success
+                                ? `Удалено ${deleteResult.count} ${deleteResult.type === 'bids' ? 'ставок' : 'заявок'}`
+                                : deleteResult.error}
+                        </span>
+                    )}
+                    <button
+                        onClick={handleDeleteAllRequests}
+                        disabled={deletingRequests}
+                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        {deletingRequests ? 'Удаление...' : 'Все заявки'}
+                    </button>
+                    <button
+                        onClick={handleDeleteAllBids}
+                        disabled={deletingBids}
+                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        {deletingBids ? 'Удаление...' : 'Все ставки'}
+                    </button>
                 </div>
             </div>
 
@@ -184,14 +279,16 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
                                         {(p.role === 'shipper' ? 'Г' : p.role === 'owner' ? 'В' : p.role === 'admin' ? 'А' : 'Д')}
                                     </div>
                                     <div>
-                                        <div className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                                            {p.role === 'shipper' ? 'Грузовладелец' : p.role === 'owner' ? 'Владелец' : p.role === 'admin' ? 'Администратор' : 'Демо'}
-                                        </div>
+                                        <div className="text-sm font-bold dark:text-white">{p.name || '—'}</div>
+                                        <div className="text-xs text-slate-400">{p.company || p.role}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {p.telegram_id && (
                                         <span className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-2 py-0.5 rounded-full font-bold">TG</span>
+                                    )}
+                                    {p.is_banned && (
+                                        <span className="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 px-2 py-0.5 rounded-full font-bold">БАН</span>
                                     )}
                                     <span className="text-xs text-slate-400">
                                         {new Date(p.created_at).toLocaleDateString('ru-RU')}
@@ -240,6 +337,137 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Users list */}
+            <div className="bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3 flex-wrap">
+                    <h3 className="font-black uppercase tracking-widest text-sm dark:text-white flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-600" /> Пользователи
+                        {!usersLoading && <span className="text-slate-400 font-normal normal-case tracking-normal">({users.length})</span>}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                        {userActionResult && (
+                            <span className={`text-xs font-bold ${userActionResult.success ? 'text-green-600' : 'text-red-500'}`}>
+                                {userActionResult.success ? userActionResult.message : userActionResult.error}
+                            </span>
+                        )}
+                        <button onClick={fetchUsers} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                            <RefreshCw className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+                <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-700">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            value={userSearch}
+                            onChange={e => setUserSearch(e.target.value)}
+                            placeholder="Поиск по имени или компании..."
+                            className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                        />
+                    </div>
+                </div>
+                {usersLoading ? (
+                    <div className="p-5 text-center text-sm text-slate-400">Загрузка...</div>
+                ) : (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-700 max-h-96 overflow-y-auto">
+                        {users
+                            .filter(u => {
+                                const q = userSearch.toLowerCase();
+                                return !q || (u.name || '').toLowerCase().includes(q) || (u.company || '').toLowerCase().includes(q);
+                            })
+                            .map(u => (
+                                <div key={u.id} className="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                                            u.is_banned ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
+                                        }`}>
+                                            {u.role === 'shipper' ? 'Г' : u.role === 'owner' ? 'В' : u.role === 'admin' ? 'А' : u.role === 'developer' ? 'Д' : '?'}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="text-sm font-bold dark:text-white truncate">
+                                                {u.name || '—'}
+                                                {u.violation_count > 0 && (
+                                                    <span className="ml-1.5 text-[10px] text-amber-500 font-bold">{u.violation_count} нар.</span>
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-slate-400 truncate">{u.company || '—'}</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                        {u.telegram_id && <span className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-1.5 py-0.5 rounded-full font-bold">TG</span>}
+                                        {u.is_banned && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-bold">БАН</span>}
+                                        <select
+                                            value={u.role}
+                                            onChange={e => handleChangeRole(u.id, e.target.value)}
+                                            disabled={u.id === sbUser?.id}
+                                            className="text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-1.5 py-1 bg-slate-50 dark:bg-slate-800 dark:text-white focus:outline-none"
+                                        >
+                                            <option value="owner">Владелец</option>
+                                            <option value="shipper">Грузовладелец</option>
+                                            <option value="admin">Админ</option>
+                                            <option value="developer">Разработчик</option>
+                                        </select>
+                                        {u.violation_count > 0 && (
+                                            <button
+                                                onClick={() => handleResetViolations(u.id)}
+                                                className="text-[10px] text-amber-600 hover:text-amber-700 font-bold border border-amber-300 dark:border-amber-700 px-2 py-1 rounded-lg transition-colors"
+                                            >
+                                                Сбросить
+                                            </button>
+                                        )}
+                                        {u.id !== sbUser?.id && (
+                                            <button
+                                                onClick={() => handleBanUser(u.id, !u.is_banned)}
+                                                className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-colors flex items-center gap-1 ${
+                                                    u.is_banned
+                                                        ? 'text-green-600 border-green-300 dark:border-green-700 hover:bg-green-50'
+                                                        : 'text-red-600 border-red-300 dark:border-red-700 hover:bg-red-50'
+                                                }`}
+                                            >
+                                                {u.is_banned ? <><Shield className="w-3 h-3" /> Разбан</> : <><ShieldOff className="w-3 h-3" /> Бан</>}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Error logs */}
+            <div className="bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <h3 className="font-black uppercase tracking-widest text-sm dark:text-white flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" /> Логи ошибок
+                    </h3>
+                    <button onClick={fetchErrorLogs} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                        <RefreshCw className="w-4 h-4" />
+                    </button>
+                </div>
+                {logsLoading ? (
+                    <div className="p-5 text-center text-sm text-slate-400">Загрузка...</div>
+                ) : errorLogs.length === 0 ? (
+                    <div className="p-5 text-center text-sm text-slate-400">Ошибок нет</div>
+                ) : (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-700 max-h-80 overflow-y-auto">
+                        {errorLogs.map(log => (
+                            <div key={log.id} className="px-5 py-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="text-xs font-bold text-red-500 uppercase tracking-widest">{log.error_type || 'error'}</div>
+                                        <div className="text-sm dark:text-white mt-0.5 break-words">{log.message}</div>
+                                        {log.user_id && <div className="text-[10px] text-slate-400 mt-1">user: {log.user_id.slice(0, 8)}...</div>}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 shrink-0">
+                                        {new Date(log.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Broadcasts history */}
