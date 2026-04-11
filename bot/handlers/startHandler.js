@@ -51,6 +51,8 @@ export async function handleStart(chatId, text, telegramUser) {
     }
 
     const code = param;
+
+    if (!code) {
         await sendMessage(
                 chatId,
                 `👋 Добро пожаловать в <b>RailMatch</b>, ${telegramUser.first_name}!\n\n` +
@@ -64,9 +66,9 @@ export async function handleStart(chatId, text, telegramUser) {
                 OPEN_BUTTON
               );
         return;
-  }
+    }
 
-  try {
+    try {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-linking-code`, {
                 method: 'POST',
                 headers: {
@@ -101,8 +103,8 @@ export async function handleStart(chatId, text, telegramUser) {
                         OPEN_BUTTON
                       );
       }
-  } catch (err) {
+    } catch (err) {
         console.error('Error verifying linking code:', err);
         await sendMessage(chatId, '❌ Произошла ошибка. Попробуйте позже.');
-  }
+    }
 }
