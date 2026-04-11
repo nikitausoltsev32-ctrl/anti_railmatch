@@ -7,7 +7,7 @@ const APP_URL = process.env.APP_URL || 'https://railmatch.ru';
 const OPEN_BUTTON = {
     reply_markup: {
           inline_keyboard: [
-                  [{ text: '🔵 Открыть RailMatch', web_app: { url: APP_URL } }]
+                  [{ text: '🔵 Открыть RailMatch', web_app: { url: `${APP_URL}?reset=1` } }]
                 ]
     }
 };

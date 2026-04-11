@@ -94,7 +94,18 @@ export default function App() {
     const [profiles, setProfiles] = useState([]);
 
     // Навигация
-    const [screen, setScreen] = useState(() => localStorage.getItem('rm_screen') || 'landing'); // 'landing' | 'auth' | 'app'
+    const [screen, setScreen] = useState(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('reset') === '1') {
+            localStorage.removeItem('rm_screen');
+            localStorage.removeItem('rm_view');
+            const url = new URL(window.location.href);
+            url.searchParams.delete('reset');
+            window.history.replaceState({}, '', url.toString());
+            return 'landing';
+        }
+        return localStorage.getItem('rm_screen') || 'landing';
+    }); // 'landing' | 'auth' | 'app'
     const [view, setView] = useState(() => localStorage.getItem('rm_view') || 'catalog'); // 'catalog' | 'my-requests' | 'my-bids' | 'messenger' | 'profile' | 'create' | 'admin'
 
     // Persist state across reloads so user isn't kicked to main page
@@ -376,6 +387,13 @@ export default function App() {
                 });
         }
     }, [sbUser, userProfile]);
+
+    // Safety-guard: если auth завершился, профиля нет, а screen=app — сбрасываем на лендинг
+    useEffect(() => {
+        if (!authChecking && !userProfile && screen !== 'landing' && screen !== 'auth') {
+            setScreen('landing');
+        }
+    }, [authChecking, userProfile, screen]);
 
     // 2c. ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ОШИБОК → error_logs
     useEffect(() => {
