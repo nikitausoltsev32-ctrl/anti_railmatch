@@ -246,7 +246,7 @@ export default function ChatWindow({
 
     return (
         <div className="min-h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="bg-white dark:bg-[#111827] h-[calc(100vh-8rem)] sm:h-[800px] rounded-2xl sm:rounded-[2.5rem] border dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="bg-white dark:bg-[#111827] h-[100dvh] sm:h-[800px] rounded-none sm:rounded-[2.5rem] border-0 sm:border dark:border-slate-800 sm:shadow-2xl flex flex-col overflow-hidden relative">
 
                 {/* ===== HEADER ===== */}
                 <div className="px-3 sm:px-6 py-3 sm:py-4 border-b dark:border-slate-800 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl z-20">
@@ -930,6 +930,7 @@ export default function ChatWindow({
                                 value={inputText}
                                 onChange={handleInputChange}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                onFocus={() => { setTimeout(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, 350); }}
                                 placeholder="Напишите сообщение..."
                                 className="flex-1 bg-transparent px-4 py-3 outline-none dark:text-white font-bold text-sm placeholder:text-slate-400"
                             />

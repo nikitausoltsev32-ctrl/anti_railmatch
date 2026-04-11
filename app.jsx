@@ -25,7 +25,9 @@ import UserDashboard from './components/UserDashboard';
 import MyBidsView from './components/MyBidsView';
 import FleetDislocation from './components/FleetDislocation';
 import DeveloperDashboard from './components/DeveloperDashboard';
+import BugReportButton from './components/BugReportButton';
 
+import { haptic } from './src/haptic.js';
 import { supabase } from './src/supabaseClient';
 import {
     PLATFORM_COMMISSION_RATE,
@@ -315,11 +317,45 @@ export default function App() {
         };
     }, []);
 
-    // 2b. Telegram Mini App — инициализация и автолинковка
+    // 2b. Telegram Mini App — инициализация, автовход и линковка
     useEffect(() => {
-        if (!window.Telegram?.WebApp) return;
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
+        const tgApp = window.Telegram?.WebApp;
+        if (!tgApp) return;
+        tgApp.ready();
+        tgApp.expand();
+
+        // Auto-authenticate via initData when opened inside Telegram
+        const initData = tgApp.initData;
+        if (!initData) return;
+
+        // Don't re-auth if already logged in
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) return; // already authed
+
+            // Keep loading spinner visible during Mini App auth
+            setAuthChecking(true);
+            setAuthLoading(true);
+            fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-auth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ init_data: initData }),
+            })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) throw new Error(data.error || 'Telegram auth failed');
+                    return supabase.auth.setSession({
+                        access_token: data.access_token,
+                        refresh_token: data.refresh_token,
+                    }).then(() => {
+                        if (data.needs_onboarding) setNeedsTelegramOnboarding(true);
+                    });
+                })
+                .catch(err => {
+                    console.warn('Mini App auto-auth failed:', err.message);
+                    setAuthChecking(false);
+                })
+                .finally(() => setAuthLoading(false));
+        });
     }, []);
 
     useEffect(() => {
@@ -331,6 +367,12 @@ export default function App() {
                 .eq('id', sbUser.id)
                 .then(() => {
                     setUserProfile(prev => ({ ...prev, telegram_id: tgUser.id, telegram_username: tgUser.username || null }));
+                    supabase.functions.invoke('telegram-notify', {
+                        body: {
+                            telegram_id: String(tgUser.id),
+                            message: 'Telegram успешно привязан к вашему аккаунту RailMatch. Теперь вы будете получать уведомления здесь.',
+                        },
+                    }).catch(e => console.warn('TG welcome skipped:', e));
                 });
         }
     }, [sbUser, userProfile]);
@@ -621,6 +663,39 @@ export default function App() {
 
     const securityWarningTimerRef = useRef(null);
     const pendingLoginSuccessRef = useRef(null);
+    const pullStartYRef = useRef(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handlePullRefresh = useCallback(async () => {
+        if (isRefreshing || view !== 'catalog') return;
+        setIsRefreshing(true);
+        haptic.impact('light');
+        const [
+            { data: freshRequests },
+            { data: freshBids },
+            { data: freshProfiles },
+        ] = await Promise.all([
+            supabase.from('requests').select('*').order('created_at', { ascending: false }),
+            supabase.from('bids').select('*').order('created_at', { ascending: false }),
+            supabase.from('profiles').select('id, name, company, inn, role, verification_status, is_verified, telegram_id, telegram_username, phone, average_rating, review_count'),
+        ]);
+        if (freshRequests) setRequests(freshRequests);
+        if (freshBids) setBids(freshBids);
+        if (freshProfiles) setProfiles(freshProfiles);
+        haptic.notification('success');
+        setIsRefreshing(false);
+    }, [isRefreshing, view]);
+
+    const handleTouchStart = useCallback((e) => {
+        if (window.scrollY === 0) pullStartYRef.current = e.touches[0].clientY;
+    }, []);
+
+    const handleTouchEnd = useCallback((e) => {
+        if (pullStartYRef.current === null) return;
+        const delta = e.changedTouches[0].clientY - pullStartYRef.current;
+        pullStartYRef.current = null;
+        if (delta > 80) handlePullRefresh();
+    }, [handlePullRefresh]);
 
     const requireAuth = useCallback((callback) => {
         if (!sbUser || userProfile?.role === 'demo') {
@@ -728,7 +803,7 @@ export default function App() {
 
         const recentSenderTexts = messages
             .filter(m => m.chat_id === chatId && m.sender_id === sbUser.id && m.text)
-            .slice(-2)
+            .slice(-15)
             .map(m => m.text);
         const validation = validateMessageSequence(recentSenderTexts, text);
 
@@ -773,8 +848,23 @@ export default function App() {
                     sanctionLevel = 'blocked';
                     sanctionMessage = `Чат заблокирован на ${CHAT_BLOCK_HOURS} часов. Повторные нарушения приведут к снятию верификации.`;
                 } else {
-                    // 1 нарушение: предупреждение
-                    sanctionMessage = 'Ваше сообщение содержит контактные данные и заблокировано. Используйте кнопку «Раскрыть контакты» для безопасной передачи данных.';
+                    // 1 нарушение: предупреждение с уточнением типа
+                    const violationHints = {
+                        phone: 'Сообщение содержит номер телефона.',
+                        messenger: 'Сообщение содержит ссылку на мессенджер или username.',
+                        email: 'Сообщение содержит email-адрес.',
+                        url: 'Сообщение содержит ссылку на внешний сайт.',
+                        obfuscated: 'Обнаружена попытка скрытой передачи контактов.',
+                        address: 'Сообщение содержит физический адрес.',
+                        surname: 'Передача фамилий запрещена до раскрытия контактов.',
+                        company_name: 'Передача названия компании запрещена до раскрытия контактов.',
+                        requisites: 'Сообщение содержит банковские или налоговые реквизиты.',
+                        stop_word: 'Сообщение содержит попытку обхода платформы.',
+                        split_contact: 'Обнаружена попытка передать контакт по частям.',
+                        split_letter: 'Обнаружена попытка передать данные по буквам.',
+                    };
+                    const hint = violationHints[validation.violationType] || 'Сообщение содержит запрещённые данные.';
+                    sanctionMessage = `${hint} Используйте кнопку «Раскрыть контакты» для безопасной передачи данных.`;
                 }
 
                 await supabase.from('profiles').update(profileUpdate).eq('id', sbUser.id);
@@ -842,6 +932,7 @@ export default function App() {
         }
 
         setBids(prev => prev.map(b => b.id === bidId ? { ...b, status: 'accepted' } : b));
+        haptic.escalate();
 
         sendNotification(
             bid.ownerId,
@@ -903,6 +994,7 @@ export default function App() {
             const partnerId = isShipper ? bid.ownerId : bid.shipperInn;
 
             if (fullyConfirmed && updatedBid.status === 'pending') {
+                haptic.escalate();
                 await supabase.from('bids').update({ status: 'commission_pending' }).eq('id', bid.id);
                 setActiveChat(prev => ({ ...prev, ...updateField, status: 'commission_pending' }));
                 setBids(prev => prev.map(b => b.id === bid.id ? { ...b, ...updateField, status: 'commission_pending' } : b));
@@ -1399,13 +1491,13 @@ export default function App() {
 
     return (
         <ErrorBoundary>
-        <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top">
+        <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             {/* DEV BANNER */}
-            <div className="w-full bg-amber-400 dark:bg-amber-500 text-amber-900 dark:text-amber-950 text-center py-2 px-4 text-xs font-black tracking-wide z-50 flex items-center justify-center gap-2 flex-wrap">
+            <div className={`w-full bg-amber-400 dark:bg-amber-500 text-amber-900 dark:text-amber-950 text-center py-2 px-4 text-xs font-black tracking-wide z-50 flex items-center justify-center gap-2 flex-wrap${view === 'chat' ? ' hidden md:flex' : ''}`}>
                 <span>Сайт находится в разработке. По вопросам пишите в Telegram:</span>
                 <a href="https://t.me/onemonba" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:opacity-70 transition-opacity">@onemonba</a>
             </div>
-            <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
+            <header className={`sticky top-0 z-50 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60${view === 'chat' ? ' hidden md:block' : ''}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('catalog')}>
                         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform"><TrainFront className="text-white w-5 h-5" /></div>
@@ -1454,7 +1546,7 @@ export default function App() {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24 md:pb-10 relative">
+            <main className={view === 'chat' ? 'relative md:max-w-7xl md:mx-auto md:px-6 md:py-10' : 'max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24 md:pb-10 relative'}>
                 {/* SECURITY WARNING BANNER */}
                 {securityWarning && (
                     <div className={`mb-8 p-6 rounded-[2rem] border animate-in fade-in slide-in-from-top-4 duration-500 z-40 shadow-xl flex items-center gap-6 ${securityWarning.severity === 'critical'
@@ -1475,6 +1567,14 @@ export default function App() {
                 )}
                 {view === 'catalog' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        {isRefreshing && (
+                            <div className="flex justify-center mb-4 -mt-2">
+                                <div className="flex items-center gap-2 text-xs font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full">
+                                    <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                    Обновление...
+                                </div>
+                            </div>
+                        )}
                         {(!sbUser || userProfile?.role === 'demo') && (
                             <div className="mb-6 sm:mb-10 p-4 sm:p-6 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm border-l-4 border-l-orange-500">
                                 <div className="flex items-center gap-3 sm:gap-4 text-orange-600 dark:text-orange-400"><AlertCircle className="w-8 h-8 sm:w-10 sm:h-10 shrink-0" /><div><h3 className="font-extrabold text-base sm:text-lg">Демо-режим</h3><p className="text-xs sm:text-sm font-medium opacity-80">Зарегистрируйтесь для публикации грузов и ставок.</p></div></div>
@@ -1603,7 +1703,7 @@ export default function App() {
                                     return (
                                         <div
                                             key={chatBid.id}
-                                            onClick={() => setActiveChat(buildChatObject(chatBid, req, profiles))}
+                                            onClick={() => { const obj = buildChatObject(chatBid, req, profiles); setActiveChat(obj); if (window.innerWidth < 1024) setView('chat'); }}
                                             className={`p-4 rounded-2xl cursor-pointer transition-all border ${isActive
                                                 ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20'
                                                 : 'bg-slate-50 dark:bg-slate-800/50 border-transparent hover:border-blue-300 dark:hover:border-slate-600'
@@ -1710,7 +1810,7 @@ export default function App() {
                 )}
 
                 {view === 'chat' && activeChat && (
-                    <div className="animate-in fade-in zoom-in-95 duration-500">
+                    <div className="animate-in fade-in zoom-in-95 duration-500 md:mt-10">
                         <ChatWindow
                             chat={activeChat}
                             messages={(messages || []).filter(m => m.chat_id === activeChat.id)}
@@ -1788,7 +1888,7 @@ export default function App() {
             {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
 
             {/* Mobile Bottom Navigation */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#0B1120]/90 backdrop-blur-xl border-t border-slate-200/60 dark:border-slate-800/60 px-2 pb-[env(safe-area-inset-bottom)]">
+            <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#0B1120]/90 backdrop-blur-xl border-t border-slate-200/60 dark:border-slate-800/60 px-2 pb-[env(safe-area-inset-bottom)]${view === 'chat' ? ' hidden' : ''}`}>
                 <div className="flex items-center justify-around h-16">
                     {[
                         { key: 'catalog', label: 'Биржа', icon: <Sparkles className="w-5 h-5" /> },
@@ -1799,7 +1899,7 @@ export default function App() {
                     ].map(tab => (
                         <button
                             key={tab.key}
-                            onClick={() => tab.key === 'profile' ? requireAuth(() => setView('profile')) : setView(tab.key)}
+                            onClick={() => { haptic.impact('light'); tab.key === 'profile' ? requireAuth(() => setView('profile')) : setView(tab.key); }}
                             className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors relative ${
                                 (view === tab.key || (tab.key === 'messenger' && view === 'chat'))
                                     ? 'text-blue-600 dark:text-blue-400'
@@ -1813,6 +1913,7 @@ export default function App() {
                     ))}
                 </div>
             </nav>
+        <BugReportButton />
         </div>
         </ErrorBoundary>
     );

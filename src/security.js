@@ -1,109 +1,163 @@
 // --- БИЗНЕС-ЛОГИКА БЕЗОПАСНОСТИ (Anti-leakage) ---
-// 4-уровневая система защиты чата RailMatch
+// Многоуровневая защита чата RailMatch от утечки контактов
 
-// === УРОВЕНЬ 1: REGEX-ФИЛЬТРАЦИЯ ===
-
-// Стоп-слова: прямые попытки обхода платформы
+// === СТОП-ФРАЗЫ (контекстные — не одиночные слова) ===
 export const STOP_WORDS = [
     // Прямые попытки обхода
     'давайте в обход', 'скину в телегу', 'оплата на карту', 'наберите мне напрямую',
-    'мой номер', 'мой телефон', 'пишите в вотсап', 'связаться в телеграме',
-    'перезвоните на', 'мои реквизиты', 'оплатить на карту',
-    'контакты', 'телефон', 'email', 'почта', 'whatsapp', 'telegram', 'viber',
-    'личку', 'в личку', 'direct', 'директ', 'мобильный', 'сотовый', 'созвонимся',
-    // Глаголы и фразы поиска контактов
-    'набери меня', 'набери мне', 'наберите меня', 'наберите мне',
-    'позвони мне', 'позвоните мне', 'позвони на', 'позвоните на',
-    'звони мне', 'звоните мне', 'перезвони',
-    'найди меня', 'найдите меня', 'найди в', 'найдите в',
-    'пиши мне', 'пишите мне', 'написать мне',
-    'свяжись', 'свяжитесь', 'свяжись со мной', 'свяжитесь со мной',
-    'отправлю реквизиты', 'скину реквизиты', 'дам номер', 'дам контакт', 'скину номер',
-    'в обход платформы', 'без платформы', 'напрямую', 'вне платформы', 'минуя платформу',
-    'вконтакте', 'одноклассники', 'ok.ru', 'вк ',
-    // Мессенджеры (русские варианты)
-    'вотсап', 'ватсап', 'вайбер', 'телеграм', 'сигнал',
-    'инстаграм', 'инста',
+    'мой номер', 'мой телефон', 'мои контакты', 'дайте контакт', 'дам контакт',
+    'пишите в вотсап', 'связаться в телеграме', 'перезвоните на', 'мои реквизиты',
+    'оплатить на карту', 'дам номер', 'скину номер', 'скину реквизиты',
+    'отправлю реквизиты', 'в обход платформы', 'без платформы', 'вне платформы',
+    'минуя платформу', 'напрямую без', 'встретимся лично и', 'оплатим наличными',
+    'передам напрямую', 'найди меня в', 'найдите меня в', 'пиши мне в',
+    'написать мне в', 'свяжись со мной', 'свяжитесь со мной',
+    // Ссылки на сторонние площадки
+    'найди на авито', 'найдите на авито', 'мы на авито', 'есть на авито',
+    'на hh.ru', 'на headhunter', 'на 2гис', 'в 2гис', 'найди в 2гис',
+    'на rabota', 'на superjob',
+    // Мессенджеры в контексте
+    'пишите в личку', 'в личку', 'в директ',
+    'наберите в вотсапе', 'пишите в вотсапе', 'добавьте в вотсап',
+    'найдите в телеграм', 'пишите в телеграм', 'добавьте в телеграм',
+    'вконтакте у меня', 'одноклассники мой', 'vk.com/',
 ];
 
-// Цифры прописью (русский)
+// === ЦИФРЫ ПРОПИСЬЮ ===
 const DIGIT_WORDS_RU = {
     'ноль': '0', 'нуль': '0',
-    'один': '1', 'одна': '1', 'одно': '1',
-    'два': '2', 'две': '2',
-    'три': '3',
-    'четыре': '4',
-    'пять': '5',
-    'шесть': '6',
-    'семь': '7',
-    'восемь': '8',
-    'девять': '9',
+    'один': '1', 'одна': '1', 'одно': '1', 'одного': '1', 'одной': '1',
+    'два': '2', 'две': '2', 'двух': '2',
+    'три': '3', 'трёх': '3', 'трех': '3',
+    'четыре': '4', 'четырёх': '4', 'четырех': '4',
+    'пять': '5', 'пяти': '5',
+    'шесть': '6', 'шести': '6',
+    'семь': '7', 'семи': '7',
+    'восемь': '8', 'восьми': '8',
+    'девять': '9', 'девяти': '9',
 };
 
-// Цифры прописью (казахский транслит)
 const DIGIT_WORDS_KZ = {
     'bir': '1', 'бир': '1',
     'eki': '2', 'еки': '2',
     'ush': '3', 'уш': '3', 'үш': '3',
     'tort': '4', 'торт': '4', 'төрт': '4',
-    'bes': '5', 'бес': '5', 'бiс': '5',
+    'bes': '5', 'бес': '5',
     'alty': '6', 'алты': '6',
     'zheti': '7', 'жети': '7', 'жеті': '7',
     'sekiz': '8', 'секиз': '8', 'сегіз': '8',
     'togyz': '9', 'тогыз': '9', 'тоғыз': '9',
 };
 
-const ALL_DIGIT_WORDS = { ...DIGIT_WORDS_RU, ...DIGIT_WORDS_KZ };
-const DIGIT_WORD_PATTERN = new RegExp(
-    `(?:${Object.keys(ALL_DIGIT_WORDS).join('|')})`,
-    'gi'
-);
+// Слова-числа на латинице
+const DIGIT_WORDS_EN = {
+    'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
+    'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9',
+};
 
-// --- Детекторы ---
+const ALL_DIGIT_WORDS = { ...DIGIT_WORDS_RU, ...DIGIT_WORDS_KZ, ...DIGIT_WORDS_EN };
 
-/** Телефонные номера: +7/8/007 + 10 цифр, с любыми разделителями */
+// Замена цифр символами (лит-код: а=1, б=2...)
+const CYRILLIC_DIGIT_MAP = {
+    'а': '1', 'б': '2', 'в': '3', 'г': '4', 'д': '5',
+    'е': '6', 'ж': '7', 'з': '8', 'и': '9', 'й': '0',
+};
+
+// Замена цифр схожими символами
+const LOOKALIKE_MAP = {
+    'о': '0', 'O': '0', 'o': '0', 'О': '0',
+    'l': '1', 'I': '1', 'і': '1', '|': '1',
+    'з': '3', 'З': '3',
+    'ч': '4', 'Ч': '4',
+    'б': '6', 'Б': '6',
+    'г': '7', 'Г': '7',
+    'в': '8', 'В': '8',
+};
+
+// === ДЕТЕКТОРЫ ===
+
+/** Нормализует текст: убирает разделители, раскрывает обфускацию */
+function normalizeForPhone(text) {
+    let s = text;
+
+    // Убираем разделители между цифрами/буквами
+    s = s.replace(/[\s\-_.()\[\]{}/\\|,;:*"'«»]+/g, '');
+
+    // Lookalike-символы → цифры
+    s = s.replace(/[оOoОlIі|зЗчЧбБгГвВ]/g, ch => LOOKALIKE_MAP[ch] || ch);
+
+    return s;
+}
+
+/** Восстанавливает цифры прописью в строке в числа */
+function replaceDigitWords(text) {
+    const words = text.toLowerCase().split(/\s+/);
+    return words.map(w => {
+        const clean = w.replace(/[,.\-!?]/g, '');
+        return ALL_DIGIT_WORDS[clean] !== undefined ? ALL_DIGIT_WORDS[clean] : w;
+    }).join(' ');
+}
+
+/**
+ * Основной детектор телефонных номеров.
+ * Работает с нормализованным текстом — ловит любой способ написания.
+ */
 function detectPhone(text) {
-    const normalized = text.replace(/[\s\-().+]/g, '');
+    // --- Прямые форматы ---
+    // +7 / 8 / 007 / +7 / 7 (с разделителями и без)
+    if (/(?:\+?7|8|007)\s*[-.(]?\s*\d{3}\s*[-.)]\s*\d{3}\s*[-.]?\s*\d{2}\s*[-.]?\s*\d{2}/.test(text)) return true;
 
-    // Стандартные форматы: +7, 8, 007 + 10 цифр
-    if (/(?:\+?7|8|007)\s*[-.(]?\s*\d{3}\s*[-.)]\s*\d{3}\s*[-.]?\s*\d{2}\s*[-.]?\s*\d{2}/.test(text)) {
-        return true;
-    }
+    // Нормализуем и проверяем подряд идущие цифры
+    const norm = normalizeForPhone(text);
 
-    // 7+ последовательных цифр (после удаления разделителей)
-    if (/\d{7,}/.test(normalized)) {
-        return true;
-    }
+    // 10+ цифр подряд после удаления разделителей (любой телефон мира)
+    if (/\d{10,}/.test(norm)) return true;
 
-    // Частичные номера: группы цифр через дефисы/пробелы (минимум 6 цифр суммарно)
-    const digitGroups = text.match(/\d[\d\s\-.]{5,}\d/g);
+    // Российский номер: 7 или 8 + 10 цифр
+    if (/^[78]\d{10}$/.test(norm)) return true;
+    if (/[78]\d{10}/.test(norm)) return true;
+
+    // Группы цифр: минимум 7 цифр суммарно в группах через стандартные разделители
+    const digitGroups = text.match(/\d[\d\s\-.]{4,}\d/g);
     if (digitGroups) {
         for (const group of digitGroups) {
             const digits = group.replace(/\D/g, '');
-            if (digits.length >= 6) return true;
+            if (digits.length >= 7) return true;
         }
+    }
+
+    // Цифры прописью восстановленные
+    const withDigits = replaceDigitWords(text);
+    if (withDigits !== text.toLowerCase()) {
+        // Повторная проверка после замены прописью
+        const normAfter = normalizeForPhone(withDigits.replace(/\s/g, ''));
+        if (/\d{7,}/.test(normAfter)) return true;
     }
 
     return false;
 }
 
-/** Цифры через пробелы: "8 7 7 7 1 2 3 4 5 6 7" */
+/** Пробелы между отдельными цифрами: "8 9 5 0 1 2 3 4 5 6 7" */
 function detectSpacedDigits(text) {
-    // Одиночные цифры, разделённые пробелами (минимум 5 штук подряд)
+    // 5+ одиночных цифр через пробелы
     return /(?:^|\s)(\d\s+){4,}\d(?:\s|$)/.test(text);
 }
 
-/** Цифры прописью: "восемь семь семь один два три" */
+/**
+ * Цифры прописью: "восемь девять пять ноль один два три"
+ * Порог снижен до 4 (было 3) чтобы ловить более длинные последовательности
+ * но не блокировать "три вагона пять тонн"
+ */
 function detectWrittenDigits(text) {
     const lower = text.toLowerCase();
     const words = lower.split(/\s+/);
     let consecutive = 0;
 
     for (const word of words) {
-        const clean = word.replace(/[,.-]/g, '');
-        if (ALL_DIGIT_WORDS[clean]) {
+        const clean = word.replace(/[,.\-!?]/g, '');
+        if (ALL_DIGIT_WORDS[clean] !== undefined) {
             consecutive++;
-            if (consecutive >= 3) return true;
+            if (consecutive >= 4) return true;
         } else {
             consecutive = 0;
         }
@@ -111,136 +165,92 @@ function detectWrittenDigits(text) {
     return false;
 }
 
+/** Кириллические буквы как коды цифр (нестандартная обфускация) */
+function detectCyrillicEncoding(text) {
+    // Паттерн: отдельные кириллические буквы через пробел (5+ штук)
+    // Например: "в о с е м ь"
+    const isolated = text.match(/(?:^|\s)([а-яёА-ЯЁ])(?=\s|$)/g);
+    if (isolated && isolated.length >= 5) return true;
+
+    // Буквы через дефис/точку: "в-о-с-е-м-ь"
+    if (/[а-яёА-ЯЁ][-\.][а-яёА-ЯЁ][-\.][а-яёА-ЯЁ]/.test(text)) return true;
+
+    return false;
+}
+
 /** Мессенджеры и соцсети */
 function detectMessenger(text) {
     const lower = text.toLowerCase();
 
-    // Прямые ссылки: t.me/, wa.me/, vk.com/, instagram.com/
+    // Прямые ссылки
     if (/t\.me\/\S+/.test(lower)) return true;
     if (/wa\.me\/\S+/.test(lower)) return true;
     if (/vk\.com\/\S+/.test(lower)) return true;
     if (/instagram\.com\/\S+/.test(lower)) return true;
+    if (/discord\.gg\/\S+/.test(lower)) return true;
+    if (/skype\.com\/\S+/.test(lower)) return true;
 
-    // Обфусцированные ссылки: t(.)me, t[.]me, t me/, t(me)
+    // Обфусцированные ссылки
     if (/t\s*[\[(.]?\s*\.?\s*[\])]?\s*me\s*\/\S+/i.test(lower)) return true;
     if (/wa\s*[\[(.]?\s*\.?\s*[\])]?\s*me\s*\/?\S*/i.test(lower)) return true;
 
-    // @username (не @платформа — разрешаем @railmatch)
+    // @username (кроме @railmatch)
     if (/@[a-zA-Z0-9_]{2,}/.test(text) && !/@railmatch/i.test(text)) return true;
 
-    // Ключевые слова мессенджеров (английские)
-    if (/\b(telegram|whats\s*app|viber|signal)\b/i.test(lower)) return true;
+    // Ключевые слова мессенджеров
+    if (/\b(telegram|whats\s*app|viber|signal|discord|skype)\b/i.test(lower)) return true;
 
-    // Standalone мессенджер-аббревиатуры без username — тг, ТГ, tg, Max, Вотсапп и т.д.
-    if (/\b(тг|т\.г\.?|тлг|телега|tg|вотсапп|ватсапп|max)\b/i.test(lower)) return true;
+    // Русские аббревиатуры
+    if (/\b(тг|т\.г\.?|тлг|телега|tg|вотсапп|ватсапп|вотсап|ватсап|вайбер)\b/i.test(lower)) return true;
 
-    // Аббревиатуры "тг" / "tg" + username (с @ или без)
-    // Ловит: "тг onemonba", "tg username", "тг: onemonba", "тг- username"
+    // тг/tg + username
     if (/\b(тг|т\.г\.?|телега|тлг)\s*[:\-]?\s*@?[a-zA-Z][a-zA-Z0-9_.]{1,}/i.test(lower)) return true;
     if (/\btg\s*[:\-]?\s*@?[a-zA-Z][a-zA-Z0-9_.]{1,}/i.test(lower)) return true;
 
-    // Любой мессенджер-keyword + username без @ (напр. "телеграм onemonba")
-    if (/\b(telegram|телеграм|whatsapp|вотсап|ватсап|вотсапп|ватсапп|viber|вайбер|signal|тг|tg|телега|max)\s*[:\-–]?\s*[a-zA-Z][a-zA-Z0-9_.]{2,}/i.test(lower)) return true;
+    // Мессенджер + username
+    if (/\b(telegram|телеграм|whatsapp|viber|вайбер|signal|тг|tg|телега|discord|skype)\s*[:\-–]?\s*[a-zA-Z][a-zA-Z0-9_.]{2,}/i.test(lower)) return true;
 
-    // Username-подобный паттерн после любого слова-триггера (латинские слова 4+ симв. после пробела)
-    // Ловит скрытые передачи типа "пишите мне username123"
-    if (/\b(пиши|пишите|напиши|найди|ищи|найдите)\s+(?:мне\s+)?@?[a-zA-Z][a-zA-Z0-9_.]{3,}/i.test(lower)) return true;
+    // Skype ID формат: live:username или live:.cid.xxx
+    if (/\blive\s*:\s*[a-zA-Z0-9_.]{3,}/i.test(lower)) return true;
+
+    // ICQ: 9 цифр (исторический формат UIN)
+    if (/\bicq\s*:?\s*\d{8,10}\b/i.test(lower)) return true;
+
+    // Discord: username#1234
+    if (/[a-zA-Z0-9_]{3,}#\d{4}\b/.test(text)) return true;
 
     return false;
 }
 
-// Белый список латинских слов, легитимных в контексте грузоперевозок
-const LATIN_WHITELIST = new Set([
-    'cargo', 'express', 'online', 'email', 'market', 'russia', 'global',
-    'trans', 'logistic', 'service', 'group', 'https', 'http', 'gmail',
-    'yandex', 'railmatch', 'mobile', 'phone', 'signal', 'viber', 'telegram',
-    'whatsapp', 'instagram', 'google', 'hello', 'thanks', 'order', 'price',
-    'delivery', 'truck', 'train', 'wagon', 'route', 'depot', 'agent',
-    'client', 'manager', 'driver', 'office', 'company', 'partner',
-]);
-
-/** Username-подобные строки на латинице (без @ и без мессенджер-префикса) */
+/** Подозрительные username-паттерны на латинице */
 function detectLatinUsername(text) {
-    // Ищем латинские слова 4-32 символа: буква + буквы/цифры/underscore
-    const latinWords = text.match(/\b[a-zA-Z][a-zA-Z0-9_]{3,31}\b/g);
-    if (!latinWords) return false;
+    const LATIN_WHITELIST = new Set([
+        'cargo', 'express', 'online', 'market', 'russia', 'global',
+        'trans', 'logistic', 'service', 'group', 'https', 'http', 'gmail',
+        'yandex', 'railmatch', 'mobile', 'signal', 'viber', 'telegram',
+        'whatsapp', 'instagram', 'google', 'hello', 'thanks', 'order', 'price',
+        'delivery', 'truck', 'train', 'wagon', 'route', 'depot', 'agent',
+        'client', 'manager', 'driver', 'office', 'company', 'partner',
+        'import', 'export', 'freight', 'platform', 'system', 'contact',
+        'request', 'contract', 'payment', 'invoice', 'document', 'report',
+        'status', 'update', 'confirm', 'cancel', 'accept', 'decline',
+        'email', 'phone', 'number', 'address', 'location', 'station',
+    ]);
 
     const hasCyrillic = /[а-яёА-ЯЁ]/.test(text);
-    const trimmed = text.trim();
 
-    for (const word of latinWords) {
-        const lower = word.toLowerCase();
-        if (LATIN_WHITELIST.has(lower)) continue;
-
-        // Содержит цифры или underscore — явный признак username (user_name, nick123)
-        if (/[0-9_]/.test(word)) return true;
-
-        // Латинское слово 6+ символов в кириллическом контексте — подозрительно
-        if (word.length >= 6 && hasCyrillic) return true;
-
-        // Короткое сообщение (≤35 символов) без кириллицы целиком — похоже на переданный username
-        if (!hasCyrillic && word.length >= 6 && trimmed.length <= 35) return true;
+    // Username с цифрами или underscore — явный признак
+    const usernamePattern = /\b[a-zA-Z][a-zA-Z0-9_]{2,}[0-9_][a-zA-Z0-9_]*\b/g;
+    const matches = text.match(usernamePattern);
+    if (matches) {
+        for (const word of matches) {
+            if (!LATIN_WHITELIST.has(word.toLowerCase())) return true;
+        }
     }
-    return false;
-}
 
-/**
- * Названия юридических лиц: ООО «Название», ИП Фамилия, АО «Компания» и т.д.
- * Также ловит: OOO, OAO, 3АО (замена букв цифрами).
- */
-function detectCompanyName(text) {
-    // Организационно-правовые формы + что-то после них
-    const orgForms = /\b(ООО|ОАО|ЗАО|ПАО|АО|ИП|ГУП|МУП|НКО|АНО|ФГУП|ФГБУ|ФГУ|Ltd|LLC|Inc|GmbH|Corp|OOO|OAO|3АО)\s*[«"']?[\wа-яА-ЯёЁ\s«»"']{2,}/i.test(text);
-    if (orgForms) return true;
-
-    // "Компания X", "фирма X", "организация X" + название 3+ символа
-    if (/\b(компания|фирма|организация|предприятие|холдинг|группа|концерн|трест)\s+[«"']?[\wа-яА-ЯёЁ]{3,}/i.test(text)) return true;
-
-    return false;
-}
-
-/**
- * ФИО: три слова с заглавной буквы кириллицей подряд (Фамилия Имя Отчество).
- * Имя + фамилия (два слова) тоже ловим если одно из них похоже на фамилию (-ов/-ев/-ин/-ых/-ский/-цкий).
- */
-function detectFullName(text) {
-    // Три кириллических слова подряд с заглавной (ФИО)
-    if (/(?:^|[\s,])[А-ЯЁ][а-яё]{1,20}\s+[А-ЯЁ][а-яё]{1,20}\s+[А-ЯЁ][а-яё]{1,20}(?:\s|$|[,.])/u.test(text)) return true;
-
-    // Фамилия + Имя: типичные окончания фамилий
-    if (/[А-ЯЁ][а-яё]+(ов|ова|ев|ева|ин|ина|ых|их|ский|ская|цкий|цкая|зов|зова|нов|нова|лов|лова|ков|кова|гин|гина)\s+[А-ЯЁ][а-яё]{2,}/u.test(text)) return true;
-
-    // Инициалы: А.Б. Фамилия или Фамилия А.Б.
-    if (/[А-ЯЁ]\.[А-ЯЁ]\.\s*[А-ЯЁ][а-яё]{2,}/.test(text)) return true;
-    if (/[А-ЯЁ][а-яё]{2,}\s+[А-ЯЁ]\.[А-ЯЁ]\./.test(text)) return true;
-
-    return false;
-}
-
-/**
- * Банковские и налоговые реквизиты: ИНН, ОГРН, КПП, р/с, БИК.
- * Эти данные достаточно для установления личности / компании вне платформы.
- */
-function detectRequisites(text) {
-    const stripped = text.replace(/[\s\-]/g, '');
-
-    // ИНН: 10 цифр (юрлицо) или 12 цифр (физлицо) — с контекстным словом
-    if (/\bинн\s*:?\s*\d{10,12}\b/i.test(text)) return true;
-    if (/\binn\s*:?\s*\d{10,12}\b/i.test(text)) return true;
-
-    // ОГРН: 13 или 15 цифр
-    if (/\bогрн\s*:?\s*\d{13,15}\b/i.test(text)) return true;
-
-    // КПП: 9 цифр с контекстом
-    if (/\bкпп\s*:?\s*\d{9}\b/i.test(text)) return true;
-
-    // БИК: 9 цифр с контекстом
-    if (/\bбик\s*:?\s*\d{9}\b/i.test(text)) return true;
-
-    // Расчётный / корр. счёт: 20 цифр
-    if (/\b(?:р\/?с|к\/?с|расч[её]тный счёт|корр?\. счёт)\s*:?\s*\d{20}\b/i.test(text)) return true;
-    // 20 цифр подряд (без пробелов) — очень похоже на р/с
-    if (/\b\d{20}\b/.test(stripped)) return true;
+    // Короткое сообщение целиком на латинице без пробелов (5-32 символа) = вероятный username
+    const trimmed = text.trim();
+    if (!hasCyrillic && /^[a-zA-Z0-9_.]{5,32}$/.test(trimmed)) return true;
 
     return false;
 }
@@ -248,57 +258,161 @@ function detectRequisites(text) {
 /** Email-адреса */
 function detectEmail(text) {
     const lower = text.toLowerCase();
-
-    // Стандартный email
     if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(text)) return true;
-
-    // Обфусцированные: [at], (at), собака, [dog]
     if (/\S+\s*[\[(]\s*(?:at|собака|dog|эт)\s*[\])]\s*\S+/i.test(lower)) return true;
-
     return false;
 }
 
 /** URL-адреса */
 function detectUrl(text) {
     const lower = text.toLowerCase();
-
-    // Протоколы
     if (/https?:\/\/\S+/.test(lower)) return true;
     if (/www\.\S+/.test(lower)) return true;
-
-    // TLD после слов: слово.ru, слово.kz, слово.com
-    if (/\w+\.(ru|kz|com|net|org|info|biz|su|by|uz|kg|tj)\b/.test(lower)) {
-        // Исключаем типичные сокращения (напр. "тыс.руб", "г.р")
-        if (!/(?:тыс|руб|коп|шт|ед|кг|км|м|г)\./i.test(lower.match(/\S+\.(ru|kz|com|net|org|info|biz|su|by|uz|kg|tj)\b/)?.[0] || '')) {
+    if (/\w+\.(ru|kz|com|net|org|info|biz|su|by|uz|kg|tj|io|me|app)\b/.test(lower)) {
+        if (!/(?:тыс|руб|коп|шт|ед|кг|км|м|г)\./i.test(lower.match(/\S+\.(ru|kz|com|net|org|info|biz|su|by|uz|kg|tj|io|me|app)\b/)?.[0] || '')) {
             return true;
         }
     }
-
-    // Обфусцированные домены: (dot), [.], точка
     if (/\w+\s*[\[(]\s*(?:dot|точка|тчк)\s*[\])]\s*(?:ru|kz|com|net|org)/i.test(lower)) return true;
+    return false;
+}
+
+/**
+ * Адреса — достаточно для встречи вне платформы.
+ * Ловит: "ул. Ленина д.5", "офис 301 этаж 3", "г. Москва пр. Победы"
+ */
+function detectAddress(text) {
+    const lower = text.toLowerCase();
+
+    // Улица / проспект / переулок + что-то после
+    if (/\b(?:ул|улица|пр|проспект|пер|переулок|пл|площадь|бул|бульвар|ш|шоссе|наб|набережная)\s*\.?\s+[а-яёА-ЯЁ\w]{3,}/i.test(lower)) return true;
+
+    // "д. 5", "дом 12", "корп. 3"
+    if (/\b(?:д|дом)\s*\.?\s*\d+/i.test(lower) && /\b(?:ул|улица|пр|проспект|г|город|офис|корп)/i.test(lower)) return true;
+
+    // "офис 301" или "офис №5" в контексте адреса
+    if (/\bофис\s*[№#]?\s*\d+/.test(lower)) return true;
+
+    // "г. Москва", "г. Казань" + что-то дальше похожее на адрес
+    if (/\bг\s*\.?\s*[А-ЯЁ][а-яё]{2,}/.test(text) && /\b(?:ул|улица|пр|проспект|д\.|дом|офис)\b/i.test(lower)) return true;
 
     return false;
 }
 
-/** Обфускация стоп-слов: т.е.л.е.ф.о.н, т-е-л-е-г-р-а-м */
+/** Обфускация ключевых слов: т.е.л.е.ф.о.н, т-е-л-е-г-р-а-м */
 function detectObfuscated(text) {
     const lower = text.toLowerCase();
-    const keyWords = ['телефон', 'телеграм', 'вотсап', 'ватсап', 'вайбер', 'контакт', 'номер', 'почта', 'телега'];
+    const keyWords = [
+        'телефон', 'телеграм', 'вотсап', 'ватсап', 'вайбер',
+        'контакт', 'номер', 'почта', 'телега', 'вконтакте',
+        'скайп', 'дискорд', 'инстаграм',
+    ];
 
     for (const word of keyWords) {
         if (word.length < 4) continue;
-        // Каждый символ слова может быть разделён точками, дефисами, пробелами
-        const pattern = word.split('').join('[\\s\\-._*]+');
+        const pattern = word.split('').join('[\\s\\-._*+|,;:!?]+');
         if (new RegExp(pattern, 'i').test(lower)) return true;
+    }
+
+    return false;
+}
+
+/** Фамилии с типичными русскими / СНГ окончаниями */
+const SURNAME_ENDINGS = new RegExp(
+    '(?:' + [
+        // -ов/-ев/-ёв (муж.) и -ова/-ева/-ёва (жен.)
+        'овы?', 'евы?', 'ёвы?',
+        'овой', 'евой',
+        // -ин/-ын и -ина/-ына
+        'иных?', 'ыных?',
+        // -ских/-ских/-цких
+        'ски[йх]', 'ска[яой]', 'ских',
+        'цки[йх]', 'цка[яой]', 'цких',
+        'жски[йх]', 'жска[яой]',
+        // -ых/-их (Черных, Лютых)
+        'ых', 'их',
+        // -ко/-енко/-ченко/-нко (украинские/южнорусские)
+        'енко', 'ченко', 'нко', 'ько',
+        // -ук/-юк (украинские)
+        'уку?', 'юку?',
+        // -евич/-ович (белорусские)
+        'евич', 'ович',
+        // -вна/-овна/-евна (отчества)
+        'овна', 'евна', 'вна',
+        // -цев/-цева и все аналоги на согл.+ев
+        'цева?', 'шева?', 'нева?', 'жева?', 'щева?',
+        'лева?', 'рева?', 'зева?', 'дева?', 'хева?',
+        'тева?', 'сева?', 'мева?', 'пева?', 'фева?',
+        'чева?', 'бева?', 'гева?', 'кева?', 'вева?',
+        // -зов/-дов/-тов и аналоги
+        'зова?', 'дова?', 'това?', 'хова?', 'шова?',
+        'жова?', 'бова?', 'мова?', 'пова?', 'рова?',
+        'сова?', 'фова?', 'лова?', 'нова?', 'кова?',
+        'гова?', 'чова?',
+    ].join('|') + ')$',
+    'iu'
+);
+
+// Слова-исключения которые выглядят как фамилии но ими не являются
+const SURNAME_EXCEPTIONS = new Set([
+    'готов', 'готова', 'здоров', 'здорова', 'знакова', 'знаков',
+    'живов', 'живова', 'новый', 'новая', 'новое', 'нового',
+    'основа', 'основы', 'основов',
+    'любовь', 'морковь', 'свекровь', 'кровь',
+    'корова', 'корову', 'коровы',
+    'голова', 'головы', 'голову',
+    'подкова', 'подковы',
+    'кладова', 'столова',
+]);
+
+function detectSurname(text) {
+    // Ищем кириллические слова с заглавной буквы (вероятное имя собственное)
+    const words = text.match(/[А-ЯЁ][а-яё]{4,}/gu);
+    if (!words) return false;
+
+    for (const word of words) {
+        const lower = word.toLowerCase();
+        if (SURNAME_EXCEPTIONS.has(lower)) continue;
+        if (SURNAME_ENDINGS.test(word)) return true;
     }
     return false;
 }
 
-// --- Главная функция валидации ---
+/** Банковские и налоговые реквизиты */
+function detectRequisites(text) {
+    const stripped = text.replace(/[\s\-]/g, '');
+
+    if (/\bинн\s*:?\s*\d{10,12}\b/i.test(text)) return true;
+    if (/\binn\s*:?\s*\d{10,12}\b/i.test(text)) return true;
+    if (/\bогрн\s*:?\s*\d{13,15}\b/i.test(text)) return true;
+    if (/\bкпп\s*:?\s*\d{9}\b/i.test(text)) return true;
+    if (/\bбик\s*:?\s*\d{9}\b/i.test(text)) return true;
+    if (/\b(?:р\/?с|к\/?с|расч[её]тный счёт|корр?\. счёт)\s*:?\s*\d{20}\b/i.test(text)) return true;
+    if (/\b\d{20}\b/.test(stripped)) return true;
+
+    return false;
+}
+
+/** Компании (ООО, ИП, АО и т.д.) — только с идентифицирующей информацией */
+function detectCompanyName(text) {
+    // ОПФ + название (3+ символа)
+    if (/\b(ООО|ОАО|ЗАО|ПАО|АО|ИП|ГУП|МУП|НКО|АНО|ФГУП|ФГБУ|Ltd|LLC|Inc|GmbH|Corp|OOO|OAO)\s*[«"'][\wа-яА-ЯёЁ\s]{3,}[»"']/i.test(text)) return true;
+    // ОПФ + название без кавычек (более строго — минимум 4 символа)
+    if (/\b(ООО|ОАО|ЗАО|ПАО|АО|ИП)\s+[А-ЯЁ][а-яёА-ЯЁ\w]{3,}/u.test(text)) return true;
+    return false;
+}
+
+/** ЖД коды станций (6 цифр — уникально идентифицируют ТЦФТО/грузоотправителя) */
+function detectRailwayCode(text) {
+    // 6-значный код в контексте "код станции", "ТЦФТО", "ЭТРАН"
+    if (/\b(?:код\s*станции|тцфто|этран|ЕК\s*ИОДВ)\s*:?\s*\d{6}\b/i.test(text)) return true;
+    return false;
+}
+
+// --- ГЛАВНАЯ ФУНКЦИЯ ВАЛИДАЦИИ ---
 
 /**
- * Проверяет сообщение на попытки обхода платформы.
- * @param {string} text - текст сообщения
+ * @param {string} text
  * @returns {{ valid: boolean, cleaned: string, isViolation: boolean, violationType: string|null }}
  */
 export const validateMessageIntent = (text) => {
@@ -308,65 +422,22 @@ export const validateMessageIntent = (text) => {
 
     const lower = text.toLowerCase();
 
-    // 1. Телефонные номера
-    if (detectPhone(text)) {
-        return violation(text, 'phone');
-    }
+    if (detectPhone(text))           return violation(text, 'phone');
+    if (detectSpacedDigits(text))    return violation(text, 'phone');
+    if (detectWrittenDigits(text))   return violation(text, 'phone');
+    if (detectCyrillicEncoding(text)) return violation(text, 'obfuscated');
+    if (detectMessenger(text))       return violation(text, 'messenger');
+    if (detectLatinUsername(text))   return violation(text, 'messenger');
+    if (detectEmail(text))           return violation(text, 'email');
+    if (detectUrl(text))             return violation(text, 'url');
+    if (detectObfuscated(text))      return violation(text, 'obfuscated');
+    if (detectAddress(text))         return violation(text, 'address');
+    if (detectSurname(text))         return violation(text, 'surname');
+    if (detectCompanyName(text))     return violation(text, 'company_name');
+    if (detectRequisites(text))      return violation(text, 'requisites');
+    if (detectRailwayCode(text))     return violation(text, 'requisites');
 
-    // 2. Цифры через пробелы
-    if (detectSpacedDigits(text)) {
-        return violation(text, 'phone');
-    }
-
-    // 3. Цифры прописью
-    if (detectWrittenDigits(text)) {
-        return violation(text, 'phone');
-    }
-
-    // 4. Мессенджеры и соцсети
-    if (detectMessenger(text)) {
-        return violation(text, 'messenger');
-    }
-
-    // 5. Username-подобные строки на латинице
-    if (detectLatinUsername(text)) {
-        return violation(text, 'messenger');
-    }
-
-    // 6. Email
-    if (detectEmail(text)) {
-        return violation(text, 'email');
-    }
-
-    // 7. URL
-    if (detectUrl(text)) {
-        return violation(text, 'url');
-    }
-
-    // 8. Обфускация ключевых слов
-    if (detectObfuscated(text)) {
-        return violation(text, 'obfuscated');
-    }
-
-    // 9. Стоп-слова
-    if (STOP_WORDS.some(sw => lower.includes(sw))) {
-        return violation(text, 'stop_word');
-    }
-
-    // 10. Названия компаний (ООО, ИП, АО и т.д.)
-    if (detectCompanyName(text)) {
-        return violation(text, 'company_name');
-    }
-
-    // 11. ФИО / инициалы
-    if (detectFullName(text)) {
-        return violation(text, 'full_name');
-    }
-
-    // 12. Банковские / налоговые реквизиты (ИНН, ОГРН, р/с, БИК)
-    if (detectRequisites(text)) {
-        return violation(text, 'requisites');
-    }
+    if (STOP_WORDS.some(sw => lower.includes(sw))) return violation(text, 'stop_word');
 
     return { valid: true, cleaned: text, isViolation: false, violationType: null };
 };
@@ -380,21 +451,63 @@ function violation(text, type) {
     };
 }
 
+// --- ПРОВЕРКА ПОСЛЕДОВАТЕЛЬНОСТИ СООБЩЕНИЙ ---
+// Ловит попытки разбить контакт на части: по словам, по буквам, по цифрам.
+
 /**
- * Проверяет новое сообщение с учётом последних сообщений того же отправителя.
- * Ловит попытки разбить контакт на несколько сообщений.
- * @param {string[]} recentSenderTexts - последние 1-2 сообщения от того же пользователя
- * @param {string} newText - новое сообщение
+ * @param {string[]} recentSenderTexts — последние до 15 сообщений от того же отправителя
+ * @param {string} newText
  */
 export const validateMessageSequence = (recentSenderTexts, newText) => {
+    // 1. Проверка одного сообщения
     const single = validateMessageIntent(newText);
     if (single.isViolation) return single;
 
-    // Проверяем комбинацию последних N сообщений + новое
-    for (let n = 1; n <= Math.min(2, recentSenderTexts.length); n++) {
+    const allMessages = [...recentSenderTexts, newText];
+
+    // 2. Sliding window: проверяем комбинацию последних 1–4 сообщений
+    for (let n = 1; n <= Math.min(4, recentSenderTexts.length); n++) {
         const slice = recentSenderTexts.slice(-n);
         const combined = [...slice, newText].join(' ');
         if (validateMessageIntent(combined).isViolation) {
+            return violation(newText, 'split_contact');
+        }
+    }
+
+    // 3. Детектор побуквенной передачи (single-letter accumulation)
+    // Если человек отправляет много коротких сообщений (1–3 символа) — это подозрительно
+    const shortMessages = allMessages.filter(m => m && m.trim().length <= 3);
+    if (shortMessages.length >= 5) {
+        // Собираем всё вместе и проверяем
+        const reconstructed = shortMessages.map(m => m.trim()).join('');
+        if (validateMessageIntent(reconstructed).isViolation) {
+            return violation(newText, 'split_letter');
+        }
+
+        // Цифры из коротких сообщений
+        const digits = reconstructed.replace(/\D/g, '');
+        if (digits.length >= 7) {
+            return violation(newText, 'split_letter');
+        }
+
+        // Буквы из коротких сообщений → восстанавливаем слово и проверяем
+        const letters = reconstructed.replace(/[^а-яёА-ЯЁa-zA-Z]/g, '');
+        if (letters.length >= 5 && validateMessageIntent(letters).isViolation) {
+            return violation(newText, 'split_letter');
+        }
+    }
+
+    // 4. Проверяем цифровые фрагменты во всех последних сообщениях (до 10)
+    const allDigits = allMessages
+        .slice(-10)
+        .map(m => (m || '').replace(/\D/g, ''))
+        .join('');
+    if (allDigits.length >= 10) {
+        // 10+ цифр суммарно за последние 10 сообщений = вероятный номер телефона
+        // (исключаем очевидные деловые числа: суммы, объёмы, даты)
+        // Проверяем что это не просто обсуждение цены/тоннажа
+        const priceContext = /(?:руб|тыс|млн|тонн|вагон|км|т\.)/i.test(allMessages.slice(-10).join(' '));
+        if (!priceContext && allDigits.length >= 10) {
             return violation(newText, 'split_contact');
         }
     }

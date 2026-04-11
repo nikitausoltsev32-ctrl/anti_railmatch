@@ -45,4 +45,14 @@ export const haptic = {
             vibrate([10]);
         }
     },
+    escalate() {
+        const hf = tg();
+        if (hf) {
+            hf.impactOccurred('light');
+            setTimeout(() => hf.impactOccurred('medium'), 120);
+            setTimeout(() => hf.impactOccurred('heavy'), 260);
+        } else {
+            vibrate([15, 90, 30, 90, 60]);
+        }
+    },
 };

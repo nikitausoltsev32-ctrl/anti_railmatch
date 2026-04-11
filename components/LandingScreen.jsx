@@ -24,7 +24,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                     <button onClick={() => setIsDark(!isDark)} className="p-2 sm:p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm hover:rotate-180 hover:shadow-lg transition-all duration-500 text-slate-400">
                         {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
-                    <button onClick={onLogin} className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Войти</button>
+                    <button onClick={() => { haptic.impact('light'); onLogin(); }} className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Войти</button>
                     <button onClick={() => { haptic.impact('medium'); onStart(); }} className="px-3 py-2 sm:px-8 sm:py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] sm:text-sm font-black uppercase tracking-widest rounded-xl sm:rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 whitespace-nowrap">Регистрация</button>
                 </div>
             </header>
@@ -79,7 +79,7 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                     <button onClick={() => { haptic.impact('medium'); onStart(); }} className="w-full sm:flex-[2] h-12 sm:h-16 px-5 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white font-black text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-2xl hover:-translate-y-1.5 active:scale-95 transition-all group flex items-center justify-center gap-3 whitespace-nowrap">
                         Начать бесплатно <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <button onClick={onDemo} className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 font-bold text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 shadow-md hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 group whitespace-nowrap">
+                    <button onClick={() => { haptic.impact('light'); onDemo(); }} className="w-full sm:flex-1 h-12 sm:h-16 px-5 sm:px-6 bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-300 font-bold text-base sm:text-sm sm:uppercase tracking-wide sm:tracking-widest rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 shadow-md hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 group whitespace-nowrap">
                         Демо <Zap className="w-4 h-4 text-amber-500 group-hover:scale-125 transition-transform" />
                     </button>
                     <a
@@ -320,10 +320,10 @@ export default function LandingScreen({ onStart, onStartShipper, onStartOwner, o
                         <h2 className="text-2xl sm:text-4xl md:text-5xl font-black mb-4 sm:mb-6">Сократите расходы<br className="sm:hidden" /> на логистику<br className="hidden md:block" /> прямо сейчас</h2>
                         <p className="text-sm sm:text-lg text-blue-100 max-w-xl mx-auto mb-8 sm:mb-10 font-medium">Тысячи заявок на перевозку. Прямые контакты. Комиссия 2.5%. Первые ставки — бесплатно.</p>
                         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                            <button onClick={onStart} className="px-8 sm:px-12 py-4 sm:py-5 bg-white text-blue-600 font-black uppercase tracking-widest text-xs sm:text-sm rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all flex items-center justify-center gap-3 group">
+                            <button onClick={() => { haptic.impact('medium'); onStart(); }} className="px-8 sm:px-12 py-4 sm:py-5 bg-white text-blue-600 font-black uppercase tracking-widest text-xs sm:text-sm rounded-2xl shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all flex items-center justify-center gap-3 group">
                                 Зарегистрироваться <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>
-                            <button onClick={onDemo} className="px-8 sm:px-12 py-4 sm:py-5 bg-white/10 backdrop-blur text-white font-black uppercase tracking-widest text-xs sm:text-sm rounded-2xl border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-3">
+                            <button onClick={() => { haptic.impact('light'); onDemo(); }} className="px-8 sm:px-12 py-4 sm:py-5 bg-white/10 backdrop-blur text-white font-black uppercase tracking-widest text-xs sm:text-sm rounded-2xl border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-3">
                                 Демо-режим <Zap className="w-5 h-5 text-amber-300" />
                             </button>
                         </div>
