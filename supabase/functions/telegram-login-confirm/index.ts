@@ -29,7 +29,11 @@ async function getSession(
     console.error("generateLink error:", linkError);
     return null;
   }
-  const { data: session, error: otpError } = await supabase.auth.verifyOtp({
+  // Use a separate client for verifyOtp to avoid overwriting service_role session
+  const anonClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data: session, error: otpError } = await anonClient.auth.verifyOtp({
     token_hash: linkData.properties.hashed_token,
     type: "magiclink",
   });
@@ -145,14 +149,23 @@ serve(async (req) => {
 
   if (result.error) return json({ error: result.error }, 500);
 
-  await supabase.from("telegram_login_tokens").update({
+  const { data: updated, error: updateError } = await supabase.from("telegram_login_tokens").update({
     status: "claimed",
     telegram_id,
     user_id: result.user_id,
     access_token: result.access_token,
     refresh_token: result.refresh_token,
     needs_onboarding: result.needs_onboarding ?? false,
-  }).eq("code", code);
+  }).eq("code", code).select("status, code").maybeSingle();
+
+  console.log("Update result:", JSON.stringify({ updated, updateError }));
+
+  if (updateError) {
+    return json({ error: `Token update failed: ${updateError.message}` }, 500);
+  }
+  if (!updated) {
+    return json({ error: "Token not updated (0 rows matched)" }, 500);
+  }
 
   return json({ ok: true, needs_onboarding: result.needs_onboarding });
 });

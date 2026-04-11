@@ -121,7 +121,10 @@ async function getSession(supabase: ReturnType<typeof createClient>, email: stri
     console.error("generateLink error:", linkError);
     return null;
   }
-  const { data: session, error: otpError } = await supabase.auth.verifyOtp({
+  const anonClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data: session, error: otpError } = await anonClient.auth.verifyOtp({
     token_hash: linkData.properties.hashed_token,
     type: "magiclink",
   });
