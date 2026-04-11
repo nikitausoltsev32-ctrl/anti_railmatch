@@ -376,18 +376,22 @@ export default function App() {
         const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
         if (tgUser?.id && sbUser && userProfile && !userProfile.telegram_id) {
             tgLinkedRef.current = true;
-            supabase.from('profiles')
-                .update({ telegram_id: tgUser.id, telegram_username: tgUser.username || null })
-                .eq('id', sbUser.id)
-                .then(() => {
-                    setUserProfile(prev => ({ ...prev, telegram_id: tgUser.id, telegram_username: tgUser.username || null }));
-                    supabase.functions.invoke('telegram-notify', {
-                        body: {
-                            telegram_id: String(tgUser.id),
-                            message: 'Telegram успешно привязан к вашему аккаунту RailMatch. Теперь вы будете получать уведомления здесь.',
-                        },
-                    }).catch(e => console.warn('TG welcome skipped:', e));
-                });
+            // Check if this telegram_id is already linked to another profile
+            supabase.from('profiles').select('id').eq('telegram_id', tgUser.id).maybeSingle().then(({ data: existing }) => {
+                if (existing) return; // Already linked to another account — skip
+                supabase.from('profiles')
+                    .update({ telegram_id: tgUser.id, telegram_username: tgUser.username || null })
+                    .eq('id', sbUser.id)
+                    .then(() => {
+                        setUserProfile(prev => ({ ...prev, telegram_id: tgUser.id, telegram_username: tgUser.username || null }));
+                        supabase.functions.invoke('telegram-notify', {
+                            body: {
+                                telegram_id: String(tgUser.id),
+                                message: 'Telegram успешно привязан к вашему аккаунту RailMatch. Теперь вы будете получать уведомления здесь.',
+                            },
+                        }).catch(e => console.warn('TG welcome skipped:', e));
+                    });
+            });
         }
     }, [sbUser, userProfile]);
 
