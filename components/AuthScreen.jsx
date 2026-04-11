@@ -76,7 +76,7 @@ function ForgotPasswordView({ onBack, isDark }) {
 
 export function TelegramOnboarding({ onSubmit, isDark }) {
     const [role, setRole] = useState('owner');
-    const [formData, setFormData] = useState({ name: '', company: '' });
+    const [formData, setFormData] = useState({ name: '', company: '', phone: '' });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
@@ -90,6 +90,7 @@ export function TelegramOnboarding({ onSubmit, isDark }) {
         if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
         else if (!validatePersonName(formData.name.trim())) errs.name = 'Укажите имя человека, а не название компании';
         if (!formData.company.trim()) errs.company = 'Укажите название компании';
+        if (!validatePhone(formData.phone)) errs.phone = 'Укажите корректный номер телефона';
         setErrors(errs);
         return Object.keys(errs).length === 0;
     };
@@ -123,7 +124,6 @@ export function TelegramOnboarding({ onSubmit, isDark }) {
                     </div>
                 </div>
 
-                <p className="text-xs text-slate-400 mb-4">Телефон можно добавить позже в профиле</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ваше имя" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.name ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
@@ -132,6 +132,10 @@ export function TelegramOnboarding({ onSubmit, isDark }) {
                     <div>
                         <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.company ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
                         {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
+                    </div>
+                    <div>
+                        <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="Телефон (+7...)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.phone ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
+                        {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}
                     </div>
                     <button
                         type="submit"
