@@ -55,7 +55,9 @@ async function createOrLoginUser(
     .maybeSingle();
 
   if (profile) {
-    const session = await getSession(supabase, fakeEmail);
+    const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
+    const email = authUser?.user?.email || fakeEmail;
+    const session = await getSession(supabase, email);
     if (!session) return { error: "Failed to create session" };
     return {
       user_id: profile.id,
