@@ -245,7 +245,7 @@ export default function ChatWindow({
     })();
 
     return (
-        <div className="min-h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="min-h-full flex flex-col animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#111827] h-[100dvh] sm:h-[800px] rounded-none sm:rounded-[2.5rem] border-0 sm:border dark:border-slate-800 sm:shadow-2xl flex flex-col overflow-hidden relative">
 
                 {/* ===== HEADER ===== */}

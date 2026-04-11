@@ -395,6 +395,33 @@ export default function App() {
         }
     }, [authChecking, userProfile, screen]);
 
+    // Telegram BackButton — показываем когда пользователь внутри приложения
+    useEffect(() => {
+        const tgApp = window.Telegram?.WebApp;
+        if (!tgApp?.BackButton) return;
+        const isInApp = screen !== 'landing' && screen !== 'auth' && !authChecking;
+        if (isInApp) {
+            tgApp.BackButton.show();
+            const handleBack = () => {
+                localStorage.removeItem('rm_screen');
+                localStorage.removeItem('rm_view');
+                supabase.auth.signOut().finally(() => {
+                    setUserProfile(null);
+                    setSbUser(null);
+                    setScreen('landing');
+                });
+                tgApp.BackButton.hide();
+            };
+            tgApp.BackButton.onClick(handleBack);
+            return () => {
+                tgApp.BackButton.offClick(handleBack);
+                tgApp.BackButton.hide();
+            };
+        } else {
+            tgApp.BackButton.hide();
+        }
+    }, [screen, authChecking]);
+
     // 2c. ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ОШИБОК → error_logs
     useEffect(() => {
         const logToSupabase = async (errorType, message, stack) => {
@@ -1485,6 +1512,13 @@ export default function App() {
 
     if (needsTelegramOnboarding) return <TelegramOnboarding onSubmit={handleTelegramOnboarding} isDark={isDark} />;
 
+    // Guard: screen=app but no profile yet — show spinner instead of broken UI
+    if (screen !== 'landing' && screen !== 'auth' && !userProfile) return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0B1120]">
+            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
+
     if (screen === 'auth') return (
         <>
             <AuthScreen mode={authMode} setMode={setAuthMode} role={regRole} setRole={setRegRole} onSubmit={handleAuthSubmit} onBack={() => { setScreen('landing'); setAuthMode('login'); }} isDark={isDark} loading={authLoading} onTelegramAuth={handleTelegramAuth} />
@@ -1828,7 +1862,7 @@ export default function App() {
                 )}
 
                 {view === 'chat' && activeChat && (
-                    <div className="animate-in fade-in zoom-in-95 duration-500 md:mt-10">
+                    <div className="animate-in fade-in duration-300 md:mt-10">
                         <ChatWindow
                             chat={activeChat}
                             messages={(messages || []).filter(m => m.chat_id === activeChat.id)}
