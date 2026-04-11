@@ -24,7 +24,7 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
-        run: npm install --no-save @notionhq/client@2 @google/generative-ai
+        run: npm install --no-save @google/generative-ai
 
       - name: Run verifier bot
         run: node scripts/bot-verifier.js
@@ -46,7 +46,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install --no-save @notionhq/client@2 @google/generative-ai @octokit/rest
+        run: npm install --no-save @google/generative-ai @octokit/rest
 
       - name: Run fixer bot
         run: node scripts/bot-fixer.js
