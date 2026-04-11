@@ -30,7 +30,7 @@ export default function BugReportButton() {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    await supabase.functions.invoke('create-bug-report', {
+    const { data, error } = await supabase.functions.invoke('create-bug-report', {
       body: {
         description: description.trim(),
         screenshot_base64: screenshot || null,
@@ -43,6 +43,9 @@ export default function BugReportButton() {
         },
       },
     });
+
+    if (error) console.error('[BugReport] invoke error:', error);
+    else console.log('[BugReport] success, id:', data?.id);
 
     setSending(false);
     setDone(true);

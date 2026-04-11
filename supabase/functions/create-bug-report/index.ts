@@ -31,6 +31,7 @@ async function ensureBucket(supabase: ReturnType<typeof createClient>) {
 }
 
 serve(async (req) => {
+  console.log("[bug-report] REQUEST:", req.method, new Date().toISOString());
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -83,6 +84,7 @@ serve(async (req) => {
   }
 
   // Создать запись в Notion
+  console.log("[bug-report] DB_ID:", NOTION_BUGS_DB_ID?.slice(0, 8), "TOKEN_SET:", !!NOTION_TOKEN);
   const res = await fetch("https://api.notion.com/v1/pages", {
     method: "POST",
     headers: {
@@ -112,9 +114,10 @@ serve(async (req) => {
   });
 
   const data = await res.json();
+  console.log("[bug-report] Notion status:", res.status, "id:", data?.id, "error:", data?.message);
 
   if (!res.ok) {
-    console.error("Notion API error:", data);
+    console.error("Notion API error:", JSON.stringify(data));
     return json({ error: "Notion error", details: data }, 500);
   }
 
