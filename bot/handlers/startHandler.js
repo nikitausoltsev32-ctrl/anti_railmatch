@@ -14,9 +14,43 @@ const OPEN_BUTTON = {
 
 export async function handleStart(chatId, text, telegramUser) {
     const parts = text.trim().split(/\s+/);
-    const code = parts[1];
+    const param = parts[1];
 
-  if (!code) {
+    // Deep link login: /start login_XXXXXXXX
+    if (param?.startsWith('login_')) {
+        const code = param.slice(6); // remove "login_" prefix
+        try {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/telegram-login-confirm`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-bot-secret': BOT_SECRET,
+                },
+                body: JSON.stringify({
+                    code,
+                    telegram_id: telegramUser.id,
+                    telegram_username: telegramUser.username || null,
+                    first_name: telegramUser.first_name || 'Пользователь',
+                }),
+            });
+            if (res.ok) {
+                await sendMessage(
+                    chatId,
+                    `✅ <b>Вы успешно вошли в RailMatch!</b>\n\nВернитесь на сайт — вход выполнен автоматически.`,
+                    OPEN_BUTTON
+                );
+            } else {
+                const data = await res.json();
+                await sendMessage(chatId, `❌ Ошибка входа: ${data.error || 'неверный или устаревший код'}.\n\nПопробуйте войти заново на сайте.`);
+            }
+        } catch (err) {
+            console.error('Login confirm error:', err);
+            await sendMessage(chatId, '❌ Произошла ошибка. Попробуйте позже.');
+        }
+        return;
+    }
+
+    const code = param;
         await sendMessage(
                 chatId,
                 `👋 Добро пожаловать в <b>RailMatch</b>, ${telegramUser.first_name}!\n\n` +

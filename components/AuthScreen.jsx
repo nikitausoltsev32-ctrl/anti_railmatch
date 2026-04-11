@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, TrainFront, Package } from 'lucide-react';
 import { supabase } from '../src/supabaseClient';
 import { haptic } from '../src/haptic.js';
@@ -76,7 +76,7 @@ function ForgotPasswordView({ onBack, isDark }) {
 
 export function TelegramOnboarding({ onSubmit, isDark }) {
     const [role, setRole] = useState('owner');
-    const [formData, setFormData] = useState({ name: '', company: '', phone: '' });
+    const [formData, setFormData] = useState({ name: '', company: '' });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
@@ -90,7 +90,6 @@ export function TelegramOnboarding({ onSubmit, isDark }) {
         if (!formData.name.trim()) errs.name = 'Укажите ваше имя';
         else if (!validatePersonName(formData.name.trim())) errs.name = 'Укажите имя человека, а не название компании';
         if (!formData.company.trim()) errs.company = 'Укажите название компании';
-        if (!validatePhone(formData.phone)) errs.phone = 'Укажите корректный номер телефона';
         setErrors(errs);
         return Object.keys(errs).length === 0;
     };
@@ -124,6 +123,7 @@ export function TelegramOnboarding({ onSubmit, isDark }) {
                     </div>
                 </div>
 
+                <p className="text-xs text-slate-400 mb-4">Телефон можно добавить позже в профиле</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ваше имя" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.name ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
@@ -132,10 +132,6 @@ export function TelegramOnboarding({ onSubmit, isDark }) {
                     <div>
                         <input name="company" type="text" value={formData.company} onChange={handleChange} placeholder="Название компании (ООО / ИП)" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.company ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
                         {errors.company && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.company}</p>}
-                    </div>
-                    <div>
-                        <input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+7 (___) ___-__-__" className={`w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border rounded-2xl outline-none focus:ring-2 dark:text-white transition-colors ${errors.phone ? 'border-red-400 ring-2 ring-red-300 dark:ring-red-800' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:border-transparent'}`} />
-                        {errors.phone && <p className="text-red-500 text-xs font-bold mt-1.5 ml-2">{errors.phone}</p>}
                     </div>
                     <button
                         type="submit"
@@ -157,41 +153,43 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
     const [errors, setErrors] = useState({});
     const [showForgot, setShowForgot] = useState(false);
 
-    const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME;
-    const isDev = import.meta.env.DEV;
-    const [tgWidgetError, setTgWidgetError] = useState(false);
+    const [tgLogin, setTgLogin] = useState(null); // null | { code, botUrl } | 'waiting' | 'expired'
+    const tgPollRef = useRef(null);
 
-    useEffect(() => {
-        if (isDev || !botUsername || !onTelegramAuth) return;
-        const container = document.getElementById('tg-widget-container');
-        if (!container || container.querySelector('script')) return;
+    const startTelegramDeepLink = async () => {
+        setTgLogin('waiting');
+        try {
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-login-init`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            setTgLogin({ code: data.code, botUrl: data.bot_url });
+            let elapsed = 0;
+            tgPollRef.current = setInterval(async () => {
+                elapsed += 2500;
+                if (elapsed > 4 * 60 * 1000) {
+                    clearInterval(tgPollRef.current);
+                    setTgLogin('expired');
+                    return;
+                }
+                const pr = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-login-poll`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: data.code }),
+                });
+                const pd = await pr.json();
+                if (pd.expired) { clearInterval(tgPollRef.current); setTgLogin('expired'); return; }
+                if (pd.claimed) {
+                    clearInterval(tgPollRef.current);
+                    onTelegramAuth({ access_token: pd.access_token, refresh_token: pd.refresh_token, needs_onboarding: pd.needs_onboarding });
+                }
+            }, 2500);
+        } catch (err) {
+            setTgLogin(null);
+        }
+    };
 
-        window.onTelegramAuthCallback = (user) => {
-            if (onTelegramAuth) onTelegramAuth(user);
-        };
-
-        const script = document.createElement('script');
-        script.src = 'https://telegram.org/js/telegram-widget.js?22';
-        script.setAttribute('data-telegram-login', botUsername);
-        script.setAttribute('data-size', 'large');
-        script.setAttribute('data-radius', '12');
-        script.setAttribute('data-onauth', 'onTelegramAuthCallback(user)');
-        script.setAttribute('data-request-access', 'write');
-        script.async = true;
-        script.onerror = () => setTgWidgetError(true);
-        container.appendChild(script);
-
-        // Detect "Bot domain invalid" iframe error after short delay
-        const timer = setTimeout(() => {
-            const iframe = container.querySelector('iframe');
-            if (!iframe) setTgWidgetError(true);
-        }, 4000);
-
-        return () => {
-            clearTimeout(timer);
-            delete window.onTelegramAuthCallback;
-        };
-    }, [onTelegramAuth, botUsername, isDev]);
+    useEffect(() => () => clearInterval(tgPollRef.current), []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -223,14 +221,35 @@ export default function AuthScreen({ mode, setMode, role, setRole, onSubmit, onB
 
                         {onTelegramAuth && (
                             <>
-                                {isDev ? (
-                                    <div className="flex justify-center my-4">
-                                        <div className="px-5 py-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs text-slate-400 font-semibold text-center">
-                                            Telegram Login Widget доступен только в production
+                                {tgLogin === null && (
+                                    <button type="button" onClick={startTelegramDeepLink} className="w-full flex items-center justify-center gap-2 py-4 bg-[#229ED9] hover:bg-[#1a8bbf] text-white font-black rounded-2xl transition-all text-sm uppercase tracking-widest">
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 13.947l-2.956-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.884.612z"/></svg>
+                                        Войти через Telegram
+                                    </button>
+                                )}
+                                {tgLogin === 'waiting' && (
+                                    <div className="flex items-center justify-center gap-2 py-4 text-slate-400 text-sm">
+                                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                        Генерация кода...
+                                    </div>
+                                )}
+                                {tgLogin && tgLogin.botUrl && (
+                                    <div className="rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4 space-y-3">
+                                        <p className="text-xs text-blue-700 dark:text-blue-300 font-bold">Откройте бота и подтвердите вход — страница войдёт автоматически</p>
+                                        <a href={tgLogin.botUrl} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 py-3 bg-[#229ED9] hover:bg-[#1a8bbf] text-white font-black rounded-xl transition-all text-sm">
+                                            Открыть @rail_match_bot
+                                        </a>
+                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                            <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                                            Ожидаем подтверждения...
                                         </div>
                                     </div>
-                                ) : tgWidgetError ? null : (
-                                    <div id="tg-widget-container" className="flex justify-center my-4 min-h-[52px]"></div>
+                                )}
+                                {tgLogin === 'expired' && (
+                                    <div className="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 p-4 text-center">
+                                        <p className="text-xs text-amber-700 dark:text-amber-300 font-bold mb-2">Время вышло</p>
+                                        <button type="button" onClick={startTelegramDeepLink} className="text-xs text-blue-600 font-bold underline">Попробовать снова</button>
+                                    </div>
                                 )}
                                 <div className="flex items-center gap-3 my-4">
                                     <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />

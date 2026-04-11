@@ -636,6 +636,16 @@ export default function App() {
         if (authLoading) return;
         setAuthLoading(true);
         try {
+            // Deep link flow: tokens passed directly
+            if (tgData.access_token && tgData.refresh_token) {
+                await supabase.auth.setSession({
+                    access_token: tgData.access_token,
+                    refresh_token: tgData.refresh_token,
+                });
+                if (tgData.needs_onboarding) setNeedsTelegramOnboarding(true);
+                return;
+            }
+            // Legacy widget flow
             const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-auth`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -643,15 +653,11 @@ export default function App() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Telegram auth failed');
-
             await supabase.auth.setSession({
                 access_token: data.access_token,
                 refresh_token: data.refresh_token,
             });
-
-            if (data.needs_onboarding) {
-                setNeedsTelegramOnboarding(true);
-            }
+            if (data.needs_onboarding) setNeedsTelegramOnboarding(true);
         } catch (err) {
             showToast(err.message || 'Ошибка входа через Telegram', 'error');
         } finally {
