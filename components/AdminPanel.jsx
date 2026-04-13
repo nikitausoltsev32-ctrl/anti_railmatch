@@ -257,6 +257,7 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
     };
 
     return (
+        <>
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-xl font-black uppercase tracking-tight dark:text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-600" /> Панель администратора
@@ -658,6 +659,7 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
                 onClose={() => setViolationsFor(null)}
             />
         )}
+        </>
     );
 }
 
