@@ -3,7 +3,7 @@ import { handleRequest } from "./index.ts";
 
 const fakeDeps = (overrides: Partial<any> = {}) => ({
   resolveSender: async () => ({ id: "user-1", role: "shipper" }),
-  loadMatch: async () => ({ id: "match-1", shipper_id: "user-1", owner_id: "user-2" }),
+  loadBid: async () => ({ ownerId: "user-2", shipperInn: "user-1" }),
   loadHistory: async () => [],
   insertMessage: async (row: any) => ({ ...row, id: "msg-1" }),
   insertViolation: async () => { throw new Error("should not be called"); },
@@ -15,7 +15,7 @@ Deno.test("happy path: clean user message → 200 + message returned", async () 
     new Request("http://x", {
       method: "POST",
       headers: { Authorization: "Bearer fake" },
-      body: JSON.stringify({ match_id: "match-1", text: "когда грузим?", kind: "user" }),
+      body: JSON.stringify({ chat_id: "chat-1", text: "когда грузим?", kind: "user" }),
     }),
     fakeDeps(),
   );
@@ -31,7 +31,7 @@ Deno.test("blocked: detector hit → 422 + violation inserted", async () => {
     new Request("http://x", {
       method: "POST",
       headers: { Authorization: "Bearer fake" },
-      body: JSON.stringify({ match_id: "match-1", text: "звони +79991234567", kind: "user" }),
+      body: JSON.stringify({ chat_id: "chat-1", text: "звони +79991234567", kind: "user" }),
     }),
     fakeDeps({
       insertViolation: async (row: any) => { violationRow = row; },
@@ -52,7 +52,7 @@ Deno.test("sequence: assembled phone over history → 422", async () => {
     new Request("http://x", {
       method: "POST",
       headers: { Authorization: "Bearer fake" },
-      body: JSON.stringify({ match_id: "match-1", text: "67", kind: "user" }),
+      body: JSON.stringify({ chat_id: "chat-1", text: "67", kind: "user" }),
     }),
     fakeDeps({
       loadHistory: async () => ["мой телефон", "+7", "999", "123", "45"],
@@ -68,7 +68,7 @@ Deno.test("unauth → 401", async () => {
   const res = await handleRequest(
     new Request("http://x", {
       method: "POST",
-      body: JSON.stringify({ match_id: "match-1", text: "hi", kind: "user" }),
+      body: JSON.stringify({ chat_id: "chat-1", text: "hi", kind: "user" }),
     }),
     fakeDeps({ resolveSender: async () => null }),
   );
@@ -80,7 +80,7 @@ Deno.test("non-participant → 403", async () => {
     new Request("http://x", {
       method: "POST",
       headers: { Authorization: "Bearer fake" },
-      body: JSON.stringify({ match_id: "match-1", text: "hi", kind: "user" }),
+      body: JSON.stringify({ chat_id: "chat-1", text: "hi", kind: "user" }),
     }),
     fakeDeps({
       resolveSender: async () => ({ id: "stranger", role: "shipper" }),
@@ -94,23 +94,26 @@ Deno.test("kind=system from non-admin → 403", async () => {
     new Request("http://x", {
       method: "POST",
       headers: { Authorization: "Bearer fake" },
-      body: JSON.stringify({ match_id: "match-1", text: "hi", kind: "system" }),
+      body: JSON.stringify({ chat_id: "chat-1", text: "hi", kind: "system" }),
     }),
     fakeDeps(),
   );
   assertEquals(res.status, 403);
 });
 
-Deno.test("kind=system from admin → 200", async () => {
+Deno.test("kind=system from admin → 200 with sender_id=system", async () => {
+  let insertedRow: any = null;
   const res = await handleRequest(
     new Request("http://x", {
       method: "POST",
       headers: { Authorization: "Bearer fake" },
-      body: JSON.stringify({ match_id: "match-1", text: "system note", kind: "system" }),
+      body: JSON.stringify({ chat_id: "chat-1", text: "system note", kind: "system" }),
     }),
     fakeDeps({
       resolveSender: async () => ({ id: "admin-1", role: "admin" }),
+      insertMessage: async (row: any) => { insertedRow = row; return { ...row, id: "msg-1" }; },
     }),
   );
   assertEquals(res.status, 200);
+  assertEquals(insertedRow.sender_id, "system");
 });

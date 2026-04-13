@@ -9,9 +9,10 @@ const corsHeaders = {
 
 interface Deps {
   resolveSender: (req: Request) => Promise<{ id: string; role: string } | null>;
-  loadMatch: (id: string) => Promise<{ id: string; shipper_id: string; owner_id: string } | null>;
-  loadHistory: (matchId: string) => Promise<string[]>;
-  insertMessage: (row: { match_id: string; sender_id: string; text: string; kind: string }) => Promise<any>;
+  // Returns the ownerId and shipperInn for the bid (both stored as text UUIDs)
+  loadBid: (chatId: string) => Promise<{ ownerId: string; shipperInn: string } | null>;
+  loadHistory: (chatId: string) => Promise<string[]>;
+  insertMessage: (row: { chat_id: string; sender_id: string; text: string }) => Promise<any>;
   insertViolation: (row: { user_id: string; match_id: string; detector: string; severity: string; snippet: string }) => Promise<void>;
 }
 
@@ -21,8 +22,8 @@ export async function handleRequest(req: Request, deps: Deps): Promise<Response>
 
   let body: any;
   try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
-  const { match_id, text, kind } = body ?? {};
-  if (!match_id || typeof text !== "string" || (kind !== "user" && kind !== "system")) {
+  const { chat_id, text, kind } = body ?? {};
+  if (!chat_id || typeof text !== "string" || (kind !== "user" && kind !== "system")) {
     return json({ error: "bad payload" }, 400);
   }
 
@@ -30,9 +31,12 @@ export async function handleRequest(req: Request, deps: Deps): Promise<Response>
   if (!sender) return json({ error: "unauth" }, 401);
   if (kind === "system" && sender.role !== "admin") return json({ error: "forbidden" }, 403);
 
-  const match = await deps.loadMatch(match_id);
-  if (!match) return json({ error: "no match" }, 404);
-  if (sender.role !== "admin" && sender.id !== match.shipper_id && sender.id !== match.owner_id) {
+  const bid = await deps.loadBid(chat_id);
+  if (!bid) return json({ error: "no chat" }, 404);
+
+  // Both ownerId and shipperInn are stored as text UUIDs in the bids/requests tables
+  const isParticipant = sender.id === bid.ownerId || sender.id === bid.shipperInn;
+  if (sender.role !== "admin" && !isParticipant) {
     return json({ error: "not participant" }, 403);
   }
 
@@ -40,13 +44,13 @@ export async function handleRequest(req: Request, deps: Deps): Promise<Response>
     const single = detect(text);
     let hit = single;
     if (!hit) {
-      const history = await deps.loadHistory(match_id);
+      const history = await deps.loadHistory(chat_id);
       hit = detectSequence(text, history);
     }
     if (hit) {
       await deps.insertViolation({
         user_id: sender.id,
-        match_id,
+        match_id: chat_id,
         detector: hit.detector,
         severity: hit.severity,
         snippet: hit.snippet,
@@ -55,7 +59,9 @@ export async function handleRequest(req: Request, deps: Deps): Promise<Response>
     }
   }
 
-  const message = await deps.insertMessage({ match_id, sender_id: sender.id, text, kind });
+  // System messages use sender_id = 'system' to match existing app convention
+  const senderId = kind === "system" ? "system" : sender.id;
+  const message = await deps.insertMessage({ chat_id, sender_id: senderId, text });
   return json({ ok: true, message }, 200);
 }
 
@@ -82,15 +88,25 @@ serve(async (req) => {
       const { data: prof } = await svc.from("profiles").select("id, role").eq("id", data.user.id).single();
       return prof ?? null;
     },
-    loadMatch: async (id) => {
-      const { data } = await svc.from("matches").select("id, shipper_id, owner_id").eq("id", id).single();
-      return data;
+    loadBid: async (chatId) => {
+      // bids.ownerId is the wagon owner; shipperInn is on the linked request
+      const { data } = await svc
+        .from("bids")
+        .select(`"ownerId", requests!inner("shipperInn")`)
+        .eq("id", chatId)
+        .single();
+      if (!data) return null;
+      return {
+        ownerId: (data as any)["ownerId"],
+        shipperInn: (data as any).requests["shipperInn"],
+      };
     },
-    loadHistory: async (matchId) => {
+    loadHistory: async (chatId) => {
       const { data } = await svc
         .from("messages")
         .select("text")
-        .eq("match_id", matchId)
+        .eq("chat_id", chatId)
+        .neq("sender_id", "system")
         .order("created_at", { ascending: false })
         .limit(8);
       return (data ?? []).reverse().map((r: any) => r.text);

@@ -1,7 +1,7 @@
 CREATE TABLE chat_violations (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  match_id        uuid NOT NULL REFERENCES matches(id)  ON DELETE CASCADE,
+  match_id        uuid NOT NULL REFERENCES bids(id)  ON DELETE CASCADE,
   detector        text NOT NULL,
   severity        text NOT NULL DEFAULT 'medium',
   snippet         text NOT NULL,
