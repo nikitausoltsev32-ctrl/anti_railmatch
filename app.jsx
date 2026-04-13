@@ -35,6 +35,7 @@ import {
     CHAT_BLOCK_HOURS, VIOLATION_RESET_DAYS
 } from './src/constants.js';
 import { validateMessageIntent, validateMessageSequence } from './src/security.js';
+import { detect as preDetect } from './src/anti-leak.js';
 
 // --- ЭКРАН СБРОСА ПАРОЛЯ ---
 function ResetPasswordScreen({ isDark, onDone }) {
@@ -947,13 +948,32 @@ export default function App() {
                 return;
             }
 
-            // --- Отправка легитимного сообщения ---
-            const { error } = await supabase.from('messages').insert([{
-                chat_id: chatId,
-                sender_id: sbUser.id,
-                text: text.trim(),
-            }]);
-            if (error) throw error;
+            // --- Клиентская pre-check (мгновенный UX) ---
+            const localHit = preDetect(text.trim());
+            if (localHit) {
+                setSecurityWarning({
+                    message: 'Сообщение содержит контактные данные. Передавайте их только после раскрытия контактов.',
+                    severity: 'warning',
+                });
+                clearTimeout(securityWarningTimerRef.current);
+                securityWarningTimerRef.current = setTimeout(() => setSecurityWarning(null), 7000);
+                return;
+            }
+
+            // --- Отправка через edge function (server-side detection + RLS) ---
+            const { data: fnData, error: fnError } = await supabase.functions.invoke('send-chat-message', {
+                body: { chat_id: chatId, text: text.trim(), kind: 'user' },
+            });
+            if (fnError) throw fnError;
+            if (fnData?.blocked) {
+                setSecurityWarning({
+                    message: 'Сообщение заблокировано: запрещено передавать контакты в чате.',
+                    severity: 'warning',
+                });
+                clearTimeout(securityWarningTimerRef.current);
+                securityWarningTimerRef.current = setTimeout(() => setSecurityWarning(null), 7000);
+                return;
+            }
 
             const partnerId = userProfile.role === 'shipper'
                 ? activeChat?.ownerId

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, TrendingUp, Send, Clock, CheckCircle, MessageSquare, Wifi, Trash2, AlertTriangle, Search, ShieldOff, Shield, RefreshCw } from 'lucide-react';
+import { Users, FileText, TrendingUp, Send, Clock, CheckCircle, MessageSquare, Wifi, Trash2, AlertTriangle, Search, ShieldOff, Shield, RefreshCw, BarChart3, UserCheck, UserX, ExternalLink } from 'lucide-react';
 
 export default function AdminPanel({ supabase, sbUser, isDark }) {
     const [stats, setStats] = useState(null);
+    const [violationsFor, setViolationsFor] = useState(null);
     const [broadcasts, setBroadcasts] = useState([]);
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [sending, setSending] = useState(false);
@@ -20,6 +21,10 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
     const [errorLogs, setErrorLogs] = useState([]);
     const [logsLoading, setLogsLoading] = useState(false);
 
+    const [broadcastStats, setBroadcastStats] = useState(null);
+    const [notionSyncing, setNotionSyncing] = useState(false);
+    const [notionResult, setNotionResult] = useState(null);
+
     useEffect(() => {
         fetchStats();
         fetchBroadcasts();
@@ -35,8 +40,8 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
             { data: bids },
         ] = await Promise.all([
             supabase.from('profiles').select('id, name, company, role, telegram_id, is_banned, created_at'),
-            supabase.from('requests').select('status, created_at'),
-            supabase.from('bids').select('status, commission_amount, created_at'),
+            supabase.from('requests').select('status, created_at, shipperId'),
+            supabase.from('bids').select('status, commission_amount, created_at, ownerId'),
         ]);
 
         const totalUsers = profiles?.length ?? 0;
@@ -53,6 +58,38 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
         const lastRegs = [...(profiles || [])]
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .slice(0, 5);
+
+        const shippers = profiles?.filter(p => p.role === 'shipper') || [];
+        const owners = profiles?.filter(p => p.role === 'owner') || [];
+        const admins = profiles?.filter(p => p.role === 'admin') || [];
+        const onboarded = profiles?.filter(p => p.name && p.name !== '—' && p.company && p.role !== 'demo') || [];
+        const notOnboarded = profiles?.filter(p => !p.name || p.name === '—' || !p.company || p.role === 'demo') || [];
+
+        const today = new Date(); today.setHours(0,0,0,0);
+        const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+        const regsToday = profiles?.filter(p => new Date(p.created_at) >= today).length || 0;
+        const regsWeek = profiles?.filter(p => new Date(p.created_at) >= weekAgo).length || 0;
+
+        const madeRequest = new Set(requests?.map(r => r.shipperId) || []);
+        const madeBid = new Set(bids?.map(b => b.ownerId) || []);
+        const activeUsers = profiles?.filter(p => madeRequest.has(p.id) || madeBid.has(p.id)) || [];
+
+        setBroadcastStats({
+            shippers: shippers.length,
+            owners: owners.length,
+            admins: admins.length,
+            onboarded: onboarded.length,
+            notOnboarded: notOnboarded.length,
+            regsToday,
+            regsWeek,
+            activeUsers: activeUsers.length,
+            byRole: [
+                { role: 'Грузовладельцы', count: shippers.length, color: 'text-blue-600' },
+                { role: 'Владельцы вагонов', count: owners.length, color: 'text-purple-600' },
+                { role: 'Админы', count: admins.length, color: 'text-amber-600' },
+            ],
+            allProfiles: profiles || [],
+        });
 
         setStats({ totalUsers, tgUsers, bannedUsers, totalRequests, activeRequests, totalBids, completedDeals, revenue, lastRegs });
         setLoadingStats(false);
@@ -71,7 +108,7 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
         setUsersLoading(true);
         const { data } = await supabase
             .from('profiles')
-            .select('id, name, company, role, is_banned, is_verified, telegram_id, telegram_username, violation_count, created_at')
+            .select('id, name, company, role, is_banned, is_verified, telegram_id, telegram_username, violation_count, created_at, chat_violations(count)')
             .order('created_at', { ascending: false })
             .limit(100);
         if (data) setUsers(data);
@@ -184,6 +221,22 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
         }
     };
 
+    const handleNotionSync = async () => {
+        setNotionSyncing(true);
+        setNotionResult(null);
+        try {
+            const res = await supabase.functions.invoke('notion-sync-users', {
+                body: { profiles: broadcastStats?.allProfiles || [] },
+            });
+            if (res.error) throw new Error(res.error.message);
+            setNotionResult({ success: true, synced: res.data?.synced || 0 });
+        } catch (err) {
+            setNotionResult({ success: false, error: err.message });
+        } finally {
+            setNotionSyncing(false);
+        }
+    };
+
     const StatCard = ({ icon: Icon, label, value, sub, color = 'blue' }) => {
         const colorMap = {
             blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600',
@@ -204,6 +257,7 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
     };
 
     return (
+        <>
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-xl font-black uppercase tracking-tight dark:text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-600" /> Панель администратора
@@ -230,6 +284,98 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
                     <StatCard icon={MessageSquare} label="Ставок" value={stats.totalBids} color="amber" />
                     <StatCard icon={CheckCircle} label="Сделок" value={stats.completedDeals} color="green" />
                     <StatCard icon={TrendingUp} label="Выручка" value={`${(stats.revenue / 1000).toFixed(0)}к ₽`} color="green" />
+                </div>
+            )}
+
+            {/* Broadcast Tracker */}
+            {broadcastStats && (
+                <div className="bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <h3 className="font-black uppercase tracking-widest text-sm dark:text-white flex items-center gap-2">
+                            <BarChart3 className="w-4 h-4 text-indigo-600" /> Трекер регистраций
+                        </h3>
+                        <div className="flex items-center gap-2">
+                            {notionResult && (
+                                <span className={`text-xs font-bold ${notionResult.success ? 'text-green-600' : 'text-red-500'}`}>
+                                    {notionResult.success ? `Notion: ${notionResult.synced} синхр.` : notionResult.error}
+                                </span>
+                            )}
+                            <button
+                                onClick={handleNotionSync}
+                                disabled={notionSyncing}
+                                className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                {notionSyncing ? 'Синхр...' : 'Notion'}
+                            </button>
+                        </div>
+                    </div>
+                    <div className="p-5 space-y-5">
+                        {/* Quick stats row */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 text-center">
+                                <div className="text-lg font-black text-green-600">{broadcastStats.regsToday}</div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-green-600/70">Сегодня</div>
+                            </div>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 text-center">
+                                <div className="text-lg font-black text-blue-600">{broadcastStats.regsWeek}</div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-blue-600/70">За неделю</div>
+                            </div>
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3 text-center">
+                                <div className="text-lg font-black text-emerald-600">{broadcastStats.activeUsers}</div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/70">Активных</div>
+                            </div>
+                            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 text-center">
+                                <div className="text-lg font-black text-amber-600">
+                                    {stats?.totalUsers > 0 ? Math.round(broadcastStats.onboarded / stats.totalUsers * 100) : 0}%
+                                </div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600/70">Конверсия</div>
+                            </div>
+                        </div>
+
+                        {/* Roles breakdown */}
+                        <div>
+                            <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">По ролям</div>
+                            <div className="space-y-2">
+                                {broadcastStats.byRole.map(r => (
+                                    <div key={r.role} className="flex items-center gap-3">
+                                        <span className="text-sm font-bold dark:text-white w-40 truncate">{r.role}</span>
+                                        <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-5 overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full transition-all ${
+                                                    r.color === 'text-blue-600' ? 'bg-blue-500' :
+                                                    r.color === 'text-purple-600' ? 'bg-purple-500' : 'bg-amber-500'
+                                                }`}
+                                                style={{ width: `${stats?.totalUsers > 0 ? (r.count / stats.totalUsers * 100) : 0}%` }}
+                                            />
+                                        </div>
+                                        <span className={`text-sm font-black w-10 text-right ${r.color}`}>{r.count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Onboarding status */}
+                        <div>
+                            <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Онбординг</div>
+                            <div className="flex gap-3">
+                                <div className="flex-1 bg-green-50 dark:bg-green-900/20 rounded-xl p-4 flex items-center gap-3">
+                                    <UserCheck className="w-8 h-8 text-green-500" />
+                                    <div>
+                                        <div className="text-xl font-black text-green-600">{broadcastStats.onboarded}</div>
+                                        <div className="text-xs text-green-600/70 font-bold">Прошли</div>
+                                    </div>
+                                </div>
+                                <div className="flex-1 bg-red-50 dark:bg-red-900/20 rounded-xl p-4 flex items-center gap-3">
+                                    <UserX className="w-8 h-8 text-red-400" />
+                                    <div>
+                                        <div className="text-xl font-black text-red-500">{broadcastStats.notOnboarded}</div>
+                                        <div className="text-xs text-red-500/70 font-bold">Не прошли</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -386,10 +532,18 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
                                             {u.role === 'shipper' ? 'Г' : u.role === 'owner' ? 'В' : u.role === 'admin' ? 'А' : u.role === 'developer' ? 'Д' : '?'}
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="text-sm font-bold dark:text-white truncate">
+                                            <div className="text-sm font-bold dark:text-white truncate flex items-center gap-1.5">
                                                 {u.name || '—'}
                                                 {u.violation_count > 0 && (
-                                                    <span className="ml-1.5 text-[10px] text-amber-500 font-bold">{u.violation_count} нар.</span>
+                                                    <span className="text-[10px] text-amber-500 font-bold">{u.violation_count} нар.</span>
+                                                )}
+                                                {(u.chat_violations?.[0]?.count ?? 0) > 0 && (
+                                                    <button
+                                                        onClick={() => setViolationsFor(u.id)}
+                                                        className="inline-flex items-center rounded bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:text-red-400 hover:bg-red-200 transition-colors"
+                                                    >
+                                                        {u.chat_violations[0].count} блок.
+                                                    </button>
                                                 )}
                                             </div>
                                             <div className="text-xs text-slate-400 truncate">{u.company || '—'}</div>
@@ -495,6 +649,64 @@ export default function AdminPanel({ supabase, sbUser, isDark }) {
                     </div>
                 </div>
             )}
+        </div>
+
+        {violationsFor && (
+            <ViolationsModal
+                supabase={supabase}
+                userId={violationsFor}
+                isDark={isDark}
+                onClose={() => setViolationsFor(null)}
+            />
+        )}
+        </>
+    );
+}
+
+function ViolationsModal({ supabase, userId, isDark, onClose }) {
+    const [rows, setRows] = useState([]);
+
+    useEffect(() => {
+        supabase
+            .from('chat_violations')
+            .select('id, detector, severity, snippet, created_at, match_id')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .then(({ data }) => setRows(data ?? []));
+    }, [userId]);
+
+    const severityColor = { high: 'text-red-600', medium: 'text-amber-500', low: 'text-slate-400' };
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={onClose}
+        >
+            <div
+                className={`max-h-[80vh] w-[640px] overflow-auto rounded-2xl shadow-xl p-5 ${isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900'}`}
+                onClick={e => e.stopPropagation()}
+            >
+                <h2 className="mb-4 text-base font-black uppercase tracking-widest">Нарушения пользователя</h2>
+                {rows.length === 0
+                    ? <p className="text-sm text-slate-400">Нет заблокированных сообщений</p>
+                    : (
+                        <ul className="space-y-2">
+                            {rows.map(r => (
+                                <li key={r.id} className={`rounded-xl border p-3 text-sm ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className={`font-bold ${severityColor[r.severity] ?? 'text-slate-500'}`}>{r.detector}</span>
+                                        <span className="text-[10px] text-slate-400">
+                                            {new Date(r.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <div className={`text-xs break-words ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{r.snippet}</div>
+                                    <div className="text-[10px] text-slate-400 mt-1">bid {String(r.match_id).slice(0, 8)}</div>
+                                </li>
+                            ))}
+                        </ul>
+                    )
+                }
+            </div>
         </div>
     );
 }

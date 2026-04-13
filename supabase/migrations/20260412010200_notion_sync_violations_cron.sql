@@ -1,0 +1,23 @@
+-- Schedule notion-sync-violations every 5 minutes.
+--
+-- pg_cron + pg_net are not yet configured in this project, so set up via
+-- Supabase Dashboard → Edge Functions → notion-sync-violations → Schedule:
+--
+--   Cron expression: */5 * * * *
+--   HTTP method: POST
+--   Authorization: Bearer <service_role_key>
+--
+-- Once pg_cron + pg_net are enabled, replace this with:
+--
+-- SELECT cron.schedule(
+--   'notion-sync-violations',
+--   '*/5 * * * *',
+--   $$ SELECT net.http_post(
+--        url := 'https://<project_ref>.functions.supabase.co/notion-sync-violations',
+--        headers := jsonb_build_object(
+--          'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
+--          'Content-Type', 'application/json'
+--        ),
+--        body := '{}'::jsonb
+--      ); $$
+-- );
