@@ -5,7 +5,7 @@ import {
     Info, PenTool, CreditCard, X, ChevronRight, ThumbsUp, SplitSquareHorizontal,
     Shield, AlertTriangle, Ban, Star
 } from 'lucide-react';
-import { downloadDocument } from './DocumentGenerator';
+const loadDocGen = () => import('./DocumentGenerator');
 import DocumentSigningModal from './DocumentSigningModal';
 import { PLATFORM_COMMISSION_RATE, MAX_COMMISSION_ROUNDS } from '../src/constants.js';
 import { validateMessageIntent } from '../src/security.js';
@@ -104,7 +104,7 @@ export default function ChatWindow({
         setInputWarning(false);
     };
 
-    const handleDownloadPDF = () => {
+    const handleDownloadPDF = async () => {
         setIsGeneratingPdf(true);
         try {
             const docTypeMap = { contract: 'contract', act: 'act', upd: 'upd', registry: 'waybill' };
@@ -119,6 +119,7 @@ export default function ChatWindow({
                 shipper: { company: chat.shipperName, inn: '' },
                 owner: { company: chat.ownerName, inn: '' },
             };
+            const { downloadDocument } = await loadDocGen();
             downloadDocument(templateType, dealData);
         } catch (e) {
             console.error('PDF generation failed', e);

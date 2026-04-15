@@ -1,0 +1,17 @@
+---
+source_file: "C:\Users\HomePc\Railmatch Anti\components\OnboardingModal.jsx"
+type: "code"
+community: "Onboarding Modal"
+location: "L1"
+tags:
+  - graphify/code
+  - graphify/EXTRACTED
+  - community/Onboarding_Modal
+---
+
+# OnboardingModal.jsx
+
+## Connections
+- [[OnboardingModal()]] - `contains` [EXTRACTED]
+
+#graphify/code #graphify/EXTRACTED #community/Onboarding_Modal

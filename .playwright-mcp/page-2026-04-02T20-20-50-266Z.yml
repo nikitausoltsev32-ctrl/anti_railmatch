@@ -1,0 +1,188 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5] [cursor=pointer]:
+      - img [ref=e7]
+      - generic [ref=e14]: RailMatch
+    - generic [ref=e15]:
+      - button [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+      - button "Войти" [ref=e19] [cursor=pointer]
+      - button "Регистрация" [ref=e20] [cursor=pointer]
+  - generic [ref=e21]:
+    - generic [ref=e25] [cursor=pointer]:
+      - img [ref=e27]
+      - generic [ref=e29]:
+        - paragraph [ref=e30]: Сделка закрыта
+        - paragraph [ref=e31]: ₽ 4 200 000 · 24 вагона
+    - generic [ref=e32] [cursor=pointer]:
+      - img [ref=e34]
+      - generic [ref=e36]:
+        - paragraph [ref=e37]: AI Agent
+        - paragraph [ref=e38]: 15 вагонов — Мск → Екб
+    - generic [ref=e39] [cursor=pointer]:
+      - img [ref=e40]
+      - text: Первая умная биржа вагонов в России
+    - heading "Грузы и вагоны. Без брокеров." [level=1] [ref=e42]:
+      - text: Грузы и вагоны.
+      - generic [ref=e43]: Без брокеров.
+    - paragraph [ref=e45]:
+      - text: RailMatch соединяет грузоотправителей и владельцев вагонов напрямую.
+      - text: Комиссия
+      - strong [ref=e46]: 2.5%
+      - text: вместо 15–20% у посредников. Сделка — от 60 секунд.
+    - generic [ref=e47]:
+      - button "Начать бесплатно" [ref=e48] [cursor=pointer]:
+        - text: Начать бесплатно
+        - img [ref=e49]
+      - button "Смотреть демо" [ref=e51] [cursor=pointer]:
+        - text: Смотреть демо
+        - img [ref=e52]
+      - link "Открыть в Telegram" [ref=e54] [cursor=pointer]:
+        - /url: https://t.me/rail_match_bot
+        - img [ref=e55]
+        - text: Открыть в Telegram
+  - generic [ref=e58]:
+    - generic [ref=e59]:
+      - generic [ref=e60]: 2.5%
+      - generic [ref=e61]: Комиссия платформы
+      - generic [ref=e62]: vs. 15–20% у брокеров
+    - generic [ref=e63]:
+      - generic [ref=e64]: 60 сек
+      - generic [ref=e65]: Создание заявки
+      - generic [ref=e66]: с помощью AI-агента
+    - generic [ref=e67]:
+      - generic [ref=e68]: 100%
+      - generic [ref=e69]: Прямые контакты
+      - generic [ref=e70]: партнёра после оплаты
+    - generic [ref=e71]:
+      - generic [ref=e72]: 0 ₽
+      - generic [ref=e73]: Абонентская плата
+      - generic [ref=e74]: платите только за результат
+  - generic [ref=e75]:
+    - generic [ref=e76]:
+      - img [ref=e78]
+      - heading "Грузоотправителям" [level=3] [ref=e82]
+      - paragraph [ref=e83]: Публикуйте заявку — и получайте прямые ставки от владельцев вагонов. Никаких посредников, скрытых наценок и бесконечных звонков диспетчерам.
+      - list [ref=e84]:
+        - listitem [ref=e85]:
+          - img [ref=e87]
+          - text: AI заполнит заявку за вас — достаточно одной фразы
+        - listitem [ref=e89]:
+          - img [ref=e91]
+          - text: Несколько ставок сразу — выбирайте лучшее предложение
+        - listitem [ref=e93]:
+          - img [ref=e95]
+          - text: Комиссия 2.5% — и контакты партнёра открыты для расчётов
+      - button "Зарегистрироваться как грузоотправитель" [ref=e98] [cursor=pointer]:
+        - text: Зарегистрироваться как грузоотправитель
+        - img [ref=e99]
+    - generic [ref=e101]:
+      - img [ref=e103]
+      - img [ref=e106]
+      - heading "Владельцам вагонов" [level=3] [ref=e113]
+      - paragraph [ref=e114]: Найдите груз под ваш парк быстрее, чем через диспетчера. Умный подбор по маршруту и типу вагона. Комиссия — только с закрытой сделки.
+      - list [ref=e115]:
+        - listitem [ref=e116]:
+          - img [ref=e118]
+          - text: Прямой доступ к тысячам заявок на перевозку
+        - listitem [ref=e120]:
+          - img [ref=e122]
+          - text: "AI-агент: один запрос — лучшие совпадения сразу"
+        - listitem [ref=e124]:
+          - img [ref=e126]
+          - text: Нет подписки — платите 2.5% только за результат
+      - button "Зарегистрироваться как владелец вагонов" [ref=e128] [cursor=pointer]:
+        - text: Зарегистрироваться как владелец вагонов
+        - img [ref=e129]
+  - generic [ref=e131]:
+    - generic [ref=e132]:
+      - generic [ref=e133]:
+        - img [ref=e134]
+        - text: Три шага до сделки
+      - heading "Как это работает?" [level=2] [ref=e136]
+      - paragraph [ref=e137]: От регистрации до закрытой сделки — за считанные минуты
+    - generic [ref=e138]:
+      - generic [ref=e139]:
+        - generic [ref=e140]: "01"
+        - img [ref=e142]
+        - heading "Разместите заявку за 60 секунд" [level=3] [ref=e145]
+        - paragraph [ref=e146]: Напишите запрос в свободной форме — AI-агент сам заполнит маршрут, тип груза и вагон. Никаких сложных форм и справочников.
+      - generic [ref=e147]:
+        - generic [ref=e148]: "02"
+        - img [ref=e150]
+        - heading "Получайте ставки напрямую" [level=3] [ref=e153]
+        - paragraph [ref=e154]: Владельцы вагонов видят вашу заявку и делают предложения. Сравнивайте условия и выбирайте лучшее — без переговоров с диспетчерами.
+      - generic [ref=e155]:
+        - generic [ref=e156]: "03"
+        - img [ref=e158]
+        - heading "Оплатите комиссию — получите прямые контакты" [level=3] [ref=e161]
+        - paragraph [ref=e162]: Согласуйте условия в защищённом чате. Оплатите комиссию 2.5% — и платформа раскроет телефон, ИНН и реквизиты партнёра. Расчёт — напрямую.
+  - generic [ref=e163]:
+    - generic [ref=e164]:
+      - heading "Всё для эффективной работы" [level=2] [ref=e165]
+      - paragraph [ref=e166]: Инструменты, которые делают ж/д логистику быстрой, прозрачной и безопасной
+    - generic [ref=e167]:
+      - generic [ref=e168]:
+        - img [ref=e170]
+        - heading "AI-агент" [level=4] [ref=e172]
+        - paragraph [ref=e173]: "Создайте заявку одной фразой: «10 крытых из Москвы в Челябинск» — агент поймёт и заполнит форму автоматически."
+      - generic [ref=e174]:
+        - img [ref=e176]
+        - heading "Умный подбор" [level=4] [ref=e179]
+        - paragraph [ref=e180]: Алгоритм сортирует предложения по выгоде для вас. Лучший груз или нужный вагон — всегда наверху списка.
+      - generic [ref=e181]:
+        - img [ref=e183]
+        - heading "Безопасный платёж" [level=4] [ref=e186]
+        - paragraph [ref=e187]: Комиссия 2.5% подтверждает серьёзность обеих сторон и открывает прямые контакты партнёра. Никаких анонимных сделок.
+      - generic [ref=e188]:
+        - img [ref=e190]
+        - heading "Защищённый чат" [level=4] [ref=e192]
+        - paragraph [ref=e193]: Встроенный мессенджер для согласования условий. Контакты сторон открываются только после оплаты.
+      - generic [ref=e194]:
+        - img [ref=e196]
+        - heading "Аналитика сделок" [level=4] [ref=e198]
+        - paragraph [ref=e199]: Дашборд с историей ставок, выручкой и статусами. Полная прозрачность по каждой операции в режиме реального времени.
+      - generic [ref=e200]:
+        - img [ref=e202]
+        - heading "Верификация компаний" [level=4] [ref=e206]
+        - paragraph [ref=e207]: Все участники проходят проверку по ИНН и ЕГРЮЛ. Работайте только с надёжными контрагентами.
+  - generic [ref=e208]:
+    - generic [ref=e209]:
+      - heading "Безопасность — в основе каждой сделки" [level=2] [ref=e210]:
+        - text: Безопасность —
+        - text: в основе каждой сделки
+      - paragraph [ref=e211]: RailMatch создан так, чтобы обе стороны были защищены на каждом этапе
+    - generic [ref=e212]:
+      - generic [ref=e213]:
+        - img [ref=e215]
+        - heading "Только реальные сделки" [level=4] [ref=e218]
+        - paragraph [ref=e219]: Комиссия 2.5% отсеивает нецелевые запросы. Контакты раскрываются только тем, кто готов к сделке — платформа гарантирует серьёзность обеих сторон.
+      - generic [ref=e220]:
+        - img [ref=e222]
+        - heading "Проверенные контрагенты" [level=4] [ref=e226]
+        - paragraph [ref=e227]: Каждая компания проходит верификацию по ИНН, ОГРН и ЕГРЮЛ. Никаких анонимов — вы всегда знаете, с кем заключаете сделку.
+      - generic [ref=e228]:
+        - img [ref=e230]
+        - heading "Защита контактов" [level=4] [ref=e233]
+        - paragraph [ref=e234]: Телефоны и реквизиты раскрываются только после заключения сделки. Платформа автоматически блокирует попытки обхода.
+  - generic [ref=e241]:
+    - generic [ref=e242]:
+      - img [ref=e243]
+      - text: Регистрация занимает 2 минуты
+    - heading "Сократите расходы на логистику прямо сейчас" [level=2] [ref=e245]:
+      - text: Сократите расходы на логистику
+      - text: прямо сейчас
+    - paragraph [ref=e246]: Тысячи заявок на перевозку. Прямые контакты. Комиссия 2.5%. Первые ставки — бесплатно.
+    - generic [ref=e247]:
+      - button "Зарегистрироваться" [ref=e248] [cursor=pointer]:
+        - text: Зарегистрироваться
+        - img [ref=e249]
+      - button "Демо-режим" [ref=e251] [cursor=pointer]:
+        - text: Демо-режим
+        - img [ref=e252]
+  - contentinfo [ref=e254]:
+    - generic [ref=e255]:
+      - generic [ref=e256]: © 2026 RailMatch Platform ООО. Все права защищены.
+      - generic [ref=e257]:
+        - button "Пользовательское соглашение" [ref=e258] [cursor=pointer]
+        - button "Конфиденциальность" [ref=e259] [cursor=pointer]

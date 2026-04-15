@@ -1,7 +1,7 @@
 import { PLATFORM_COMMISSION_RATE } from '../src/constants.js';
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, FileText, Check, AlertCircle, ShieldCheck, Eye, Loader2, Sparkles } from 'lucide-react';
-import { downloadDocument, getDocumentBlob } from './DocumentGenerator';
+const loadDocGen = () => import('./DocumentGenerator');
 
 // ============================================
 // ВАЛИДАЦИЯ
@@ -239,6 +239,7 @@ export default function DocumentSigningModal({ docType, deal, userRole, userProf
         try {
             // Merge deal data + form data
             const mergedData = buildMergedData();
+            const { getDocumentBlob } = await loadDocGen();
             const blob = getDocumentBlob(docType, mergedData);
             await onSign(docType, blob, formData, mergedData);
         } catch (err) {
@@ -248,8 +249,9 @@ export default function DocumentSigningModal({ docType, deal, userRole, userProf
         }
     };
 
-    const handlePreviewDownload = () => {
+    const handlePreviewDownload = async () => {
         const mergedData = buildMergedData();
+        const { downloadDocument } = await loadDocGen();
         downloadDocument(docType, mergedData);
     };
 

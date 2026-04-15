@@ -1,0 +1,365 @@
+"""
+Writes .graphify_semantic_new.json from notification data collected during extraction.
+Run: python scripts/_graphify_write_semantic.py
+"""
+import json
+from pathlib import Path
+
+nodes = []
+edges = []
+hyperedges = []
+
+# ── CHUNK 2: anti_railmatch components + scripts ─────────────────────────────
+nodes += [
+  {"id":"documentsigningmodal_component","label":"DocumentSigningModal (anti)","file_type":"code","source_file":"anti_railmatch/components/DocumentSigningModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"errorboundary_component","label":"ErrorBoundary (anti)","file_type":"code","source_file":"anti_railmatch/components/ErrorBoundary.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fleetdislocation_component","label":"FleetDislocation (anti)","file_type":"code","source_file":"anti_railmatch/components/FleetDislocation.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"landingscreen_component","label":"LandingScreen (anti)","file_type":"code","source_file":"anti_railmatch/components/LandingScreen.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"mybidsview_component","label":"MyBidsView (anti)","file_type":"code","source_file":"anti_railmatch/components/MyBidsView.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"myrequestsview_component","label":"MyRequestsView (anti)","file_type":"code","source_file":"anti_railmatch/components/MyRequestsView.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"onboardingmodal_component","label":"OnboardingModal (anti)","file_type":"code","source_file":"anti_railmatch/components/OnboardingModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"profilesettings_component","label":"ProfileSettings (anti)","file_type":"code","source_file":"anti_railmatch/components/ProfileSettings.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"profileviewmonitor_component","label":"ProfileViewMonitor (anti)","file_type":"code","source_file":"anti_railmatch/components/ProfileViewMonitor.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"profileaccessguard_component","label":"ProfileAccessGuard","file_type":"code","source_file":"anti_railmatch/components/ProfileViewMonitor.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"requestcard_component","label":"RequestCard (anti)","file_type":"code","source_file":"anti_railmatch/components/RequestCard.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"securitymanager_component","label":"SecurityManager (anti)","file_type":"code","source_file":"anti_railmatch/components/SecurityManager.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"termsmodal_component","label":"TermsModal (anti)","file_type":"code","source_file":"anti_railmatch/components/TermsModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"userdashboard_component","label":"UserDashboard (anti)","file_type":"code","source_file":"anti_railmatch/components/UserDashboard.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"documentgenerator_component","label":"DocumentGenerator (anti)","file_type":"code","source_file":"anti_railmatch/components/DocumentGenerator.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_module","label":"aiService (anti)","file_type":"code","source_file":"anti_railmatch/src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"constants_module","label":"constants (anti)","file_type":"code","source_file":"anti_railmatch/src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"supabaseclient_module","label":"supabaseClient (anti)","file_type":"code","source_file":"anti_railmatch/src/supabaseClient.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"supabase_db","label":"Supabase Database","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"platform_commission_rate","label":"PLATFORM_COMMISSION_RATE constant","file_type":"code","source_file":"anti_railmatch/src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+]
+edges += [
+  {"source":"documentsigningmodal_component","target":"documentgenerator_component","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/components/DocumentSigningModal.jsx","source_location":"line 4","weight":1.0},
+  {"source":"documentsigningmodal_component","target":"platform_commission_rate","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/components/DocumentSigningModal.jsx","source_location":"line 61","weight":1.0},
+  {"source":"mybidsview_component","target":"aiservice_module","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/components/MyBidsView.jsx","source_location":"line 3","weight":1.0},
+  {"source":"myrequestsview_component","target":"aiservice_module","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/components/MyRequestsView.jsx","source_location":"line 3","weight":1.0},
+  {"source":"profilesettings_component","target":"supabaseclient_module","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/components/ProfileSettings.jsx","source_location":"line 3","weight":1.0},
+  {"source":"securitymanager_component","target":"profileviewmonitor_component","relation":"conceptually_related_to","confidence":"INFERRED","confidence_score":0.85,"source_file":"anti_railmatch/components/SecurityManager.jsx","source_location":None,"weight":0.85},
+  {"source":"mybidsview_component","target":"requestcard_component","relation":"shares_data_with","confidence":"INFERRED","confidence_score":0.75,"source_file":"anti_railmatch/components/MyBidsView.jsx","source_location":None,"weight":0.75},
+  {"source":"myrequestsview_component","target":"requestcard_component","relation":"shares_data_with","confidence":"INFERRED","confidence_score":0.8,"source_file":"anti_railmatch/components/MyRequestsView.jsx","source_location":None,"weight":0.8},
+  {"source":"landingscreen_component","target":"termsmodal_component","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/components/LandingScreen.jsx","source_location":"line 326-329","weight":1.0},
+]
+hyperedges += [
+  {"id":"ai_prompt_parsing_views","label":"AI Prompt Parsing in Views","nodes":["mybidsview_component","myrequestsview_component","aiservice_module"],"relation":"implement","confidence":"EXTRACTED","confidence_score":0.95,"source_file":"anti_railmatch/components/MyBidsView.jsx"},
+  {"id":"security_rate_limiting","label":"Profile View Rate Limiting Security","nodes":["securitymanager_component","profileviewmonitor_component","profileaccessguard_component"],"relation":"implement","confidence":"INFERRED","confidence_score":0.85,"source_file":"anti_railmatch/components/ProfileViewMonitor.jsx"},
+]
+
+# ── CHUNK 3: src modules, supabase fns, bot, root components ─────────────────
+nodes += [
+  {"id":"aiservice_parsePrompt","label":"parsePrompt Function","file_type":"code","source_file":"anti_railmatch/src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_getMissingFields","label":"getMissingFields Function","file_type":"code","source_file":"anti_railmatch/src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_getClarificationQuestion","label":"getClarificationQuestion Function","file_type":"code","source_file":"anti_railmatch/src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_nlpParser","label":"Heuristic NLP Parser (RailMatch)","file_type":"code","source_file":"anti_railmatch/src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"constants_platformCommission","label":"PLATFORM_COMMISSION_RATE Constant","file_type":"code","source_file":"anti_railmatch/src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"constants_maxCommissionRounds","label":"MAX_COMMISSION_ROUNDS Constant","file_type":"code","source_file":"anti_railmatch/src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"constants_violationThresholds","label":"Violation Threshold Constants","file_type":"code","source_file":"anti_railmatch/src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"security_validateMessageIntent","label":"validateMessageIntent Function","file_type":"code","source_file":"anti_railmatch/src/security.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"security_antiLeakageSystem","label":"4-Level Anti-Leakage Security System","file_type":"code","source_file":"anti_railmatch/src/security.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"security_stopWords","label":"STOP_WORDS List","file_type":"code","source_file":"anti_railmatch/src/security.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"supabaseclient_client","label":"Supabase Client Singleton (anti)","file_type":"code","source_file":"anti_railmatch/src/supabaseClient.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fn_getDemoData","label":"get-demo-data Edge Function (anti)","file_type":"code","source_file":"anti_railmatch/supabase/functions/get-demo-data/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fn_notify","label":"notify Edge Function - Resend Email (anti)","file_type":"code","source_file":"anti_railmatch/supabase/functions/notify/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fn_sendConfirmationEmail","label":"send-confirmation-email Edge Function (anti)","file_type":"code","source_file":"anti_railmatch/supabase/functions/send-confirmation-email/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fn_telegramBot","label":"telegram-bot Edge Function (anti)","file_type":"code","source_file":"anti_railmatch/supabase/functions/telegram-bot/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fn_telegramBroadcast","label":"telegram-broadcast Edge Function (anti)","file_type":"code","source_file":"anti_railmatch/supabase/functions/telegram-broadcast/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fn_telegramNotify","label":"telegram-notify Edge Function (anti)","file_type":"code","source_file":"anti_railmatch/supabase/functions/telegram-notify/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fn_verifyLinkingCode","label":"verify-linking-code Edge Function (anti)","file_type":"code","source_file":"anti_railmatch/supabase/functions/verify-linking-code/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"bot_index","label":"Telegram Bot Server Express","file_type":"code","source_file":"bot/index.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"bot_startHandler","label":"Bot Start Handler","file_type":"code","source_file":"bot/handlers/startHandler.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"bot_telegram","label":"Bot Telegram Library sendMessage/registerWebhook","file_type":"code","source_file":"bot/lib/telegram.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"comp_adminPanel","label":"AdminPanel Component","file_type":"code","source_file":"components/AdminPanel.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"comp_aiAgentBar","label":"AiAgentBar Component","file_type":"code","source_file":"components/AiAgentBar.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"comp_analyticsDashboard","label":"AnalyticsDashboard Component","file_type":"code","source_file":"components/AnalyticsDashboard.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"comp_authScreen","label":"AuthScreen Component","file_type":"code","source_file":"components/AuthScreen.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"comp_bidModal","label":"BidModal Component","file_type":"code","source_file":"components/BidModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"comp_chatWindow","label":"ChatWindow Component","file_type":"code","source_file":"components/ChatWindow.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"comp_createRequestForm","label":"CreateRequestForm Component","file_type":"code","source_file":"components/CreateRequestForm.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"db_profiles","label":"profiles DB Table","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"db_requests","label":"requests DB Table","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"db_bids","label":"bids DB Table","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"db_broadcasts","label":"broadcasts DB Table","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"ext_resend","label":"Resend Email API","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"ext_telegramApi","label":"Telegram Bot API","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+]
+edges += [
+  {"source":"comp_aiAgentBar","target":"aiservice_parsePrompt","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AiAgentBar.jsx","source_location":None,"weight":1.0},
+  {"source":"comp_aiAgentBar","target":"aiservice_getMissingFields","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AiAgentBar.jsx","source_location":None,"weight":1.0},
+  {"source":"comp_aiAgentBar","target":"aiservice_getClarificationQuestion","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AiAgentBar.jsx","source_location":None,"weight":1.0},
+  {"source":"comp_chatWindow","target":"security_validateMessageIntent","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/ChatWindow.jsx","source_location":None,"weight":1.0},
+  {"source":"comp_authScreen","target":"supabaseclient_client","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AuthScreen.jsx","source_location":None,"weight":1.0},
+  {"source":"bot_index","target":"bot_startHandler","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"bot/index.js","source_location":None,"weight":1.0},
+  {"source":"bot_index","target":"bot_telegram","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"bot/index.js","source_location":None,"weight":1.0},
+  {"source":"bot_startHandler","target":"bot_telegram","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"bot/handlers/startHandler.js","source_location":None,"weight":1.0},
+  {"source":"bot_startHandler","target":"fn_verifyLinkingCode","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"bot/handlers/startHandler.js","source_location":None,"weight":1.0},
+  {"source":"bot_telegram","target":"ext_telegramApi","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"bot/lib/telegram.js","source_location":None,"weight":1.0},
+  {"source":"fn_notify","target":"ext_resend","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/notify/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_sendConfirmationEmail","target":"ext_resend","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/send-confirmation-email/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_sendConfirmationEmail","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/send-confirmation-email/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_telegramBot","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/telegram-bot/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_telegramBot","target":"ext_telegramApi","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/telegram-bot/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_telegramBroadcast","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/telegram-broadcast/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_telegramBroadcast","target":"db_broadcasts","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/telegram-broadcast/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_telegramBroadcast","target":"ext_telegramApi","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/telegram-broadcast/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_telegramNotify","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/telegram-notify/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_telegramNotify","target":"ext_telegramApi","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/telegram-notify/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_verifyLinkingCode","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/verify-linking-code/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_getDemoData","target":"db_requests","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/get-demo-data/index.ts","source_location":None,"weight":1.0},
+  {"source":"fn_getDemoData","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/get-demo-data/index.ts","source_location":None,"weight":1.0},
+  {"source":"comp_adminPanel","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AdminPanel.jsx","source_location":None,"weight":1.0},
+  {"source":"comp_adminPanel","target":"db_requests","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AdminPanel.jsx","source_location":None,"weight":1.0},
+  {"source":"comp_adminPanel","target":"db_bids","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AdminPanel.jsx","source_location":None,"weight":1.0},
+  {"source":"comp_adminPanel","target":"db_broadcasts","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AdminPanel.jsx","source_location":None,"weight":1.0},
+  {"source":"security_antiLeakageSystem","target":"security_validateMessageIntent","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/src/security.js","source_location":None,"weight":1.0},
+  {"source":"security_validateMessageIntent","target":"security_stopWords","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/src/security.js","source_location":None,"weight":1.0},
+]
+hyperedges += [
+  {"id":"telegram_linking_flow","label":"Telegram Account Linking Flow","nodes":["bot_startHandler","fn_verifyLinkingCode","db_profiles","ext_telegramApi"],"relation":"implement","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"bot/handlers/startHandler.js"},
+  {"id":"email_notification_system","label":"Email Notification System Resend","nodes":["fn_notify","fn_sendConfirmationEmail","ext_resend"],"relation":"implement","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"anti_railmatch/supabase/functions/notify/index.ts"},
+  {"id":"ai_nlp_pipeline","label":"AI NLP Search/Create Pipeline","nodes":["comp_aiAgentBar","aiservice_parsePrompt","aiservice_getMissingFields","aiservice_getClarificationQuestion"],"relation":"implement","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/AiAgentBar.jsx"},
+  {"id":"chat_security_enforcement","label":"Chat Security Enforcement","nodes":["comp_chatWindow","security_validateMessageIntent","security_stopWords","constants_violationThresholds"],"relation":"implement","confidence":"EXTRACTED","confidence_score":0.9,"source_file":"components/ChatWindow.jsx"},
+  {"id":"admin_broadcast_flow","label":"Admin Telegram Broadcast Flow","nodes":["comp_adminPanel","fn_telegramBroadcast","db_broadcasts","ext_telegramApi"],"relation":"implement","confidence":"INFERRED","confidence_score":0.8,"source_file":"components/AdminPanel.jsx"},
+]
+
+# ── CHUNK 4: root components (DemoModal..UserDashboard) + scripts ─────────────
+nodes += [
+  {"id":"democomponent_demomodal","label":"DemoModal","file_type":"code","source_file":"components/DemoModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"devdash_developerdashboard","label":"DeveloperDashboard","file_type":"code","source_file":"components/DeveloperDashboard.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"docgen_documentgenerator","label":"DocumentGenerator","file_type":"code","source_file":"components/DocumentGenerator.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"docsign_documentsigningmodal","label":"DocumentSigningModal","file_type":"code","source_file":"components/DocumentSigningModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"errbound_errorboundary","label":"ErrorBoundary","file_type":"code","source_file":"components/ErrorBoundary.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"fleetdis_fleetdislocation","label":"FleetDislocation","file_type":"code","source_file":"components/FleetDislocation.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"landing_landingscreen","label":"LandingScreen","file_type":"code","source_file":"components/LandingScreen.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"mybids_mybidsview","label":"MyBidsView","file_type":"code","source_file":"components/MyBidsView.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"myreqs_myrequestsview","label":"MyRequestsView","file_type":"code","source_file":"components/MyRequestsView.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"onboard_onboardingmodal","label":"OnboardingModal","file_type":"code","source_file":"components/OnboardingModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"profileset_profilesettings","label":"ProfileSettings","file_type":"code","source_file":"components/ProfileSettings.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"profilemon_profileviewmonitor","label":"ProfileViewMonitor","file_type":"code","source_file":"components/ProfileViewMonitor.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"reqcard_requestcard","label":"RequestCard","file_type":"code","source_file":"components/RequestCard.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"secmgr_securitymanager","label":"SecurityManager","file_type":"code","source_file":"components/SecurityManager.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"termsmod_termsmodal","label":"TermsModal","file_type":"code","source_file":"components/TermsModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"userdash_userdashboard","label":"UserDashboard","file_type":"code","source_file":"components/UserDashboard.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"src_aiservice","label":"aiService (parsePrompt)","file_type":"code","source_file":"src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"src_haptic","label":"haptic utility","file_type":"code","source_file":"src/haptic.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"src_constants","label":"constants (PLATFORM_COMMISSION_RATE)","file_type":"code","source_file":"src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"src_supabaseclient","label":"supabaseClient","file_type":"code","source_file":"src/supabaseClient.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"src_robotofont","label":"RobotoBase64 font","file_type":"code","source_file":"src/roboto-font.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"db_messages","label":"messages DB Table","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"db_errorlogs","label":"error_logs DB Table","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_platformcommission","label":"Platform Commission 2.5%","file_type":"document","source_file":"components/DocumentSigningModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_dailylimit","label":"Daily Profile View Limit 50/day","file_type":"document","source_file":"components/ProfileViewMonitor.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_rolesdomain","label":"User Roles shipper/owner/developer/demo","file_type":"document","source_file":"components/DeveloperDashboard.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_escrow","label":"Escrow-based contact unlock","file_type":"document","source_file":"components/ProfileViewMonitor.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_electronicSignature","label":"Electronic Signature 63-FZ","file_type":"document","source_file":"components/DocumentSigningModal.jsx","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+]
+edges += [
+  {"source":"docsign_documentsigningmodal","target":"docgen_documentgenerator","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DocumentSigningModal.jsx","source_location":"line 4","weight":1.0},
+  {"source":"docsign_documentsigningmodal","target":"concept_platformcommission","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DocumentSigningModal.jsx","source_location":"line 61","weight":1.0},
+  {"source":"docsign_documentsigningmodal","target":"concept_electronicSignature","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DocumentSigningModal.jsx","source_location":"line 467","weight":1.0},
+  {"source":"docgen_documentgenerator","target":"src_robotofont","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DocumentGenerator.js","source_location":"line 9","weight":1.0},
+  {"source":"profileset_profilesettings","target":"src_supabaseclient","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/ProfileSettings.jsx","source_location":"line 3","weight":1.0},
+  {"source":"profileset_profilesettings","target":"src_haptic","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/ProfileSettings.jsx","source_location":"line 5","weight":1.0},
+  {"source":"profileset_profilesettings","target":"db_profiles","relation":"shares_data_with","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/ProfileSettings.jsx","source_location":"line 31","weight":1.0},
+  {"source":"landing_landingscreen","target":"src_haptic","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/LandingScreen.jsx","source_location":"line 3","weight":1.0},
+  {"source":"reqcard_requestcard","target":"src_haptic","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/RequestCard.jsx","source_location":"line 3","weight":1.0},
+  {"source":"mybids_mybidsview","target":"src_aiservice","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/MyBidsView.jsx","source_location":"line 3","weight":1.0},
+  {"source":"myreqs_myrequestsview","target":"src_aiservice","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/MyRequestsView.jsx","source_location":"line 3","weight":1.0},
+  {"source":"devdash_developerdashboard","target":"db_profiles","relation":"shares_data_with","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DeveloperDashboard.jsx","source_location":"line 80","weight":1.0},
+  {"source":"devdash_developerdashboard","target":"db_requests","relation":"shares_data_with","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DeveloperDashboard.jsx","source_location":"line 81","weight":1.0},
+  {"source":"devdash_developerdashboard","target":"db_bids","relation":"shares_data_with","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DeveloperDashboard.jsx","source_location":"line 82","weight":1.0},
+  {"source":"devdash_developerdashboard","target":"db_messages","relation":"shares_data_with","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DeveloperDashboard.jsx","source_location":"line 83","weight":1.0},
+  {"source":"devdash_developerdashboard","target":"db_errorlogs","relation":"shares_data_with","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DeveloperDashboard.jsx","source_location":"line 84","weight":1.0},
+  {"source":"devdash_developerdashboard","target":"concept_rolesdomain","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DeveloperDashboard.jsx","source_location":"lines 9-13","weight":1.0},
+  {"source":"profilemon_profileviewmonitor","target":"concept_dailylimit","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/ProfileViewMonitor.jsx","source_location":"line 3","weight":1.0},
+  {"source":"profilemon_profileviewmonitor","target":"concept_escrow","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/ProfileViewMonitor.jsx","source_location":"line 71","weight":1.0},
+  {"source":"secmgr_securitymanager","target":"concept_dailylimit","relation":"implements","confidence":"INFERRED","confidence_score":0.9,"source_file":"components/SecurityManager.jsx","source_location":"lines 28-30","weight":0.9},
+  {"source":"profilemon_profileviewmonitor","target":"secmgr_securitymanager","relation":"semantically_similar_to","confidence":"INFERRED","confidence_score":0.85,"source_file":"components/ProfileViewMonitor.jsx","source_location":None,"weight":0.85},
+  {"source":"onboard_onboardingmodal","target":"concept_rolesdomain","relation":"references","confidence":"INFERRED","confidence_score":0.9,"source_file":"components/OnboardingModal.jsx","source_location":"lines 14-47","weight":0.9},
+  {"source":"userdash_userdashboard","target":"concept_rolesdomain","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/UserDashboard.jsx","source_location":"lines 8-44","weight":1.0},
+  {"source":"mybids_mybidsview","target":"db_bids","relation":"shares_data_with","confidence":"INFERRED","confidence_score":0.9,"source_file":"components/MyBidsView.jsx","source_location":"lines 11-15","weight":0.9},
+  {"source":"myreqs_myrequestsview","target":"db_requests","relation":"shares_data_with","confidence":"INFERRED","confidence_score":0.9,"source_file":"components/MyRequestsView.jsx","source_location":"lines 12-17","weight":0.9},
+]
+hyperedges += [
+  {"id":"document_signing_flow","label":"Document Signing Flow","nodes":["docsign_documentsigningmodal","docgen_documentgenerator","concept_platformcommission","concept_electronicSignature"],"relation":"implement","confidence":"EXTRACTED","confidence_score":0.95,"source_file":"components/DocumentSigningModal.jsx"},
+  {"id":"developer_admin_monitoring","label":"Developer Admin Monitoring","nodes":["devdash_developerdashboard","db_profiles","db_requests","db_bids","db_messages","db_errorlogs"],"relation":"participate_in","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"components/DeveloperDashboard.jsx"},
+  {"id":"profile_view_rate_limiting","label":"Profile View Rate Limiting System","nodes":["profilemon_profileviewmonitor","secmgr_securitymanager","concept_dailylimit","concept_escrow"],"relation":"implement","confidence":"INFERRED","confidence_score":0.85,"source_file":"components/ProfileViewMonitor.jsx"},
+  {"id":"role_based_ux","label":"Role-Based UX Components","nodes":["democomponent_demomodal","onboard_onboardingmodal","userdash_userdashboard","concept_rolesdomain"],"relation":"implement","confidence":"INFERRED","confidence_score":0.85,"source_file":"components/OnboardingModal.jsx"},
+]
+
+# ── CHUNK 5: test scripts + root src + root supabase functions ────────────────
+nodes += [
+  {"id":"aiservice_parseprompt","label":"parsePrompt - NLP Prompt Parser","file_type":"code","source_file":"src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_getmissingfields","label":"getMissingFields - Required Fields Validator","file_type":"code","source_file":"src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_getclarificationquestion","label":"getClarificationQuestion - Clarification Prompt Generator","file_type":"code","source_file":"src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_wagontypes","label":"WAGON_TYPES - Wagon Type Synonyms Dictionary","file_type":"code","source_file":"src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_cargotypes","label":"CARGO_TYPES - Cargo Type Synonyms Dictionary","file_type":"code","source_file":"src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"aiservice_cityabbreviations","label":"CITY_ABBREVIATIONS - Russian City Abbreviation Map","file_type":"code","source_file":"src/aiService.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"constants_platformcommission","label":"PLATFORM_COMMISSION_RATE 2.5%","file_type":"code","source_file":"src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"constants_violationthresholds","label":"Violation Threshold Constants - Chat Safety Levels","file_type":"code","source_file":"src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"constants_minpriceperwagon","label":"MIN_PRICE_PER_WAGON 30000 RUB Floor Price","file_type":"code","source_file":"src/constants.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"haptic_haptic","label":"haptic - Telegram WebApp Haptic Feedback Adapter","file_type":"code","source_file":"src/haptic.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"security_validatemessageintent","label":"validateMessageIntent - Chat Anti-leakage Validator","file_type":"code","source_file":"src/security.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"security_validatemessagesequence","label":"validateMessageSequence - Multi-message Split Detection","file_type":"code","source_file":"src/security.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"security_stopwords","label":"STOP_WORDS - Platform Bypass Stop Word List","file_type":"code","source_file":"src/security.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"security_detectors","label":"Security Detectors - Phone/Messenger/Email/URL/Name","file_type":"code","source_file":"src/security.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"supabaseclient_supabase","label":"supabase - Supabase Client Instance","file_type":"code","source_file":"src/supabaseClient.js","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"getdemodata_fn","label":"get-demo-data - Edge Function Unauthenticated Demo Data","file_type":"code","source_file":"supabase/functions/get-demo-data/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"notify_fn","label":"notify - Edge Function Transactional Email via Resend","file_type":"code","source_file":"supabase/functions/notify/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"sendconfirmationemail_fn","label":"send-confirmation-email - Edge Function Registration Email","file_type":"code","source_file":"supabase/functions/send-confirmation-email/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"telegramauth_fn","label":"telegram-auth - Edge Function Telegram Login Widget Auth","file_type":"code","source_file":"supabase/functions/telegram-auth/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"telegrambot_fn","label":"telegram-bot - Edge Function Telegram Bot Webhook Handler","file_type":"code","source_file":"supabase/functions/telegram-bot/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"telegrambroadcast_fn","label":"telegram-broadcast - Edge Function Admin Broadcast","file_type":"code","source_file":"supabase/functions/telegram-broadcast/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"telegramnotify_fn","label":"telegram-notify - Edge Function Per-user Telegram Notification","file_type":"code","source_file":"supabase/functions/telegram-notify/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"verifylinkingcode_fn","label":"verify-linking-code - Edge Function Telegram Account Linking","file_type":"code","source_file":"supabase/functions/verify-linking-code/index.ts","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"testapp_testapp","label":"test_app - Pre-deployment Gap Testing","file_type":"code","source_file":"scripts/test_app.py","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"testdeep_testdeep","label":"test_deep - Deep Pre-deploy Gap Testing","file_type":"code","source_file":"scripts/test_deep.py","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"testdemo_testdemo","label":"test_demo - Demo Flow Deep Test","file_type":"code","source_file":"scripts/test_demo.py","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"testfinal_testfinal","label":"test_final - Final Pre-deploy Verification","file_type":"code","source_file":"scripts/test_final.py","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"external_resend","label":"Resend API - Email Delivery Service","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"external_telegramapi","label":"Telegram Bot API - Messaging Service","file_type":"document","source_file":None,"source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+]
+edges += [
+  {"source":"aiservice_parseprompt","target":"aiservice_wagontypes","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/aiService.js","source_location":None,"weight":1.0},
+  {"source":"aiservice_parseprompt","target":"aiservice_cargotypes","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/aiService.js","source_location":None,"weight":1.0},
+  {"source":"aiservice_parseprompt","target":"aiservice_cityabbreviations","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/aiService.js","source_location":None,"weight":1.0},
+  {"source":"aiservice_getclarificationquestion","target":"aiservice_getmissingfields","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/aiService.js","source_location":None,"weight":1.0},
+  {"source":"security_validatemessageintent","target":"security_stopwords","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/security.js","source_location":None,"weight":1.0},
+  {"source":"security_validatemessageintent","target":"security_detectors","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/security.js","source_location":None,"weight":1.0},
+  {"source":"security_validatemessagesequence","target":"security_validatemessageintent","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/security.js","source_location":None,"weight":1.0},
+  {"source":"getdemodata_fn","target":"db_requests","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/get-demo-data/index.ts","source_location":None,"weight":1.0},
+  {"source":"getdemodata_fn","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/get-demo-data/index.ts","source_location":None,"weight":1.0},
+  {"source":"notify_fn","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/notify/index.ts","source_location":None,"weight":1.0},
+  {"source":"notify_fn","target":"external_resend","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/notify/index.ts","source_location":None,"weight":1.0},
+  {"source":"sendconfirmationemail_fn","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/send-confirmation-email/index.ts","source_location":None,"weight":1.0},
+  {"source":"sendconfirmationemail_fn","target":"external_resend","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/send-confirmation-email/index.ts","source_location":None,"weight":1.0},
+  {"source":"telegramauth_fn","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/telegram-auth/index.ts","source_location":None,"weight":1.0},
+  {"source":"telegrambot_fn","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/telegram-bot/index.ts","source_location":None,"weight":1.0},
+  {"source":"telegrambot_fn","target":"external_telegramapi","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/telegram-bot/index.ts","source_location":None,"weight":1.0},
+  {"source":"telegrambroadcast_fn","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/telegram-broadcast/index.ts","source_location":None,"weight":1.0},
+  {"source":"telegrambroadcast_fn","target":"db_broadcasts","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/telegram-broadcast/index.ts","source_location":None,"weight":1.0},
+  {"source":"telegrambroadcast_fn","target":"external_telegramapi","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/telegram-broadcast/index.ts","source_location":None,"weight":1.0},
+  {"source":"telegramnotify_fn","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/telegram-notify/index.ts","source_location":None,"weight":1.0},
+  {"source":"telegramnotify_fn","target":"external_telegramapi","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/telegram-notify/index.ts","source_location":None,"weight":1.0},
+  {"source":"verifylinkingcode_fn","target":"db_profiles","relation":"calls","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"supabase/functions/verify-linking-code/index.ts","source_location":None,"weight":1.0},
+  {"source":"haptic_haptic","target":"external_telegramapi","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/haptic.js","source_location":None,"weight":1.0},
+  {"source":"constants_violationthresholds","target":"security_validatemessageintent","relation":"rationale_for","confidence":"INFERRED","confidence_score":0.8,"source_file":"src/constants.js","source_location":None,"weight":0.8},
+  {"source":"constants_minpriceperwagon","target":"db_requests","relation":"rationale_for","confidence":"INFERRED","confidence_score":0.75,"source_file":"src/constants.js","source_location":None,"weight":0.75},
+]
+hyperedges += [
+  {"id":"playwright_test_suite","label":"Playwright Pre-Deploy Test Suite","nodes":["testapp_testapp","testdeep_testdeep","testdemo_testdemo","testfinal_testfinal"],"relation":"implement","confidence":"EXTRACTED","confidence_score":0.95,"source_file":"scripts/test_app.py"},
+  {"id":"telegram_integration_cluster","label":"Telegram Integration Functions","nodes":["telegramauth_fn","telegrambot_fn","telegrambroadcast_fn","telegramnotify_fn","verifylinkingcode_fn","haptic_haptic"],"relation":"participate_in","confidence":"INFERRED","confidence_score":0.85,"source_file":"supabase/functions/telegram-bot/index.ts"},
+  {"id":"nlp_parser_cluster","label":"NLP Prompt Parser Components","nodes":["aiservice_parseprompt","aiservice_getmissingfields","aiservice_getclarificationquestion","aiservice_wagontypes","aiservice_cargotypes","aiservice_cityabbreviations"],"relation":"implement","confidence":"EXTRACTED","confidence_score":0.95,"source_file":"src/aiService.js"},
+  {"id":"chat_security_system","label":"Chat Anti-Leakage Security System","nodes":["security_validatemessageintent","security_validatemessagesequence","security_stopwords","security_detectors","constants_violationthresholds"],"relation":"implement","confidence":"INFERRED","confidence_score":0.9,"source_file":"src/security.js"},
+]
+
+# ── CHUNK 6: docs, SVGs, landing/auth/demo screenshots ───────────────────────
+nodes += [
+  {"id":"claude_md_railmatch","label":"RailMatch Project Claude Configuration","file_type":"document","source_file":"CLAUDE.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"product_txt_railmatch","label":"RailMatch Product Technical Specification MVP","file_type":"document","source_file":"product.txt","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"readme_railmatch","label":"RailMatch README B2B Rail Freight Marketplace","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"russia_svg_root","label":"Russia Map SVG Root","file_type":"document","source_file":"russia.svg","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_railmatch_platform","label":"RailMatch B2B Marketplace Platform","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_commission_model","label":"Commission-Based Business Model 2.5%","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_anti_leak_system","label":"Anti-Leak Contact Detection System","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_deal_pipeline","label":"4-Stage Deal Pipeline","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_user_roles","label":"User Roles Shipper Owner Demo Admin","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_tech_stack","label":"Tech Stack React 18 Vite Supabase Tailwind Telegram","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_db_schema","label":"Supabase DB Schema profiles requests bids messages wagons","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_ai_agent_bar","label":"AI Agent Bar for NLP Request Creation","file_type":"document","source_file":"product.txt","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_fleet_map","label":"Fleet Dislocation Map Interactive Russia Map","file_type":"document","source_file":"README.md","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_landing_ux","label":"Landing Page UX Hero Dual Role Value Prop","file_type":"image","source_file":"scripts/01_landing.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_auth_ux","label":"Auth UX Email Password Login with Validation States","file_type":"image","source_file":"scripts/11_auth.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_exchange_ux","label":"Exchange Birzha UX Cargo Cards AI Bar Demo Banner","file_type":"image","source_file":"scripts/demo_tab_0.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_analytics_ux","label":"Analytics UX KPI Widgets Bid Dynamics Chart","file_type":"image","source_file":"scripts/demo_tab_3.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"concept_chat_ux","label":"Chat UX Dialog List Main Chat Area","file_type":"image","source_file":"scripts/demo_tab_4.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+]
+edges += [
+  {"source":"readme_railmatch","target":"concept_railmatch_platform","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"readme_railmatch","target":"concept_commission_model","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"readme_railmatch","target":"concept_anti_leak_system","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"readme_railmatch","target":"concept_deal_pipeline","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"readme_railmatch","target":"concept_user_roles","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"readme_railmatch","target":"concept_tech_stack","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"readme_railmatch","target":"concept_db_schema","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"readme_railmatch","target":"concept_fleet_map","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"product_txt_railmatch","target":"concept_ai_agent_bar","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"product.txt","source_location":None,"weight":1.0},
+  {"source":"concept_anti_leak_system","target":"concept_commission_model","relation":"rationale_for","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md","source_location":None,"weight":1.0},
+  {"source":"concept_deal_pipeline","target":"concept_commission_model","relation":"rationale_for","confidence":"INFERRED","confidence_score":0.9,"source_file":"README.md","source_location":None,"weight":0.9},
+  {"source":"concept_fleet_map","target":"russia_svg_root","relation":"references","confidence":"INFERRED","confidence_score":0.85,"source_file":"README.md","source_location":None,"weight":0.85},
+  {"source":"concept_exchange_ux","target":"concept_ai_agent_bar","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/demo_tab_0.png","source_location":None,"weight":1.0},
+  {"source":"concept_chat_ux","target":"concept_anti_leak_system","relation":"conceptually_related_to","confidence":"INFERRED","confidence_score":0.85,"source_file":"scripts/demo_tab_4.png","source_location":None,"weight":0.85},
+]
+hyperedges += [
+  {"id":"railmatch_core_docs","label":"RailMatch Core Documentation Set","nodes":["product_txt_railmatch","readme_railmatch","claude_md_railmatch"],"relation":"form","confidence":"EXTRACTED","confidence_score":0.95,"source_file":"README.md"},
+  {"id":"platform_business_model","label":"Commission Model Protected by Anti-Leak System","nodes":["concept_commission_model","concept_anti_leak_system","concept_deal_pipeline"],"relation":"participate_in","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"README.md"},
+]
+
+# ── CHUNK 7: final screenshots ────────────────────────────────────────────────
+nodes += [
+  {"id":"final_01_exchange","label":"Exchange Screen Birzha Main Freight Exchange","file_type":"image","source_file":"scripts/final_01_exchange.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"final_02_analytics","label":"Analytics Screen Аналитика Рынка Market Analytics","file_type":"image","source_file":"scripts/final_02_analytics.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"final_03_messages","label":"Messages Screen Сообщения Dialogs Chat","file_type":"image","source_file":"scripts/final_03_messages.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"final_04_my_requests","label":"My Requests Screen Мои Заявки My Freight Requests","file_type":"image","source_file":"scripts/final_04_my_requests.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"final_05_my_bids","label":"My Bids Screen Мои Ставки My Wagon Bids","file_type":"image","source_file":"scripts/final_05_my_bids.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"final_06_exchange_no_form","label":"Exchange Screen No Form Биржа Without Filter Form","file_type":"image","source_file":"scripts/final_06_exchange_no_form.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"final_07_mobile","label":"Mobile View RailMatch Mobile App Telegram Mini App","file_type":"image","source_file":"scripts/final_07_mobile.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"railmatch_app","label":"RailMatch Application","file_type":"document","source_file":"scripts/final_01_exchange.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"feature_exchange","label":"Birzha Freight Exchange Feature","file_type":"document","source_file":"scripts/final_01_exchange.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"feature_analytics","label":"Аналитика Market Analytics Feature","file_type":"document","source_file":"scripts/final_02_analytics.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"feature_messages","label":"Сообщения Messaging Chat Feature","file_type":"document","source_file":"scripts/final_03_messages.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"feature_my_requests","label":"Мои Заявки My Freight Requests Feature","file_type":"document","source_file":"scripts/final_04_my_requests.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"feature_my_bids","label":"Мои Ставки My Wagon Bids Feature","file_type":"document","source_file":"scripts/final_05_my_bids.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"feature_ai_agent","label":"RailMatch AI Agent Intelligent Suggestion Engine","file_type":"document","source_file":"scripts/final_01_exchange.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"feature_demo_mode","label":"Demo Mode Guest Demo Access Mode","file_type":"document","source_file":"scripts/final_01_exchange.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"ui_smart_suggestions","label":"Smart Top Offer Cards Intelligent Selection","file_type":"document","source_file":"scripts/final_01_exchange.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"design_desktop","label":"Desktop Web Design Layout","file_type":"document","source_file":"scripts/final_01_exchange.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+  {"id":"design_mobile","label":"Mobile Telegram Mini App Design Layout","file_type":"document","source_file":"scripts/final_07_mobile.png","source_location":None,"source_url":None,"captured_at":None,"author":None,"contributor":None},
+]
+edges += [
+  {"source":"final_01_exchange","target":"feature_exchange","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_01_exchange.png","source_location":None,"weight":1.0},
+  {"source":"final_01_exchange","target":"feature_ai_agent","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_01_exchange.png","source_location":None,"weight":1.0},
+  {"source":"final_01_exchange","target":"feature_demo_mode","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_01_exchange.png","source_location":None,"weight":1.0},
+  {"source":"final_01_exchange","target":"ui_smart_suggestions","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_01_exchange.png","source_location":None,"weight":1.0},
+  {"source":"final_02_analytics","target":"feature_analytics","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_02_analytics.png","source_location":None,"weight":1.0},
+  {"source":"final_03_messages","target":"feature_messages","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_03_messages.png","source_location":None,"weight":1.0},
+  {"source":"final_04_my_requests","target":"feature_my_requests","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_04_my_requests.png","source_location":None,"weight":1.0},
+  {"source":"final_05_my_bids","target":"feature_my_bids","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_05_my_bids.png","source_location":None,"weight":1.0},
+  {"source":"final_07_mobile","target":"design_mobile","relation":"references","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_07_mobile.png","source_location":None,"weight":1.0},
+  {"source":"feature_ai_agent","target":"ui_smart_suggestions","relation":"implements","confidence":"INFERRED","confidence_score":0.85,"source_file":"scripts/final_01_exchange.png","source_location":None,"weight":0.85},
+  {"source":"railmatch_app","target":"feature_exchange","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_01_exchange.png","source_location":None,"weight":1.0},
+  {"source":"railmatch_app","target":"feature_analytics","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_02_analytics.png","source_location":None,"weight":1.0},
+  {"source":"railmatch_app","target":"feature_messages","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_03_messages.png","source_location":None,"weight":1.0},
+  {"source":"railmatch_app","target":"feature_my_requests","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_04_my_requests.png","source_location":None,"weight":1.0},
+  {"source":"railmatch_app","target":"feature_my_bids","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_05_my_bids.png","source_location":None,"weight":1.0},
+  {"source":"railmatch_app","target":"feature_demo_mode","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_01_exchange.png","source_location":None,"weight":1.0},
+  {"source":"railmatch_app","target":"feature_ai_agent","relation":"implements","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_01_exchange.png","source_location":None,"weight":1.0},
+  {"source":"feature_analytics","target":"feature_exchange","relation":"shares_data_with","confidence":"INFERRED","confidence_score":0.85,"source_file":"scripts/final_02_analytics.png","source_location":None,"weight":0.85},
+  {"source":"feature_messages","target":"feature_exchange","relation":"conceptually_related_to","confidence":"INFERRED","confidence_score":0.75,"source_file":"scripts/final_03_messages.png","source_location":None,"weight":0.75},
+  {"source":"design_mobile","target":"design_desktop","relation":"conceptually_related_to","confidence":"INFERRED","confidence_score":0.8,"source_file":"scripts/final_07_mobile.png","source_location":None,"weight":0.8},
+]
+hyperedges += [
+  {"id":"railmatch_core_screens","label":"RailMatch Core Application Screens","nodes":["final_01_exchange","final_02_analytics","final_03_messages","final_04_my_requests","final_05_my_bids","final_07_mobile"],"relation":"implement","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"scripts/final_01_exchange.png"},
+  {"id":"ai_powered_features","label":"AI-Powered RailMatch Features","nodes":["feature_ai_agent","ui_smart_suggestions","feature_my_requests","feature_my_bids"],"relation":"implement","confidence":"INFERRED","confidence_score":0.85,"source_file":"scripts/final_01_exchange.png"},
+]
+
+# ── Deduplicate nodes by id ───────────────────────────────────────────────────
+seen = {}
+deduped_nodes = []
+for n in nodes:
+    if n["id"] not in seen:
+        seen[n["id"]] = True
+        deduped_nodes.append(n)
+
+result = {
+    "nodes": deduped_nodes,
+    "edges": edges,
+    "hyperedges": hyperedges,
+    "input_tokens": 0,
+    "output_tokens": 0,
+}
+
+Path(".graphify_semantic_new.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
+print(f"Written: {len(deduped_nodes)} nodes, {len(edges)} edges, {len(hyperedges)} hyperedges")

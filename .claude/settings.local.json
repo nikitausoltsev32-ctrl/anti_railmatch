@@ -73,7 +73,8 @@
       "Bash(npx supabase:*)",
       "Bash(npm install:*)",
       "Bash(npm test:*)",
-      "mcp__claude_ai_Notion__notion-fetch"
+      "mcp__claude_ai_Notion__notion-fetch",
+      "Bash(node:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

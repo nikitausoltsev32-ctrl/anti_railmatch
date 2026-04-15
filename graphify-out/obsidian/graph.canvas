@@ -1,0 +1,4706 @@
+{
+  "nodes": [
+    {
+      "id": "g0",
+      "type": "group",
+      "label": "Telegram Backend and DB",
+      "x": 0,
+      "y": 0,
+      "width": 1540,
+      "height": 1420,
+      "color": "1"
+    },
+    {
+      "id": "n_comp_adminPanel",
+      "type": "file",
+      "file": "graphify/obsidian/AdminPanel Component.md",
+      "x": 20,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_bot_startHandler",
+      "type": "file",
+      "file": "graphify/obsidian/Bot Start Handler.md",
+      "x": 220,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_bot_telegram",
+      "type": "file",
+      "file": "graphify/obsidian/Bot Telegram Library sendMessageregisterWebhook.md",
+      "x": 420,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_devdash_developerdashboard",
+      "type": "file",
+      "file": "graphify/obsidian/DeveloperDashboard.md",
+      "x": 20,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_constants_minpriceperwagon",
+      "type": "file",
+      "file": "graphify/obsidian/MIN_PRICE_PER_WAGON 30000 RUB Floor Price.md",
+      "x": 220,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_mybids_mybidsview",
+      "type": "file",
+      "file": "graphify/obsidian/MyBidsView.md",
+      "x": 420,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_myreqs_myrequestsview",
+      "type": "file",
+      "file": "graphify/obsidian/MyRequestsView.md",
+      "x": 20,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_onboard_onboardingmodal",
+      "type": "file",
+      "file": "graphify/obsidian/OnboardingModal.md",
+      "x": 220,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_external_resend",
+      "type": "file",
+      "file": "graphify/obsidian/Resend API - Email Delivery Service.md",
+      "x": 420,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_ext_resend",
+      "type": "file",
+      "file": "graphify/obsidian/Resend Email API.md",
+      "x": 20,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_ext_telegramApi",
+      "type": "file",
+      "file": "graphify/obsidian/Telegram Bot API.md",
+      "x": 220,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_external_telegramapi",
+      "type": "file",
+      "file": "graphify/obsidian/Telegram Bot API - Messaging Service.md",
+      "x": 420,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_bot_index",
+      "type": "file",
+      "file": "graphify/obsidian/Telegram Bot Server Express.md",
+      "x": 20,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_rolesdomain",
+      "type": "file",
+      "file": "graphify/obsidian/User Roles shipperownerdeveloperdemo.md",
+      "x": 220,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_userdash_userdashboard",
+      "type": "file",
+      "file": "graphify/obsidian/UserDashboard.md",
+      "x": 420,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_src_aiservice",
+      "type": "file",
+      "file": "graphify/obsidian/aiService (parsePrompt).md",
+      "x": 20,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_db_bids",
+      "type": "file",
+      "file": "graphify/obsidian/bids DB Table.md",
+      "x": 220,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_db_broadcasts",
+      "type": "file",
+      "file": "graphify/obsidian/broadcasts DB Table.md",
+      "x": 420,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_db_errorlogs",
+      "type": "file",
+      "file": "graphify/obsidian/error_logs DB Table.md",
+      "x": 20,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_getdemodata_fn",
+      "type": "file",
+      "file": "graphify/obsidian/get-demo-data - Edge Function Unauthenticated Demo Data.md",
+      "x": 220,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fn_getDemoData",
+      "type": "file",
+      "file": "graphify/obsidian/get-demo-data Edge Function (anti).md",
+      "x": 420,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_haptic_haptic",
+      "type": "file",
+      "file": "graphify/obsidian/haptic - Telegram WebApp Haptic Feedback Adapter.md",
+      "x": 20,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_db_messages",
+      "type": "file",
+      "file": "graphify/obsidian/messages DB Table.md",
+      "x": 220,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_notify_fn",
+      "type": "file",
+      "file": "graphify/obsidian/notify - Edge Function Transactional Email via Resend.md",
+      "x": 420,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fn_notify",
+      "type": "file",
+      "file": "graphify/obsidian/notify Edge Function - Resend Email (anti).md",
+      "x": 20,
+      "y": 720,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_db_profiles",
+      "type": "file",
+      "file": "graphify/obsidian/profiles DB Table.md",
+      "x": 220,
+      "y": 720,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_db_requests",
+      "type": "file",
+      "file": "graphify/obsidian/requests DB Table.md",
+      "x": 420,
+      "y": 720,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_sendconfirmationemail_fn",
+      "type": "file",
+      "file": "graphify/obsidian/send-confirmation-email - Edge Function Registration Email.md",
+      "x": 20,
+      "y": 800,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fn_sendConfirmationEmail",
+      "type": "file",
+      "file": "graphify/obsidian/send-confirmation-email Edge Function (anti).md",
+      "x": 220,
+      "y": 800,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_telegramauth_fn",
+      "type": "file",
+      "file": "graphify/obsidian/telegram-auth - Edge Function Telegram Login Widget Auth.md",
+      "x": 420,
+      "y": 800,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_telegrambot_fn",
+      "type": "file",
+      "file": "graphify/obsidian/telegram-bot - Edge Function Telegram Bot Webhook Handler.md",
+      "x": 20,
+      "y": 880,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fn_telegramBot",
+      "type": "file",
+      "file": "graphify/obsidian/telegram-bot Edge Function (anti).md",
+      "x": 220,
+      "y": 880,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_telegrambroadcast_fn",
+      "type": "file",
+      "file": "graphify/obsidian/telegram-broadcast - Edge Function Admin Broadcast.md",
+      "x": 420,
+      "y": 880,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fn_telegramBroadcast",
+      "type": "file",
+      "file": "graphify/obsidian/telegram-broadcast Edge Function (anti).md",
+      "x": 20,
+      "y": 960,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_telegramnotify_fn",
+      "type": "file",
+      "file": "graphify/obsidian/telegram-notify - Edge Function Per-user Telegram Notification.md",
+      "x": 220,
+      "y": 960,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fn_telegramNotify",
+      "type": "file",
+      "file": "graphify/obsidian/telegram-notify Edge Function (anti).md",
+      "x": 420,
+      "y": 960,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_verifylinkingcode_fn",
+      "type": "file",
+      "file": "graphify/obsidian/verify-linking-code - Edge Function Telegram Account Linking.md",
+      "x": 20,
+      "y": 1040,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fn_verifyLinkingCode",
+      "type": "file",
+      "file": "graphify/obsidian/verify-linking-code Edge Function (anti).md",
+      "x": 220,
+      "y": 1040,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g1",
+      "type": "group",
+      "label": "React UI Components",
+      "x": 1620,
+      "y": 0,
+      "width": 1320,
+      "height": 1220,
+      "color": "2"
+    },
+    {
+      "id": "n_analyticsdashboard_analyticsdashboard",
+      "type": "file",
+      "file": "graphify/obsidian/AnalyticsDashboard().md",
+      "x": 1640,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_analyticsdashboard",
+      "type": "file",
+      "file": "graphify/obsidian/AnalyticsDashboard.jsx.md",
+      "x": 1840,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_app_app",
+      "type": "file",
+      "file": "graphify/obsidian/App().md",
+      "x": 2040,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_authscreen_authscreen",
+      "type": "file",
+      "file": "graphify/obsidian/AuthScreen().md",
+      "x": 1640,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_authscreen",
+      "type": "file",
+      "file": "graphify/obsidian/AuthScreen.jsx.md",
+      "x": 1840,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_bidmodal_bidmodal",
+      "type": "file",
+      "file": "graphify/obsidian/BidModal().md",
+      "x": 2040,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_bidmodal",
+      "type": "file",
+      "file": "graphify/obsidian/BidModal.jsx.md",
+      "x": 1640,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_createrequestform_createrequestform",
+      "type": "file",
+      "file": "graphify/obsidian/CreateRequestForm().md",
+      "x": 1840,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_createrequestform",
+      "type": "file",
+      "file": "graphify/obsidian/CreateRequestForm.jsx.md",
+      "x": 2040,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_demomodal_demomodal",
+      "type": "file",
+      "file": "graphify/obsidian/DemoModal().md",
+      "x": 1640,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_demomodal",
+      "type": "file",
+      "file": "graphify/obsidian/DemoModal.jsx.md",
+      "x": 1840,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_developerdashboard_developerdashboard",
+      "type": "file",
+      "file": "graphify/obsidian/DeveloperDashboard().md",
+      "x": 2040,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_developerdashboard",
+      "type": "file",
+      "file": "graphify/obsidian/DeveloperDashboard.jsx.md",
+      "x": 1640,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fleetdislocation_fleetdislocation",
+      "type": "file",
+      "file": "graphify/obsidian/FleetDislocation().md",
+      "x": 1840,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_fleetdislocation",
+      "type": "file",
+      "file": "graphify/obsidian/FleetDislocation.jsx.md",
+      "x": 2040,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_authscreen_forgotpasswordview",
+      "type": "file",
+      "file": "graphify/obsidian/ForgotPasswordView().md",
+      "x": 1640,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_landingscreen_landingscreen",
+      "type": "file",
+      "file": "graphify/obsidian/LandingScreen().md",
+      "x": 1840,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_landingscreen",
+      "type": "file",
+      "file": "graphify/obsidian/LandingScreen.jsx.md",
+      "x": 2040,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_profilesettings_profilesettings",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileSettings().md",
+      "x": 1640,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_profilesettings",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileSettings.jsx.md",
+      "x": 1840,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_requestcard_requestcard",
+      "type": "file",
+      "file": "graphify/obsidian/RequestCard().md",
+      "x": 2040,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_requestcard",
+      "type": "file",
+      "file": "graphify/obsidian/RequestCard.jsx.md",
+      "x": 1640,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_app_resetpasswordscreen",
+      "type": "file",
+      "file": "graphify/obsidian/ResetPasswordScreen().md",
+      "x": 1840,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_developerdashboard_statcard",
+      "type": "file",
+      "file": "graphify/obsidian/StatCard().md",
+      "x": 2040,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_authscreen_telegramonboarding",
+      "type": "file",
+      "file": "graphify/obsidian/TelegramOnboarding().md",
+      "x": 1640,
+      "y": 720,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_userdashboard_userdashboard",
+      "type": "file",
+      "file": "graphify/obsidian/UserDashboard().md",
+      "x": 1840,
+      "y": 720,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_userdashboard",
+      "type": "file",
+      "file": "graphify/obsidian/UserDashboard.jsx.md",
+      "x": 2040,
+      "y": 720,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_app",
+      "type": "file",
+      "file": "graphify/obsidian/app.jsx.md",
+      "x": 1640,
+      "y": 800,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_supabaseclient",
+      "type": "file",
+      "file": "graphify/obsidian/supabaseClient.js.md",
+      "x": 1840,
+      "y": 800,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_authscreen_validatepersonname",
+      "type": "file",
+      "file": "graphify/obsidian/validatePersonName().md",
+      "x": 2040,
+      "y": 800,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_authscreen_validatephone",
+      "type": "file",
+      "file": "graphify/obsidian/validatePhone().md",
+      "x": 1640,
+      "y": 880,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g2",
+      "type": "group",
+      "label": "Document Generator",
+      "x": 3020,
+      "y": 0,
+      "width": 1100,
+      "height": 920,
+      "color": "3"
+    },
+    {
+      "id": "n_documentgenerator",
+      "type": "file",
+      "file": "graphify/obsidian/DocumentGenerator.js.md",
+      "x": 3040,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_addfooter",
+      "type": "file",
+      "file": "graphify/obsidian/addFooter().md",
+      "x": 3240,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_addheader",
+      "type": "file",
+      "file": "graphify/obsidian/addHeader().md",
+      "x": 3440,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_addpartyblock",
+      "type": "file",
+      "file": "graphify/obsidian/addPartyBlock().md",
+      "x": 3040,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_addsignatures",
+      "type": "file",
+      "file": "graphify/obsidian/addSignatures().md",
+      "x": 3240,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_addwatermark",
+      "type": "file",
+      "file": "graphify/obsidian/addWatermark().md",
+      "x": 3440,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_checkpage",
+      "type": "file",
+      "file": "graphify/obsidian/checkPage().md",
+      "x": 3040,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_downloaddocument",
+      "type": "file",
+      "file": "graphify/obsidian/downloadDocument().md",
+      "x": 3240,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_drawtablerow",
+      "type": "file",
+      "file": "graphify/obsidian/drawTableRow().md",
+      "x": 3440,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_fmt",
+      "type": "file",
+      "file": "graphify/obsidian/fmt().md",
+      "x": 3040,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_fmtdate",
+      "type": "file",
+      "file": "graphify/obsidian/fmtDate().md",
+      "x": 3240,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_generatedocument",
+      "type": "file",
+      "file": "graphify/obsidian/generateDocument().md",
+      "x": 3440,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_getdocumentblob",
+      "type": "file",
+      "file": "graphify/obsidian/getDocumentBlob().md",
+      "x": 3040,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_numtowords",
+      "type": "file",
+      "file": "graphify/obsidian/numToWords().md",
+      "x": 3240,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_renderact",
+      "type": "file",
+      "file": "graphify/obsidian/renderAct().md",
+      "x": 3440,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_rendercontract",
+      "type": "file",
+      "file": "graphify/obsidian/renderContract().md",
+      "x": 3040,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_rendergu12",
+      "type": "file",
+      "file": "graphify/obsidian/renderGU12().md",
+      "x": 3240,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_renderupd",
+      "type": "file",
+      "file": "graphify/obsidian/renderUPD().md",
+      "x": 3440,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_renderwaybill",
+      "type": "file",
+      "file": "graphify/obsidian/renderWaybill().md",
+      "x": 3040,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_roboto_font",
+      "type": "file",
+      "file": "graphify/obsidian/roboto-font.js.md",
+      "x": 3240,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_setupcyrillicfont",
+      "type": "file",
+      "file": "graphify/obsidian/setupCyrillicFont().md",
+      "x": 3440,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentgenerator_shortdate",
+      "type": "file",
+      "file": "graphify/obsidian/shortDate().md",
+      "x": 3040,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g3",
+      "type": "group",
+      "label": "Security and Anti-Leak",
+      "x": 4200,
+      "y": 0,
+      "width": 1100,
+      "height": 720,
+      "color": "4"
+    },
+    {
+      "id": "n_security_stopwords",
+      "type": "file",
+      "file": "graphify/obsidian/STOP_WORDS - Platform Bypass Stop Word List.md",
+      "x": 4220,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectors",
+      "type": "file",
+      "file": "graphify/obsidian/Security Detectors - PhoneMessengerEmailURLName.md",
+      "x": 4420,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_constants_violationthresholds",
+      "type": "file",
+      "file": "graphify/obsidian/Violation Threshold Constants - Chat Safety Levels.md",
+      "x": 4620,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectcompanyname",
+      "type": "file",
+      "file": "graphify/obsidian/detectCompanyName().md",
+      "x": 4220,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectemail",
+      "type": "file",
+      "file": "graphify/obsidian/detectEmail().md",
+      "x": 4420,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectfullname",
+      "type": "file",
+      "file": "graphify/obsidian/detectFullName().md",
+      "x": 4620,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectlatinusername",
+      "type": "file",
+      "file": "graphify/obsidian/detectLatinUsername().md",
+      "x": 4220,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectmessenger",
+      "type": "file",
+      "file": "graphify/obsidian/detectMessenger().md",
+      "x": 4420,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectobfuscated",
+      "type": "file",
+      "file": "graphify/obsidian/detectObfuscated().md",
+      "x": 4620,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectphone",
+      "type": "file",
+      "file": "graphify/obsidian/detectPhone().md",
+      "x": 4220,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectrequisites",
+      "type": "file",
+      "file": "graphify/obsidian/detectRequisites().md",
+      "x": 4420,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectspaceddigits",
+      "type": "file",
+      "file": "graphify/obsidian/detectSpacedDigits().md",
+      "x": 4620,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detecturl",
+      "type": "file",
+      "file": "graphify/obsidian/detectUrl().md",
+      "x": 4220,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_detectwrittendigits",
+      "type": "file",
+      "file": "graphify/obsidian/detectWrittenDigits().md",
+      "x": 4420,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security",
+      "type": "file",
+      "file": "graphify/obsidian/security.js.md",
+      "x": 4620,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_validatemessageintent",
+      "type": "file",
+      "file": "graphify/obsidian/validateMessageIntent().md",
+      "x": 4220,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_validatemessagesequence",
+      "type": "file",
+      "file": "graphify/obsidian/validateMessageSequence().md",
+      "x": 4420,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_violation",
+      "type": "file",
+      "file": "graphify/obsidian/violation().md",
+      "x": 4620,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g4",
+      "type": "group",
+      "label": "AI NLP Service",
+      "x": 5380,
+      "y": 0,
+      "width": 880,
+      "height": 620,
+      "color": "5"
+    },
+    {
+      "id": "n_aiagentbar_aiagentbar",
+      "type": "file",
+      "file": "graphify/obsidian/AiAgentBar().md",
+      "x": 5400,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiagentbar",
+      "type": "file",
+      "file": "graphify/obsidian/AiAgentBar.jsx.md",
+      "x": 5600,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_cargotypes",
+      "type": "file",
+      "file": "graphify/obsidian/CARGO_TYPES - Cargo Type Synonyms Dictionary.md",
+      "x": 5800,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_cityabbreviations",
+      "type": "file",
+      "file": "graphify/obsidian/CITY_ABBREVIATIONS - Russian City Abbreviation Map.md",
+      "x": 5400,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_mybidsview_mybidsview",
+      "type": "file",
+      "file": "graphify/obsidian/MyBidsView().md",
+      "x": 5600,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_mybidsview",
+      "type": "file",
+      "file": "graphify/obsidian/MyBidsView.jsx.md",
+      "x": 5800,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_myrequestsview_myrequestsview",
+      "type": "file",
+      "file": "graphify/obsidian/MyRequestsView().md",
+      "x": 5400,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_myrequestsview",
+      "type": "file",
+      "file": "graphify/obsidian/MyRequestsView.jsx.md",
+      "x": 5600,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_wagontypes",
+      "type": "file",
+      "file": "graphify/obsidian/WAGON_TYPES - Wagon Type Synonyms Dictionary.md",
+      "x": 5800,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice",
+      "type": "file",
+      "file": "graphify/obsidian/aiService.js.md",
+      "x": 5400,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_capitalize",
+      "type": "file",
+      "file": "graphify/obsidian/capitalize().md",
+      "x": 5600,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_getclarificationquestion",
+      "type": "file",
+      "file": "graphify/obsidian/getClarificationQuestion().md",
+      "x": 5800,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_getmissingfields",
+      "type": "file",
+      "file": "graphify/obsidian/getMissingFields().md",
+      "x": 5400,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_parseprompt",
+      "type": "file",
+      "file": "graphify/obsidian/parsePrompt().md",
+      "x": 5600,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_resolvecityname",
+      "type": "file",
+      "file": "graphify/obsidian/resolveCityName().md",
+      "x": 5800,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g5",
+      "type": "group",
+      "label": "App Features",
+      "x": 6340,
+      "y": 0,
+      "width": 880,
+      "height": 620,
+      "color": "6"
+    },
+    {
+      "id": "n_final_02_analytics",
+      "type": "file",
+      "file": "graphify/obsidian/Analytics Screen \u0410\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0430 \u0420\u044b\u043d\u043a\u0430 Market Analytics.md",
+      "x": 6360,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_feature_exchange",
+      "type": "file",
+      "file": "graphify/obsidian/Birzha Freight Exchange Feature.md",
+      "x": 6560,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_feature_demo_mode",
+      "type": "file",
+      "file": "graphify/obsidian/Demo Mode Guest Demo Access Mode.md",
+      "x": 6760,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_final_01_exchange",
+      "type": "file",
+      "file": "graphify/obsidian/Exchange Screen Birzha Main Freight Exchange.md",
+      "x": 6360,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_final_03_messages",
+      "type": "file",
+      "file": "graphify/obsidian/Messages Screen \u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f Dialogs Chat.md",
+      "x": 6560,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_final_05_my_bids",
+      "type": "file",
+      "file": "graphify/obsidian/My Bids Screen \u041c\u043e\u0438 \u0421\u0442\u0430\u0432\u043a\u0438 My Wagon Bids.md",
+      "x": 6760,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_final_04_my_requests",
+      "type": "file",
+      "file": "graphify/obsidian/My Requests Screen \u041c\u043e\u0438 \u0417\u0430\u044f\u0432\u043a\u0438 My Freight Requests.md",
+      "x": 6360,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_feature_ai_agent",
+      "type": "file",
+      "file": "graphify/obsidian/RailMatch AI Agent Intelligent Suggestion Engine.md",
+      "x": 6560,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_railmatch_app",
+      "type": "file",
+      "file": "graphify/obsidian/RailMatch Application.md",
+      "x": 6760,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_ui_smart_suggestions",
+      "type": "file",
+      "file": "graphify/obsidian/Smart Top Offer Cards Intelligent Selection.md",
+      "x": 6360,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_feature_analytics",
+      "type": "file",
+      "file": "graphify/obsidian/\u0410\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0430 Market Analytics Feature.md",
+      "x": 6560,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_feature_my_requests",
+      "type": "file",
+      "file": "graphify/obsidian/\u041c\u043e\u0438 \u0417\u0430\u044f\u0432\u043a\u0438 My Freight Requests Feature.md",
+      "x": 6760,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_feature_my_bids",
+      "type": "file",
+      "file": "graphify/obsidian/\u041c\u043e\u0438 \u0421\u0442\u0430\u0432\u043a\u0438 My Wagon Bids Feature.md",
+      "x": 6360,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_feature_messages",
+      "type": "file",
+      "file": "graphify/obsidian/\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f Messaging Chat Feature.md",
+      "x": 6560,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g6",
+      "type": "group",
+      "label": "Business Model and UX",
+      "x": 7300,
+      "y": 0,
+      "width": 880,
+      "height": 520,
+      "color": "1"
+    },
+    {
+      "id": "n_concept_deal_pipeline",
+      "type": "file",
+      "file": "graphify/obsidian/4-Stage Deal Pipeline.md",
+      "x": 7320,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_anti_leak_system",
+      "type": "file",
+      "file": "graphify/obsidian/Anti-Leak Contact Detection System.md",
+      "x": 7520,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_chat_ux",
+      "type": "file",
+      "file": "graphify/obsidian/Chat UX Dialog List Main Chat Area.md",
+      "x": 7720,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_commission_model",
+      "type": "file",
+      "file": "graphify/obsidian/Commission-Based Business Model 2.5%.md",
+      "x": 7320,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_fleet_map",
+      "type": "file",
+      "file": "graphify/obsidian/Fleet Dislocation Map Interactive Russia Map.md",
+      "x": 7520,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_railmatch_platform",
+      "type": "file",
+      "file": "graphify/obsidian/RailMatch B2B Marketplace Platform.md",
+      "x": 7720,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_readme_railmatch",
+      "type": "file",
+      "file": "graphify/obsidian/RailMatch README B2B Rail Freight Marketplace.md",
+      "x": 7320,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_russia_svg_root",
+      "type": "file",
+      "file": "graphify/obsidian/Russia Map SVG Root.md",
+      "x": 7520,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_db_schema",
+      "type": "file",
+      "file": "graphify/obsidian/Supabase DB Schema profiles requests bids messages wagons.md",
+      "x": 7720,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_tech_stack",
+      "type": "file",
+      "file": "graphify/obsidian/Tech Stack React 18 Vite Supabase Tailwind Telegram.md",
+      "x": 7320,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_user_roles",
+      "type": "file",
+      "file": "graphify/obsidian/User Roles Shipper Owner Demo Admin.md",
+      "x": 7520,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g7",
+      "type": "group",
+      "label": "Error Handling",
+      "x": 8260,
+      "y": 0,
+      "width": 660,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_errorboundary_errorboundary_componentdidcatch",
+      "type": "file",
+      "file": "graphify/obsidian/.componentDidCatch().md",
+      "x": 8280,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_errorboundary_errorboundary_constructor",
+      "type": "file",
+      "file": "graphify/obsidian/.constructor().md",
+      "x": 8480,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_errorboundary_errorboundary_getderivedstatefromerror",
+      "type": "file",
+      "file": "graphify/obsidian/.getDerivedStateFromError().md",
+      "x": 8680,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_errorboundary_errorboundary_render",
+      "type": "file",
+      "file": "graphify/obsidian/.render().md",
+      "x": 8280,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_errorboundary_errorboundary",
+      "type": "file",
+      "file": "graphify/obsidian/ErrorBoundary.md",
+      "x": 8480,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_errorboundary",
+      "type": "file",
+      "file": "graphify/obsidian/ErrorBoundary.jsx.md",
+      "x": 8680,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g8",
+      "type": "group",
+      "label": "Chat and Signing",
+      "x": 9000,
+      "y": 0,
+      "width": 660,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_chatwindow_chatwindow",
+      "type": "file",
+      "file": "graphify/obsidian/ChatWindow().md",
+      "x": 9020,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_chatwindow",
+      "type": "file",
+      "file": "graphify/obsidian/ChatWindow.jsx.md",
+      "x": 9220,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentsigningmodal_documentsigningmodal",
+      "type": "file",
+      "file": "graphify/obsidian/DocumentSigningModal().md",
+      "x": 9420,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentsigningmodal",
+      "type": "file",
+      "file": "graphify/obsidian/DocumentSigningModal.jsx.md",
+      "x": 9020,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentsigningmodal_getstageconfig",
+      "type": "file",
+      "file": "graphify/obsidian/getStageConfig().md",
+      "x": 9220,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g9",
+      "type": "group",
+      "label": "Terms and Legal",
+      "x": 0,
+      "y": 1500,
+      "width": 660,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_termsmodal_privacycontent",
+      "type": "file",
+      "file": "graphify/obsidian/PrivacyContent().md",
+      "x": 20,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_termsmodal_section",
+      "type": "file",
+      "file": "graphify/obsidian/Section().md",
+      "x": 220,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_termsmodal_termscontent",
+      "type": "file",
+      "file": "graphify/obsidian/TermsContent().md",
+      "x": 420,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_termsmodal_termsmodal",
+      "type": "file",
+      "file": "graphify/obsidian/TermsModal().md",
+      "x": 20,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_termsmodal",
+      "type": "file",
+      "file": "graphify/obsidian/TermsModal.jsx.md",
+      "x": 220,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g10",
+      "type": "group",
+      "label": "Supabase Edge Functions",
+      "x": 1620,
+      "y": 1500,
+      "width": 660,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_index_buildwelcomehtml",
+      "type": "file",
+      "file": "graphify/obsidian/buildWelcomeHtml().md",
+      "x": 1640,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_index",
+      "type": "file",
+      "file": "graphify/obsidian/index.ts.md",
+      "x": 1840,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_index_json",
+      "type": "file",
+      "file": "graphify/obsidian/json().md",
+      "x": 2040,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_index_sendmessage",
+      "type": "file",
+      "file": "graphify/obsidian/sendMessage()_1.md",
+      "x": 1640,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_index_verifytelegramhash",
+      "type": "file",
+      "file": "graphify/obsidian/verifyTelegramHash().md",
+      "x": 1840,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g11",
+      "type": "group",
+      "label": "Demo Flow Tests",
+      "x": 3020,
+      "y": 1500,
+      "width": 660,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_test_demo_rationale_1",
+      "type": "file",
+      "file": "graphify/obsidian/Railmatch Anti - Demo flow deep test Tests demo app navigation, rating badges,.md",
+      "x": 3040,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_demo_enter_demo",
+      "type": "file",
+      "file": "graphify/obsidian/enter_demo().md",
+      "x": 3240,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_demo_log",
+      "type": "file",
+      "file": "graphify/obsidian/log()_2.md",
+      "x": 3440,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_demo_run",
+      "type": "file",
+      "file": "graphify/obsidian/run()_1.md",
+      "x": 3040,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_demo",
+      "type": "file",
+      "file": "graphify/obsidian/test_demo.py.md",
+      "x": 3240,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g12",
+      "type": "group",
+      "label": "Final Deploy Tests",
+      "x": 4200,
+      "y": 1500,
+      "width": 660,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_test_final_rationale_20",
+      "type": "file",
+      "file": "graphify/obsidian/Click nav tab by index 0=BIRJA, 1=MY REQ, 2=MY BIDS, 3=ANALYTICS, 4=MESSAGES.md",
+      "x": 4220,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_final_click_nav",
+      "type": "file",
+      "file": "graphify/obsidian/click_nav().md",
+      "x": 4420,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_final_log",
+      "type": "file",
+      "file": "graphify/obsidian/log()_3.md",
+      "x": 4620,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_final_run",
+      "type": "file",
+      "file": "graphify/obsidian/run()_2.md",
+      "x": 4220,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_final",
+      "type": "file",
+      "file": "graphify/obsidian/test_final.py.md",
+      "x": 4420,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g13",
+      "type": "group",
+      "label": "Core UI Screens",
+      "x": 5380,
+      "y": 1500,
+      "width": 660,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_landing_landingscreen",
+      "type": "file",
+      "file": "graphify/obsidian/LandingScreen.md",
+      "x": 5400,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_profileset_profilesettings",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileSettings.md",
+      "x": 5600,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_reqcard_requestcard",
+      "type": "file",
+      "file": "graphify/obsidian/RequestCard.md",
+      "x": 5800,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_src_haptic",
+      "type": "file",
+      "file": "graphify/obsidian/haptic utility.md",
+      "x": 5400,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_src_supabaseclient",
+      "type": "file",
+      "file": "graphify/obsidian/supabaseClient.md",
+      "x": 5600,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g14",
+      "type": "group",
+      "label": "Document Signing Flow",
+      "x": 6340,
+      "y": 1500,
+      "width": 660,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_docgen_documentgenerator",
+      "type": "file",
+      "file": "graphify/obsidian/DocumentGenerator.md",
+      "x": 6360,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docsign_documentsigningmodal",
+      "type": "file",
+      "file": "graphify/obsidian/DocumentSigningModal.md",
+      "x": 6560,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_electronicSignature",
+      "type": "file",
+      "file": "graphify/obsidian/Electronic Signature 63-FZ.md",
+      "x": 6760,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_platformcommission",
+      "type": "file",
+      "file": "graphify/obsidian/Platform Commission 2.5%.md",
+      "x": 6360,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_src_robotofont",
+      "type": "file",
+      "file": "graphify/obsidian/RobotoBase64 font.md",
+      "x": 6560,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g15",
+      "type": "group",
+      "label": "Profile View Monitor",
+      "x": 7300,
+      "y": 1500,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_profileviewmonitor_profileaccessguard",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileAccessGuard().md",
+      "x": 7320,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_profileviewmonitor_profileviewmonitor",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileViewMonitor().md",
+      "x": 7520,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_profileviewmonitor",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileViewMonitor.jsx.md",
+      "x": 7720,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_profileviewmonitor_generateprofileviewwarning",
+      "type": "file",
+      "file": "graphify/obsidian/generateProfileViewWarning().md",
+      "x": 7320,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g16",
+      "type": "group",
+      "label": "App Pre-deploy Tests",
+      "x": 8260,
+      "y": 1500,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_test_app_rationale_1",
+      "type": "file",
+      "file": "graphify/obsidian/Railmatch Anti - Pre-deployment gap testing Tests all major user flows and surfa.md",
+      "x": 8280,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_app_log",
+      "type": "file",
+      "file": "graphify/obsidian/log().md",
+      "x": 8480,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_app_run_tests",
+      "type": "file",
+      "file": "graphify/obsidian/run_tests().md",
+      "x": 8680,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_app",
+      "type": "file",
+      "file": "graphify/obsidian/test_app.py.md",
+      "x": 8280,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g17",
+      "type": "group",
+      "label": "Deep Pre-deploy Tests",
+      "x": 9000,
+      "y": 1500,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_test_deep_rationale_1",
+      "type": "file",
+      "file": "graphify/obsidian/Railmatch Anti - Deep pre-deploy gap testing Covers landing \u2192 auth \u2192 demo app f.md",
+      "x": 9020,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_deep_log",
+      "type": "file",
+      "file": "graphify/obsidian/log()_1.md",
+      "x": 9220,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_deep_run",
+      "type": "file",
+      "file": "graphify/obsidian/run().md",
+      "x": 9420,
+      "y": 1580,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_test_deep",
+      "type": "file",
+      "file": "graphify/obsidian/test_deep.py.md",
+      "x": 9020,
+      "y": 1660,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g18",
+      "type": "group",
+      "label": "AI Bids and Requests",
+      "x": 0,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_mybidsview_component",
+      "type": "file",
+      "file": "graphify/obsidian/MyBidsView (anti).md",
+      "x": 20,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_myrequestsview_component",
+      "type": "file",
+      "file": "graphify/obsidian/MyRequestsView (anti).md",
+      "x": 220,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_requestcard_component",
+      "type": "file",
+      "file": "graphify/obsidian/RequestCard (anti).md",
+      "x": 420,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_module",
+      "type": "file",
+      "file": "graphify/obsidian/aiService (anti).md",
+      "x": 20,
+      "y": 2140,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g19",
+      "type": "group",
+      "label": "Chat Security Layer",
+      "x": 1620,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_security_antiLeakageSystem",
+      "type": "file",
+      "file": "graphify/obsidian/4-Level Anti-Leakage Security System.md",
+      "x": 1640,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_comp_chatWindow",
+      "type": "file",
+      "file": "graphify/obsidian/ChatWindow Component.md",
+      "x": 1840,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_stopWords",
+      "type": "file",
+      "file": "graphify/obsidian/STOP_WORDS List.md",
+      "x": 2040,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_security_validateMessageIntent",
+      "type": "file",
+      "file": "graphify/obsidian/validateMessageIntent Function.md",
+      "x": 1640,
+      "y": 2140,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g20",
+      "type": "group",
+      "label": "NLP Parser Functions",
+      "x": 3020,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_comp_aiAgentBar",
+      "type": "file",
+      "file": "graphify/obsidian/AiAgentBar Component.md",
+      "x": 3040,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_getClarificationQuestion",
+      "type": "file",
+      "file": "graphify/obsidian/getClarificationQuestion Function.md",
+      "x": 3240,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_getMissingFields",
+      "type": "file",
+      "file": "graphify/obsidian/getMissingFields Function.md",
+      "x": 3440,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_aiservice_parsePrompt",
+      "type": "file",
+      "file": "graphify/obsidian/parsePrompt Function.md",
+      "x": 3040,
+      "y": 2140,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g21",
+      "type": "group",
+      "label": "Profile Rate Limiting",
+      "x": 4200,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_concept_dailylimit",
+      "type": "file",
+      "file": "graphify/obsidian/Daily Profile View Limit 50day.md",
+      "x": 4220,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_escrow",
+      "type": "file",
+      "file": "graphify/obsidian/Escrow-based contact unlock.md",
+      "x": 4420,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_profilemon_profileviewmonitor",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileViewMonitor.md",
+      "x": 4620,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_secmgr_securitymanager",
+      "type": "file",
+      "file": "graphify/obsidian/SecurityManager.md",
+      "x": 4220,
+      "y": 2140,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g22",
+      "type": "group",
+      "label": "Telegram Library",
+      "x": 5380,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_telegram_registerwebhook",
+      "type": "file",
+      "file": "graphify/obsidian/registerWebhook().md",
+      "x": 5400,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_telegram_sendmessage",
+      "type": "file",
+      "file": "graphify/obsidian/sendMessage().md",
+      "x": 5600,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_telegram",
+      "type": "file",
+      "file": "graphify/obsidian/telegram.js.md",
+      "x": 5800,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g23",
+      "type": "group",
+      "label": "Haptic Feedback",
+      "x": 6340,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_haptic",
+      "type": "file",
+      "file": "graphify/obsidian/haptic.js.md",
+      "x": 6360,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_haptic_tg",
+      "type": "file",
+      "file": "graphify/obsidian/tg().md",
+      "x": 6560,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_haptic_vibrate",
+      "type": "file",
+      "file": "graphify/obsidian/vibrate().md",
+      "x": 6760,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g24",
+      "type": "group",
+      "label": "Document Signing Modal",
+      "x": 7300,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_documentgenerator_component",
+      "type": "file",
+      "file": "graphify/obsidian/DocumentGenerator (anti).md",
+      "x": 7320,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_documentsigningmodal_component",
+      "type": "file",
+      "file": "graphify/obsidian/DocumentSigningModal (anti).md",
+      "x": 7520,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_platform_commission_rate",
+      "type": "file",
+      "file": "graphify/obsidian/PLATFORM_COMMISSION_RATE constant.md",
+      "x": 7720,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g25",
+      "type": "group",
+      "label": "Exchange UX and Product",
+      "x": 8260,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_concept_ai_agent_bar",
+      "type": "file",
+      "file": "graphify/obsidian/AI Agent Bar for NLP Request Creation.md",
+      "x": 8280,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_concept_exchange_ux",
+      "type": "file",
+      "file": "graphify/obsidian/Exchange Birzha UX Cargo Cards AI Bar Demo Banner.md",
+      "x": 8480,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_product_txt_railmatch",
+      "type": "file",
+      "file": "graphify/obsidian/RailMatch Product Technical Specification MVP.md",
+      "x": 8680,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g26",
+      "type": "group",
+      "label": "Mobile Design",
+      "x": 9000,
+      "y": 1980,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_design_desktop",
+      "type": "file",
+      "file": "graphify/obsidian/Desktop Web Design Layout.md",
+      "x": 9020,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_design_mobile",
+      "type": "file",
+      "file": "graphify/obsidian/Mobile Telegram Mini App Design Layout.md",
+      "x": 9220,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_final_07_mobile",
+      "type": "file",
+      "file": "graphify/obsidian/Mobile View RailMatch Mobile App Telegram Mini App.md",
+      "x": 9420,
+      "y": 2060,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g27",
+      "type": "group",
+      "label": "Bot Start Handler",
+      "x": 0,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_starthandler_handlestart",
+      "type": "file",
+      "file": "graphify/obsidian/handleStart().md",
+      "x": 20,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_starthandler",
+      "type": "file",
+      "file": "graphify/obsidian/startHandler.js.md",
+      "x": 220,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g28",
+      "type": "group",
+      "label": "Admin Panel",
+      "x": 1620,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_adminpanel_adminpanel",
+      "type": "file",
+      "file": "graphify/obsidian/AdminPanel().md",
+      "x": 1640,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_adminpanel",
+      "type": "file",
+      "file": "graphify/obsidian/AdminPanel.jsx.md",
+      "x": 1840,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g29",
+      "type": "group",
+      "label": "Onboarding Modal",
+      "x": 3020,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_onboardingmodal_onboardingmodal",
+      "type": "file",
+      "file": "graphify/obsidian/OnboardingModal().md",
+      "x": 3040,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_onboardingmodal",
+      "type": "file",
+      "file": "graphify/obsidian/OnboardingModal.jsx.md",
+      "x": 3240,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g30",
+      "type": "group",
+      "label": "Security Manager",
+      "x": 4200,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_securitymanager_securitymanager",
+      "type": "file",
+      "file": "graphify/obsidian/SecurityManager().md",
+      "x": 4220,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_securitymanager",
+      "type": "file",
+      "file": "graphify/obsidian/SecurityManager.jsx.md",
+      "x": 4420,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g31",
+      "type": "group",
+      "label": "Mock Data Scripts",
+      "x": 5380,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_insertmockdata_insertmockdata",
+      "type": "file",
+      "file": "graphify/obsidian/insertMockData().md",
+      "x": 5400,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_insertmockdata",
+      "type": "file",
+      "file": "graphify/obsidian/insertMockData.js.md",
+      "x": 5600,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g32",
+      "type": "group",
+      "label": "Demo Data Reset",
+      "x": 6340,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_resetdemodata_resetdemodata",
+      "type": "file",
+      "file": "graphify/obsidian/resetDemoData().md",
+      "x": 6360,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_resetdemodata",
+      "type": "file",
+      "file": "graphify/obsidian/resetDemoData.js.md",
+      "x": 6560,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g33",
+      "type": "group",
+      "label": "DB Insert Tests",
+      "x": 7300,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_testinsert_testinsert",
+      "type": "file",
+      "file": "graphify/obsidian/testInsert().md",
+      "x": 7320,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_testinsert",
+      "type": "file",
+      "file": "graphify/obsidian/testInsert.js.md",
+      "x": 7520,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g34",
+      "type": "group",
+      "label": "Owner Insert Tests",
+      "x": 8260,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_testinsertowner_test",
+      "type": "file",
+      "file": "graphify/obsidian/test().md",
+      "x": 8280,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_testinsertowner",
+      "type": "file",
+      "file": "graphify/obsidian/testInsertOwner.js.md",
+      "x": 8480,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g35",
+      "type": "group",
+      "label": "Schema Inspector",
+      "x": 9000,
+      "y": 2460,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_testmeta_testfetch",
+      "type": "file",
+      "file": "graphify/obsidian/testFetch().md",
+      "x": 9020,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_testmeta",
+      "type": "file",
+      "file": "graphify/obsidian/testMeta.js.md",
+      "x": 9220,
+      "y": 2540,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g36",
+      "type": "group",
+      "label": "REST API Tests",
+      "x": 0,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_testrest_testfetch",
+      "type": "file",
+      "file": "graphify/obsidian/testFetch()_1.md",
+      "x": 20,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_testrest",
+      "type": "file",
+      "file": "graphify/obsidian/testRest.js.md",
+      "x": 220,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g37",
+      "type": "group",
+      "label": "Landing and Terms",
+      "x": 1620,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_landingscreen_component",
+      "type": "file",
+      "file": "graphify/obsidian/LandingScreen (anti).md",
+      "x": 1640,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_termsmodal_component",
+      "type": "file",
+      "file": "graphify/obsidian/TermsModal (anti).md",
+      "x": 1840,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g38",
+      "type": "group",
+      "label": "Profile and Security",
+      "x": 3020,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_profileviewmonitor_component",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileViewMonitor (anti).md",
+      "x": 3040,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_securitymanager_component",
+      "type": "file",
+      "file": "graphify/obsidian/SecurityManager (anti).md",
+      "x": 3240,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g39",
+      "type": "group",
+      "label": "Profile Settings",
+      "x": 4200,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_profilesettings_component",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileSettings (anti).md",
+      "x": 4220,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_supabaseclient_module",
+      "type": "file",
+      "file": "graphify/obsidian/supabaseClient (anti).md",
+      "x": 4420,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g40",
+      "type": "group",
+      "label": "Auth Screen",
+      "x": 5380,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_comp_authScreen",
+      "type": "file",
+      "file": "graphify/obsidian/AuthScreen Component.md",
+      "x": 5400,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_supabaseclient_client",
+      "type": "file",
+      "file": "graphify/obsidian/Supabase Client Singleton (anti).md",
+      "x": 5600,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g41",
+      "type": "group",
+      "label": "Utility",
+      "x": 6340,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_main",
+      "type": "file",
+      "file": "graphify/obsidian/main.jsx.md",
+      "x": 6360,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g42",
+      "type": "group",
+      "label": "Utility",
+      "x": 7300,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_postcss_config",
+      "type": "file",
+      "file": "graphify/obsidian/postcss.config.js.md",
+      "x": 7320,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g43",
+      "type": "group",
+      "label": "Utility",
+      "x": 8260,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_tailwind_config",
+      "type": "file",
+      "file": "graphify/obsidian/tailwind.config.js.md",
+      "x": 8280,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g44",
+      "type": "group",
+      "label": "Utility",
+      "x": 9000,
+      "y": 2940,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_vite_config",
+      "type": "file",
+      "file": "graphify/obsidian/vite.config.js.md",
+      "x": 9020,
+      "y": 3020,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g45",
+      "type": "group",
+      "label": "Utility",
+      "x": 0,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_generatemap",
+      "type": "file",
+      "file": "graphify/obsidian/generateMap.js.md",
+      "x": 20,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g46",
+      "type": "group",
+      "label": "Utility",
+      "x": 1620,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_testparser",
+      "type": "file",
+      "file": "graphify/obsidian/testParser.js.md",
+      "x": 1640,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g47",
+      "type": "group",
+      "label": "Utility",
+      "x": 3020,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_testparserhyphen",
+      "type": "file",
+      "file": "graphify/obsidian/testParserHyphen.js.md",
+      "x": 3040,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g48",
+      "type": "group",
+      "label": "Utility",
+      "x": 4200,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_constants",
+      "type": "file",
+      "file": "graphify/obsidian/constants.js.md",
+      "x": 4220,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g49",
+      "type": "group",
+      "label": "Utility",
+      "x": 5380,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_find_buttons",
+      "type": "file",
+      "file": "graphify/obsidian/find_buttons.py.md",
+      "x": 5400,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g50",
+      "type": "group",
+      "label": "Utility",
+      "x": 6340,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_errorboundary_component",
+      "type": "file",
+      "file": "graphify/obsidian/ErrorBoundary (anti).md",
+      "x": 6360,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g51",
+      "type": "group",
+      "label": "Utility",
+      "x": 7300,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_fleetdislocation_component",
+      "type": "file",
+      "file": "graphify/obsidian/FleetDislocation (anti).md",
+      "x": 7320,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g52",
+      "type": "group",
+      "label": "Utility",
+      "x": 8260,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_onboardingmodal_component",
+      "type": "file",
+      "file": "graphify/obsidian/OnboardingModal (anti).md",
+      "x": 8280,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g53",
+      "type": "group",
+      "label": "Utility",
+      "x": 9000,
+      "y": 3420,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_profileaccessguard_component",
+      "type": "file",
+      "file": "graphify/obsidian/ProfileAccessGuard.md",
+      "x": 9020,
+      "y": 3500,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g54",
+      "type": "group",
+      "label": "Utility",
+      "x": 0,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_userdashboard_component",
+      "type": "file",
+      "file": "graphify/obsidian/UserDashboard (anti).md",
+      "x": 20,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g55",
+      "type": "group",
+      "label": "Utility",
+      "x": 1620,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_constants_module",
+      "type": "file",
+      "file": "graphify/obsidian/constants (anti).md",
+      "x": 1640,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g56",
+      "type": "group",
+      "label": "Utility",
+      "x": 3020,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_supabase_db",
+      "type": "file",
+      "file": "graphify/obsidian/Supabase Database.md",
+      "x": 3040,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g57",
+      "type": "group",
+      "label": "Utility",
+      "x": 4200,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_aiservice_nlpParser",
+      "type": "file",
+      "file": "graphify/obsidian/Heuristic NLP Parser (RailMatch).md",
+      "x": 4220,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g58",
+      "type": "group",
+      "label": "Utility",
+      "x": 5380,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_constants_platformCommission",
+      "type": "file",
+      "file": "graphify/obsidian/PLATFORM_COMMISSION_RATE Constant.md",
+      "x": 5400,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g59",
+      "type": "group",
+      "label": "Utility",
+      "x": 6340,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_constants_maxCommissionRounds",
+      "type": "file",
+      "file": "graphify/obsidian/MAX_COMMISSION_ROUNDS Constant.md",
+      "x": 6360,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g60",
+      "type": "group",
+      "label": "Utility",
+      "x": 7300,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_constants_violationThresholds",
+      "type": "file",
+      "file": "graphify/obsidian/Violation Threshold Constants.md",
+      "x": 7320,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g61",
+      "type": "group",
+      "label": "Utility",
+      "x": 8260,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_comp_analyticsDashboard",
+      "type": "file",
+      "file": "graphify/obsidian/AnalyticsDashboard Component.md",
+      "x": 8280,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g62",
+      "type": "group",
+      "label": "Utility",
+      "x": 9000,
+      "y": 3900,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_comp_bidModal",
+      "type": "file",
+      "file": "graphify/obsidian/BidModal Component.md",
+      "x": 9020,
+      "y": 3980,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g63",
+      "type": "group",
+      "label": "Utility",
+      "x": 0,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_comp_createRequestForm",
+      "type": "file",
+      "file": "graphify/obsidian/CreateRequestForm Component.md",
+      "x": 20,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g64",
+      "type": "group",
+      "label": "Utility",
+      "x": 1620,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_democomponent_demomodal",
+      "type": "file",
+      "file": "graphify/obsidian/DemoModal.md",
+      "x": 1640,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g65",
+      "type": "group",
+      "label": "Utility",
+      "x": 3020,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_errbound_errorboundary",
+      "type": "file",
+      "file": "graphify/obsidian/ErrorBoundary_1.md",
+      "x": 3040,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g66",
+      "type": "group",
+      "label": "Utility",
+      "x": 4200,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_fleetdis_fleetdislocation",
+      "type": "file",
+      "file": "graphify/obsidian/FleetDislocation.md",
+      "x": 4220,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g67",
+      "type": "group",
+      "label": "Utility",
+      "x": 5380,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_termsmod_termsmodal",
+      "type": "file",
+      "file": "graphify/obsidian/TermsModal.md",
+      "x": 5400,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g68",
+      "type": "group",
+      "label": "Utility",
+      "x": 6340,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_src_constants",
+      "type": "file",
+      "file": "graphify/obsidian/constants (PLATFORM_COMMISSION_RATE).md",
+      "x": 6360,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g69",
+      "type": "group",
+      "label": "Utility",
+      "x": 7300,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_constants_platformcommission",
+      "type": "file",
+      "file": "graphify/obsidian/PLATFORM_COMMISSION_RATE 2.5%.md",
+      "x": 7320,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g70",
+      "type": "group",
+      "label": "Utility",
+      "x": 8260,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_supabaseclient_supabase",
+      "type": "file",
+      "file": "graphify/obsidian/supabase - Supabase Client Instance.md",
+      "x": 8280,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g71",
+      "type": "group",
+      "label": "Utility",
+      "x": 9000,
+      "y": 4380,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_testapp_testapp",
+      "type": "file",
+      "file": "graphify/obsidian/test_app - Pre-deployment Gap Testing.md",
+      "x": 9020,
+      "y": 4460,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g72",
+      "type": "group",
+      "label": "Utility",
+      "x": 0,
+      "y": 4860,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_testdeep_testdeep",
+      "type": "file",
+      "file": "graphify/obsidian/test_deep - Deep Pre-deploy Gap Testing.md",
+      "x": 20,
+      "y": 4940,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g73",
+      "type": "group",
+      "label": "Utility",
+      "x": 1620,
+      "y": 4860,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_testdemo_testdemo",
+      "type": "file",
+      "file": "graphify/obsidian/test_demo - Demo Flow Deep Test.md",
+      "x": 1640,
+      "y": 4940,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g74",
+      "type": "group",
+      "label": "Utility",
+      "x": 3020,
+      "y": 4860,
+      "width": 600,
+      "height": 400,
+      "color": "3"
+    },
+    {
+      "id": "n_testfinal_testfinal",
+      "type": "file",
+      "file": "graphify/obsidian/test_final - Final Pre-deploy Verification.md",
+      "x": 3040,
+      "y": 4940,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g75",
+      "type": "group",
+      "label": "Utility",
+      "x": 4200,
+      "y": 4860,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_claude_md_railmatch",
+      "type": "file",
+      "file": "graphify/obsidian/RailMatch Project Claude Configuration.md",
+      "x": 4220,
+      "y": 4940,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g76",
+      "type": "group",
+      "label": "Utility",
+      "x": 5380,
+      "y": 4860,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_concept_landing_ux",
+      "type": "file",
+      "file": "graphify/obsidian/Landing Page UX Hero Dual Role Value Prop.md",
+      "x": 5400,
+      "y": 4940,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g77",
+      "type": "group",
+      "label": "Utility",
+      "x": 6340,
+      "y": 4860,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_concept_auth_ux",
+      "type": "file",
+      "file": "graphify/obsidian/Auth UX Email Password Login with Validation States.md",
+      "x": 6360,
+      "y": 4940,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g78",
+      "type": "group",
+      "label": "Utility",
+      "x": 7300,
+      "y": 4860,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_concept_analytics_ux",
+      "type": "file",
+      "file": "graphify/obsidian/Analytics UX KPI Widgets Bid Dynamics Chart.md",
+      "x": 7320,
+      "y": 4940,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g79",
+      "type": "group",
+      "label": "Utility",
+      "x": 8260,
+      "y": 4860,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_final_06_exchange_no_form",
+      "type": "file",
+      "file": "graphify/obsidian/Exchange Screen No Form \u0411\u0438\u0440\u0436\u0430 Without Filter Form.md",
+      "x": 8280,
+      "y": 4940,
+      "width": 180,
+      "height": 60
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_app_landingscreen",
+      "fromNode": "n_app",
+      "toNode": "n_landingscreen",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_authscreen",
+      "fromNode": "n_app",
+      "toNode": "n_authscreen",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_requestcard",
+      "fromNode": "n_app",
+      "toNode": "n_requestcard",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_myrequestsview",
+      "fromNode": "n_app",
+      "toNode": "n_myrequestsview",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_bidmodal",
+      "fromNode": "n_app",
+      "toNode": "n_bidmodal",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_demomodal",
+      "fromNode": "n_app",
+      "toNode": "n_demomodal",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_profilesettings",
+      "fromNode": "n_app",
+      "toNode": "n_profilesettings",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_chatwindow",
+      "fromNode": "n_app",
+      "toNode": "n_chatwindow",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_createrequestform",
+      "fromNode": "n_app",
+      "toNode": "n_createrequestform",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_aiagentbar",
+      "fromNode": "n_app",
+      "toNode": "n_aiagentbar",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_analyticsdashboard",
+      "fromNode": "n_app",
+      "toNode": "n_analyticsdashboard",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_userdashboard",
+      "fromNode": "n_app",
+      "toNode": "n_userdashboard",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_mybidsview",
+      "fromNode": "n_app",
+      "toNode": "n_mybidsview",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_fleetdislocation",
+      "fromNode": "n_app",
+      "toNode": "n_fleetdislocation",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_developerdashboard",
+      "fromNode": "n_app",
+      "toNode": "n_developerdashboard",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_supabaseclient",
+      "fromNode": "n_app",
+      "toNode": "n_supabaseclient",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_app_app_resetpasswordscreen",
+      "fromNode": "n_app",
+      "toNode": "n_app_resetpasswordscreen",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_app_app_app",
+      "fromNode": "n_app",
+      "toNode": "n_app_app",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_index_index_buildwelcomehtml",
+      "fromNode": "n_index",
+      "toNode": "n_index_buildwelcomehtml",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_index_index_sendmessage",
+      "fromNode": "n_index",
+      "toNode": "n_index_sendmessage",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_index_index_json",
+      "fromNode": "n_index",
+      "toNode": "n_index_json",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_index_index_verifytelegramhash",
+      "fromNode": "n_index",
+      "toNode": "n_index_verifytelegramhash",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_starthandler_starthandler_handlestart",
+      "fromNode": "n_starthandler",
+      "toNode": "n_starthandler_handlestart",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_telegram_telegram_sendmessage",
+      "fromNode": "n_telegram",
+      "toNode": "n_telegram_sendmessage",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_telegram_telegram_registerwebhook",
+      "fromNode": "n_telegram",
+      "toNode": "n_telegram_registerwebhook",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_adminpanel_adminpanel_adminpanel",
+      "fromNode": "n_adminpanel",
+      "toNode": "n_adminpanel_adminpanel",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_aiagentbar_aiservice",
+      "fromNode": "n_aiagentbar",
+      "toNode": "n_aiservice",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_aiagentbar_aiagentbar_aiagentbar",
+      "fromNode": "n_aiagentbar",
+      "toNode": "n_aiagentbar_aiagentbar",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_analyticsdashboard_analyticsdashboard_analyticsdashboard",
+      "fromNode": "n_analyticsdashboard",
+      "toNode": "n_analyticsdashboard_analyticsdashboard",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_authscreen_supabaseclient",
+      "fromNode": "n_authscreen",
+      "toNode": "n_supabaseclient",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_authscreen_authscreen_validatephone",
+      "fromNode": "n_authscreen",
+      "toNode": "n_authscreen_validatephone",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_authscreen_authscreen_validatepersonname",
+      "fromNode": "n_authscreen",
+      "toNode": "n_authscreen_validatepersonname",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_authscreen_authscreen_forgotpasswordview",
+      "fromNode": "n_authscreen",
+      "toNode": "n_authscreen_forgotpasswordview",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_authscreen_authscreen_authscreen",
+      "fromNode": "n_authscreen",
+      "toNode": "n_authscreen_authscreen",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_authscreen_authscreen_telegramonboarding",
+      "fromNode": "n_authscreen",
+      "toNode": "n_authscreen_telegramonboarding",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_bidmodal_bidmodal_bidmodal",
+      "fromNode": "n_bidmodal",
+      "toNode": "n_bidmodal_bidmodal",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_chatwindow_documentgenerator",
+      "fromNode": "n_chatwindow",
+      "toNode": "n_documentgenerator",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_chatwindow_documentsigningmodal",
+      "fromNode": "n_chatwindow",
+      "toNode": "n_documentsigningmodal",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_chatwindow_chatwindow_chatwindow",
+      "fromNode": "n_chatwindow",
+      "toNode": "n_chatwindow_chatwindow",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_createrequestform_createrequestform_createrequestform",
+      "fromNode": "n_createrequestform",
+      "toNode": "n_createrequestform_createrequestform",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_demomodal_demomodal_demomodal",
+      "fromNode": "n_demomodal",
+      "toNode": "n_demomodal_demomodal",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_roboto_font",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_roboto_font",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_setupcyrillicfont",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_setupcyrillicfont",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_fmt",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_fmt",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_fmtdate",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_fmtdate",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_shortdate",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_shortdate",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_addwatermark",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_addwatermark",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_addheader",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_addheader",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_addpartyblock",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_addpartyblock",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_addsignatures",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_addsignatures",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_addfooter",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_addfooter",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_drawtablerow",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_drawtablerow",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_checkpage",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_checkpage",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_rendercontract",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_rendercontract",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_rendergu12",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_rendergu12",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_renderwaybill",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_renderwaybill",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_renderupd",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_renderupd",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_renderact",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_renderact",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_numtowords",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_numtowords",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_generatedocument",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_generatedocument",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_downloaddocument",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_downloaddocument",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentgenerator_getdocumentblob",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentgenerator_getdocumentblob",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_documentsigningmodal",
+      "fromNode": "n_documentgenerator",
+      "toNode": "n_documentsigningmodal",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_setupcyrillicfont_documentgenerator_generatedocument",
+      "fromNode": "n_documentgenerator_setupcyrillicfont",
+      "toNode": "n_documentgenerator_generatedocument",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmt_documentgenerator_rendercontract",
+      "fromNode": "n_documentgenerator_fmt",
+      "toNode": "n_documentgenerator_rendercontract",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmt_documentgenerator_renderupd",
+      "fromNode": "n_documentgenerator_fmt",
+      "toNode": "n_documentgenerator_renderupd",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmt_documentgenerator_renderact",
+      "fromNode": "n_documentgenerator_fmt",
+      "toNode": "n_documentgenerator_renderact",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmt_documentgenerator_numtowords",
+      "fromNode": "n_documentgenerator_fmt",
+      "toNode": "n_documentgenerator_numtowords",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmtdate_documentgenerator_addheader",
+      "fromNode": "n_documentgenerator_fmtdate",
+      "toNode": "n_documentgenerator_addheader",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmtdate_documentgenerator_rendercontract",
+      "fromNode": "n_documentgenerator_fmtdate",
+      "toNode": "n_documentgenerator_rendercontract",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmtdate_documentgenerator_renderwaybill",
+      "fromNode": "n_documentgenerator_fmtdate",
+      "toNode": "n_documentgenerator_renderwaybill",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmtdate_documentgenerator_renderupd",
+      "fromNode": "n_documentgenerator_fmtdate",
+      "toNode": "n_documentgenerator_renderupd",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_fmtdate_documentgenerator_renderact",
+      "fromNode": "n_documentgenerator_fmtdate",
+      "toNode": "n_documentgenerator_renderact",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_shortdate_documentgenerator_addwatermark",
+      "fromNode": "n_documentgenerator_shortdate",
+      "toNode": "n_documentgenerator_addwatermark",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addwatermark_documentgenerator_addsignatures",
+      "fromNode": "n_documentgenerator_addwatermark",
+      "toNode": "n_documentgenerator_addsignatures",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addwatermark_documentgenerator_checkpage",
+      "fromNode": "n_documentgenerator_addwatermark",
+      "toNode": "n_documentgenerator_checkpage",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addwatermark_documentgenerator_rendercontract",
+      "fromNode": "n_documentgenerator_addwatermark",
+      "toNode": "n_documentgenerator_rendercontract",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addwatermark_documentgenerator_rendergu12",
+      "fromNode": "n_documentgenerator_addwatermark",
+      "toNode": "n_documentgenerator_rendergu12",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addwatermark_documentgenerator_renderwaybill",
+      "fromNode": "n_documentgenerator_addwatermark",
+      "toNode": "n_documentgenerator_renderwaybill",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addwatermark_documentgenerator_renderupd",
+      "fromNode": "n_documentgenerator_addwatermark",
+      "toNode": "n_documentgenerator_renderupd",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addwatermark_documentgenerator_renderact",
+      "fromNode": "n_documentgenerator_addwatermark",
+      "toNode": "n_documentgenerator_renderact",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addheader_documentgenerator_rendercontract",
+      "fromNode": "n_documentgenerator_addheader",
+      "toNode": "n_documentgenerator_rendercontract",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addheader_documentgenerator_rendergu12",
+      "fromNode": "n_documentgenerator_addheader",
+      "toNode": "n_documentgenerator_rendergu12",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addheader_documentgenerator_renderwaybill",
+      "fromNode": "n_documentgenerator_addheader",
+      "toNode": "n_documentgenerator_renderwaybill",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addheader_documentgenerator_renderupd",
+      "fromNode": "n_documentgenerator_addheader",
+      "toNode": "n_documentgenerator_renderupd",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addheader_documentgenerator_renderact",
+      "fromNode": "n_documentgenerator_addheader",
+      "toNode": "n_documentgenerator_renderact",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addpartyblock_documentgenerator_rendercontract",
+      "fromNode": "n_documentgenerator_addpartyblock",
+      "toNode": "n_documentgenerator_rendercontract",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addsignatures_documentgenerator_rendercontract",
+      "fromNode": "n_documentgenerator_addsignatures",
+      "toNode": "n_documentgenerator_rendercontract",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addsignatures_documentgenerator_rendergu12",
+      "fromNode": "n_documentgenerator_addsignatures",
+      "toNode": "n_documentgenerator_rendergu12",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addsignatures_documentgenerator_renderwaybill",
+      "fromNode": "n_documentgenerator_addsignatures",
+      "toNode": "n_documentgenerator_renderwaybill",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addsignatures_documentgenerator_renderupd",
+      "fromNode": "n_documentgenerator_addsignatures",
+      "toNode": "n_documentgenerator_renderupd",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addsignatures_documentgenerator_renderact",
+      "fromNode": "n_documentgenerator_addsignatures",
+      "toNode": "n_documentgenerator_renderact",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_addfooter_documentgenerator_generatedocument",
+      "fromNode": "n_documentgenerator_addfooter",
+      "toNode": "n_documentgenerator_generatedocument",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_drawtablerow_documentgenerator_renderwaybill",
+      "fromNode": "n_documentgenerator_drawtablerow",
+      "toNode": "n_documentgenerator_renderwaybill",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_drawtablerow_documentgenerator_renderupd",
+      "fromNode": "n_documentgenerator_drawtablerow",
+      "toNode": "n_documentgenerator_renderupd",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_drawtablerow_documentgenerator_renderact",
+      "fromNode": "n_documentgenerator_drawtablerow",
+      "toNode": "n_documentgenerator_renderact",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_checkpage_documentgenerator_rendercontract",
+      "fromNode": "n_documentgenerator_checkpage",
+      "toNode": "n_documentgenerator_rendercontract",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_checkpage_documentgenerator_rendergu12",
+      "fromNode": "n_documentgenerator_checkpage",
+      "toNode": "n_documentgenerator_rendergu12",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_checkpage_documentgenerator_renderwaybill",
+      "fromNode": "n_documentgenerator_checkpage",
+      "toNode": "n_documentgenerator_renderwaybill",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_checkpage_documentgenerator_renderupd",
+      "fromNode": "n_documentgenerator_checkpage",
+      "toNode": "n_documentgenerator_renderupd",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_checkpage_documentgenerator_renderact",
+      "fromNode": "n_documentgenerator_checkpage",
+      "toNode": "n_documentgenerator_renderact",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_rendercontract_documentgenerator_numtowords",
+      "fromNode": "n_documentgenerator_rendercontract",
+      "toNode": "n_documentgenerator_numtowords",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_rendercontract_documentgenerator_generatedocument",
+      "fromNode": "n_documentgenerator_rendercontract",
+      "toNode": "n_documentgenerator_generatedocument",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_rendergu12_documentgenerator_generatedocument",
+      "fromNode": "n_documentgenerator_rendergu12",
+      "toNode": "n_documentgenerator_generatedocument",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_renderwaybill_documentgenerator_generatedocument",
+      "fromNode": "n_documentgenerator_renderwaybill",
+      "toNode": "n_documentgenerator_generatedocument",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_renderupd_documentgenerator_generatedocument",
+      "fromNode": "n_documentgenerator_renderupd",
+      "toNode": "n_documentgenerator_generatedocument",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_renderact_documentgenerator_numtowords",
+      "fromNode": "n_documentgenerator_renderact",
+      "toNode": "n_documentgenerator_numtowords",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_renderact_documentgenerator_generatedocument",
+      "fromNode": "n_documentgenerator_renderact",
+      "toNode": "n_documentgenerator_generatedocument",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_generatedocument_documentgenerator_downloaddocument",
+      "fromNode": "n_documentgenerator_generatedocument",
+      "toNode": "n_documentgenerator_downloaddocument",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentgenerator_generatedocument_documentgenerator_getdocumentblob",
+      "fromNode": "n_documentgenerator_generatedocument",
+      "toNode": "n_documentgenerator_getdocumentblob",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_documentsigningmodal_documentsigningmodal_getstageconfig",
+      "fromNode": "n_documentsigningmodal",
+      "toNode": "n_documentsigningmodal_getstageconfig",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_documentsigningmodal_documentsigningmodal_documentsigningmodal",
+      "fromNode": "n_documentsigningmodal",
+      "toNode": "n_documentsigningmodal_documentsigningmodal",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_errorboundary_errorboundary_errorboundary",
+      "fromNode": "n_errorboundary",
+      "toNode": "n_errorboundary_errorboundary",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_errorboundary_errorboundary_errorboundary_errorboundary_constructor",
+      "fromNode": "n_errorboundary_errorboundary",
+      "toNode": "n_errorboundary_errorboundary_constructor",
+      "label": "method [EXTRACTED]"
+    },
+    {
+      "id": "e_errorboundary_errorboundary_errorboundary_errorboundary_getderivedstatefromerror",
+      "fromNode": "n_errorboundary_errorboundary",
+      "toNode": "n_errorboundary_errorboundary_getderivedstatefromerror",
+      "label": "method [EXTRACTED]"
+    },
+    {
+      "id": "e_errorboundary_errorboundary_errorboundary_errorboundary_componentdidcatch",
+      "fromNode": "n_errorboundary_errorboundary",
+      "toNode": "n_errorboundary_errorboundary_componentdidcatch",
+      "label": "method [EXTRACTED]"
+    },
+    {
+      "id": "e_errorboundary_errorboundary_errorboundary_errorboundary_render",
+      "fromNode": "n_errorboundary_errorboundary",
+      "toNode": "n_errorboundary_errorboundary_render",
+      "label": "method [EXTRACTED]"
+    },
+    {
+      "id": "e_fleetdislocation_fleetdislocation_fleetdislocation",
+      "fromNode": "n_fleetdislocation",
+      "toNode": "n_fleetdislocation_fleetdislocation",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_landingscreen_landingscreen_landingscreen",
+      "fromNode": "n_landingscreen",
+      "toNode": "n_landingscreen_landingscreen",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_mybidsview_aiservice",
+      "fromNode": "n_mybidsview",
+      "toNode": "n_aiservice",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_mybidsview_mybidsview_mybidsview",
+      "fromNode": "n_mybidsview",
+      "toNode": "n_mybidsview_mybidsview",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_myrequestsview_aiservice",
+      "fromNode": "n_myrequestsview",
+      "toNode": "n_aiservice",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_myrequestsview_myrequestsview_myrequestsview",
+      "fromNode": "n_myrequestsview",
+      "toNode": "n_myrequestsview_myrequestsview",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_onboardingmodal_onboardingmodal_onboardingmodal",
+      "fromNode": "n_onboardingmodal",
+      "toNode": "n_onboardingmodal_onboardingmodal",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_profilesettings_supabaseclient",
+      "fromNode": "n_profilesettings",
+      "toNode": "n_supabaseclient",
+      "label": "imports_from [EXTRACTED]"
+    },
+    {
+      "id": "e_profilesettings_profilesettings_profilesettings",
+      "fromNode": "n_profilesettings",
+      "toNode": "n_profilesettings_profilesettings",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_profileviewmonitor_profileviewmonitor_profileviewmonitor",
+      "fromNode": "n_profileviewmonitor",
+      "toNode": "n_profileviewmonitor_profileviewmonitor",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_profileviewmonitor_profileviewmonitor_profileaccessguard",
+      "fromNode": "n_profileviewmonitor",
+      "toNode": "n_profileviewmonitor_profileaccessguard",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_profileviewmonitor_profileviewmonitor_generateprofileviewwarning",
+      "fromNode": "n_profileviewmonitor",
+      "toNode": "n_profileviewmonitor_generateprofileviewwarning",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_profileviewmonitor_profileviewmonitor_profileviewmonitor_profileaccessguard",
+      "fromNode": "n_profileviewmonitor_profileviewmonitor",
+      "toNode": "n_profileviewmonitor_profileaccessguard",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_requestcard_requestcard_requestcard",
+      "fromNode": "n_requestcard",
+      "toNode": "n_requestcard_requestcard",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_securitymanager_securitymanager_securitymanager",
+      "fromNode": "n_securitymanager",
+      "toNode": "n_securitymanager_securitymanager",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_termsmodal_termsmodal_termsmodal",
+      "fromNode": "n_termsmodal",
+      "toNode": "n_termsmodal_termsmodal",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_termsmodal_termsmodal_section",
+      "fromNode": "n_termsmodal",
+      "toNode": "n_termsmodal_section",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_termsmodal_termsmodal_termscontent",
+      "fromNode": "n_termsmodal",
+      "toNode": "n_termsmodal_termscontent",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_termsmodal_termsmodal_privacycontent",
+      "fromNode": "n_termsmodal",
+      "toNode": "n_termsmodal_privacycontent",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_userdashboard_userdashboard_userdashboard",
+      "fromNode": "n_userdashboard",
+      "toNode": "n_userdashboard_userdashboard",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_insertmockdata_insertmockdata_insertmockdata",
+      "fromNode": "n_insertmockdata",
+      "toNode": "n_insertmockdata_insertmockdata",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_resetdemodata_resetdemodata_resetdemodata",
+      "fromNode": "n_resetdemodata",
+      "toNode": "n_resetdemodata_resetdemodata",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_testinsert_testinsert_testinsert",
+      "fromNode": "n_testinsert",
+      "toNode": "n_testinsert_testinsert",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_testinsertowner_testinsertowner_test",
+      "fromNode": "n_testinsertowner",
+      "toNode": "n_testinsertowner_test",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_testmeta_testmeta_testfetch",
+      "fromNode": "n_testmeta",
+      "toNode": "n_testmeta_testfetch",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_testrest_testrest_testfetch",
+      "fromNode": "n_testrest",
+      "toNode": "n_testrest_testfetch",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_aiservice_capitalize",
+      "fromNode": "n_aiservice",
+      "toNode": "n_aiservice_capitalize",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_aiservice_resolvecityname",
+      "fromNode": "n_aiservice",
+      "toNode": "n_aiservice_resolvecityname",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_aiservice_parseprompt",
+      "fromNode": "n_aiservice",
+      "toNode": "n_aiservice_parseprompt",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_aiservice_getmissingfields",
+      "fromNode": "n_aiservice",
+      "toNode": "n_aiservice_getmissingfields",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_aiservice_getclarificationquestion",
+      "fromNode": "n_aiservice",
+      "toNode": "n_aiservice_getclarificationquestion",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_resolvecityname_aiservice_parseprompt",
+      "fromNode": "n_aiservice_resolvecityname",
+      "toNode": "n_aiservice_parseprompt",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_parseprompt_aiservice_wagontypes",
+      "fromNode": "n_aiservice_parseprompt",
+      "toNode": "n_aiservice_wagontypes",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_parseprompt_aiservice_cargotypes",
+      "fromNode": "n_aiservice_parseprompt",
+      "toNode": "n_aiservice_cargotypes",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_parseprompt_aiservice_cityabbreviations",
+      "fromNode": "n_aiservice_parseprompt",
+      "toNode": "n_aiservice_cityabbreviations",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_aiservice_getmissingfields_aiservice_getclarificationquestion",
+      "fromNode": "n_aiservice_getmissingfields",
+      "toNode": "n_aiservice_getclarificationquestion",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectphone",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectphone",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectspaceddigits",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectspaceddigits",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectwrittendigits",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectwrittendigits",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectmessenger",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectmessenger",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectlatinusername",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectlatinusername",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectemail",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectemail",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detecturl",
+      "fromNode": "n_security",
+      "toNode": "n_security_detecturl",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectobfuscated",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectobfuscated",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_validatemessageintent",
+      "fromNode": "n_security",
+      "toNode": "n_security_validatemessageintent",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_violation",
+      "fromNode": "n_security",
+      "toNode": "n_security_violation",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectcompanyname",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectcompanyname",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectfullname",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectfullname",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_detectrequisites",
+      "fromNode": "n_security",
+      "toNode": "n_security_detectrequisites",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_security_validatemessagesequence",
+      "fromNode": "n_security",
+      "toNode": "n_security_validatemessagesequence",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_security_detectphone_security_validatemessageintent",
+      "fromNode": "n_security_detectphone",
+      "toNode": "n_security_validatemessageintent",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_detectspaceddigits_security_validatemessageintent",
+      "fromNode": "n_security_detectspaceddigits",
+      "toNode": "n_security_validatemessageintent",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_detectwrittendigits_security_validatemessageintent",
+      "fromNode": "n_security_detectwrittendigits",
+      "toNode": "n_security_validatemessageintent",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_detectmessenger_security_validatemessageintent",
+      "fromNode": "n_security_detectmessenger",
+      "toNode": "n_security_validatemessageintent",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_detectlatinusername_security_validatemessageintent",
+      "fromNode": "n_security_detectlatinusername",
+      "toNode": "n_security_validatemessageintent",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_detectemail_security_validatemessageintent",
+      "fromNode": "n_security_detectemail",
+      "toNode": "n_security_validatemessageintent",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_detecturl_security_validatemessageintent",
+      "fromNode": "n_security_detecturl",
+      "toNode": "n_security_validatemessageintent",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_detectobfuscated_security_validatemessageintent",
+      "fromNode": "n_security_detectobfuscated",
+      "toNode": "n_security_validatemessageintent",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_validatemessageintent_security_violation",
+      "fromNode": "n_security_validatemessageintent",
+      "toNode": "n_security_violation",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_validatemessageintent_security_detectcompanyname",
+      "fromNode": "n_security_validatemessageintent",
+      "toNode": "n_security_detectcompanyname",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_validatemessageintent_security_detectfullname",
+      "fromNode": "n_security_validatemessageintent",
+      "toNode": "n_security_detectfullname",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_validatemessageintent_security_detectrequisites",
+      "fromNode": "n_security_validatemessageintent",
+      "toNode": "n_security_detectrequisites",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_validatemessageintent_security_validatemessagesequence",
+      "fromNode": "n_security_validatemessageintent",
+      "toNode": "n_security_validatemessagesequence",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_validatemessageintent_security_stopwords",
+      "fromNode": "n_security_validatemessageintent",
+      "toNode": "n_security_stopwords",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_security_validatemessageintent_security_detectors",
+      "fromNode": "n_security_validatemessageintent",
+      "toNode": "n_security_detectors",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_security_violation_security_validatemessagesequence",
+      "fromNode": "n_security_violation",
+      "toNode": "n_security_validatemessagesequence",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_developerdashboard_developerdashboard_statcard",
+      "fromNode": "n_developerdashboard",
+      "toNode": "n_developerdashboard_statcard",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_developerdashboard_developerdashboard_developerdashboard",
+      "fromNode": "n_developerdashboard",
+      "toNode": "n_developerdashboard_developerdashboard",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_test_app_test_app_log",
+      "fromNode": "n_test_app",
+      "toNode": "n_test_app_log",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_test_app_test_app_run_tests",
+      "fromNode": "n_test_app",
+      "toNode": "n_test_app_run_tests",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_test_app_test_app_rationale_1",
+      "fromNode": "n_test_app",
+      "toNode": "n_test_app_rationale_1",
+      "label": "rationale_for [EXTRACTED]"
+    },
+    {
+      "id": "e_test_app_log_test_app_run_tests",
+      "fromNode": "n_test_app_log",
+      "toNode": "n_test_app_run_tests",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_test_deep_test_deep_log",
+      "fromNode": "n_test_deep",
+      "toNode": "n_test_deep_log",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_test_deep_test_deep_run",
+      "fromNode": "n_test_deep",
+      "toNode": "n_test_deep_run",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_test_deep_test_deep_rationale_1",
+      "fromNode": "n_test_deep",
+      "toNode": "n_test_deep_rationale_1",
+      "label": "rationale_for [EXTRACTED]"
+    },
+    {
+      "id": "e_test_deep_log_test_deep_run",
+      "fromNode": "n_test_deep_log",
+      "toNode": "n_test_deep_run",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_test_demo_test_demo_log",
+      "fromNode": "n_test_demo",
+      "toNode": "n_test_demo_log",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_test_demo_test_demo_enter_demo",
+      "fromNode": "n_test_demo",
+      "toNode": "n_test_demo_enter_demo",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_test_demo_test_demo_run",
+      "fromNode": "n_test_demo",
+      "toNode": "n_test_demo_run",
+      "label": "contains [EXTRACTED]"
+    },
+    {
+      "id": "e_test_demo_test_demo_rationale_1",
+      "fromNode": "n_test_demo",
+      "toNode": "n_test_demo_rationale_1",
+      "label": "rationale_for [EXTRACTED]"
+    },
+    {
+      "id": "e_test_demo_log_test_demo_run",
+      "fromNode": "n_test_demo_log",
+      "toNode": "n_test_demo_run",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_test_demo_enter_demo_test_demo_run",
+      "fromNode": "n_test_demo_enter_demo",
+      "toNode": "n_test_demo_run",
+      "label": "calls [EXTRACTED]"
+    },
+    {
+      "id": "e_test_final_test_final_log",
+      "fromNode": "n_test_final",
+      "toNode": "n_test_final_log",
+      "label": "contains [EXTRACTED]"
+    }
+  ]
+}

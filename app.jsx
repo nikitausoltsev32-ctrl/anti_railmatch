@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import {
     TrainFront, ArrowRight, AlertCircle, User,
     MessageSquare, Sparkles, Moon, Sun, Ban, TrendingUp,
@@ -16,16 +16,23 @@ import ProfileSettings from './components/ProfileSettings';
 import ChatWindow from './components/ChatWindow';
 import CreateRequestForm from './components/CreateRequestForm';
 import AiAgentBar from './components/AiAgentBar';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
 import OnboardingModal from './components/OnboardingModal.jsx';
 import TermsModal from './components/TermsModal.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
-import AdminPanel from './components/AdminPanel.jsx';
 import UserDashboard from './components/UserDashboard';
 import MyBidsView from './components/MyBidsView';
-import FleetDislocation from './components/FleetDislocation';
-import DeveloperDashboard from './components/DeveloperDashboard';
 import BugReportButton from './components/BugReportButton';
+
+const AnalyticsDashboard = lazy(() => import('./components/AnalyticsDashboard'));
+const AdminPanel = lazy(() => import('./components/AdminPanel.jsx'));
+const FleetDislocation = lazy(() => import('./components/FleetDislocation'));
+const DeveloperDashboard = lazy(() => import('./components/DeveloperDashboard'));
+
+const LazyFallback = () => (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+        <div style={{ color: '#888', fontSize: 14 }}>Загрузка…</div>
+    </div>
+);
 
 import { haptic } from './src/haptic.js';
 import { supabase } from './src/supabaseClient';
@@ -1753,11 +1760,17 @@ export default function App() {
                     </div>
                 )}
 
-                {view === 'analytics' && <AnalyticsDashboard requests={requests} bids={bids} />}
+                {view === 'analytics' && (
+                    <Suspense fallback={<LazyFallback />}>
+                        <AnalyticsDashboard requests={requests} bids={bids} />
+                    </Suspense>
+                )}
 
 
                 {view === 'dev-dashboard' && userProfile?.role === 'developer' && (
-                    <DeveloperDashboard user={userProfile} supabase={supabase} />
+                    <Suspense fallback={<LazyFallback />}>
+                        <DeveloperDashboard user={userProfile} supabase={supabase} />
+                    </Suspense>
                 )}
 
                 {view === 'messenger' && (
@@ -1891,7 +1904,9 @@ export default function App() {
                 )}
 
                 {view === 'admin' && userProfile?.role === 'admin' && (
-                    <AdminPanel supabase={supabase} sbUser={sbUser} isDark={isDark} />
+                    <Suspense fallback={<LazyFallback />}>
+                        <AdminPanel supabase={supabase} sbUser={sbUser} isDark={isDark} />
+                    </Suspense>
                 )}
 
                 {view === 'chat' && activeChat && (
@@ -1931,7 +1946,11 @@ export default function App() {
                   />
                 )}
 
-                {view === 'fleet' && <FleetDislocation />}
+                {view === 'fleet' && (
+                    <Suspense fallback={<LazyFallback />}>
+                        <FleetDislocation />
+                    </Suspense>
+                )}
 
                 {view === 'my-dashboard' && userProfile && (
                   <UserDashboard

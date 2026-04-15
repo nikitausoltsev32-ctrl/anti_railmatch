@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import html2canvas from 'html2canvas';
 import { supabase } from '../src/supabaseClient';
 
 export default function BugReportButton() {
@@ -11,6 +10,7 @@ export default function BugReportButton() {
 
   async function handleOpen() {
     try {
+      const { default: html2canvas } = await import('html2canvas');
       const canvas = await html2canvas(document.body, {
         useCORS: true,
         allowTaint: true,

@@ -1,0 +1,76 @@
+- generic [ref=e310]:
+  - generic [ref=e311]:
+    - generic [ref=e312]: "Сайт находится в разработке. По вопросам пишите в Telegram:"
+    - link "@onemonba" [ref=e313] [cursor=pointer]:
+      - /url: https://t.me/onemonba
+  - banner [ref=e314]:
+    - generic [ref=e315]:
+      - generic [ref=e316] [cursor=pointer]:
+        - img [ref=e318]
+        - generic [ref=e325]: RailMatch
+      - navigation [ref=e326]:
+        - button "Биржа" [ref=e327] [cursor=pointer]
+        - button "Мои заявки" [ref=e328] [cursor=pointer]
+        - button "Мои ставки" [ref=e329] [cursor=pointer]
+        - button "Аналитика" [ref=e330] [cursor=pointer]
+        - button "Сообщения" [ref=e331] [cursor=pointer]
+      - generic [ref=e332]:
+        - button [ref=e333] [cursor=pointer]:
+          - img [ref=e334]
+        - generic [ref=e336] [cursor=pointer]:
+          - generic [ref=e337]:
+            - generic [ref=e338]: ООО Тест
+            - generic [ref=e339]: Грузоотправитель
+          - img [ref=e341]
+  - main [ref=e344]:
+    - generic [ref=e345]:
+      - generic [ref=e347]:
+        - generic [ref=e348]:
+          - img [ref=e349]
+          - generic [ref=e351]: AI Agent
+        - textbox "Найти или создать..." [ref=e352]
+        - button "Поиск" [ref=e353] [cursor=pointer]:
+          - generic [ref=e354]: Поиск
+          - img [ref=e355]
+      - generic [ref=e357]:
+        - generic [ref=e358]: "Фильтры:"
+        - button "Крытый" [ref=e359] [cursor=pointer]
+        - button "Полувагон" [ref=e360] [cursor=pointer]
+        - button "Цистерна" [ref=e361] [cursor=pointer]
+        - button "Платформа" [ref=e362] [cursor=pointer]
+        - button "Хоппер" [ref=e363] [cursor=pointer]
+        - button "Москва" [ref=e365] [cursor=pointer]
+        - button "Екатеринбург" [ref=e366] [cursor=pointer]
+        - button "Санкт-Петербург" [ref=e367] [cursor=pointer]
+        - button "Казань" [ref=e368] [cursor=pointer]
+      - generic [ref=e369]:
+        - generic [ref=e370]:
+          - img [ref=e372]
+          - generic [ref=e374]: "Интеллектуальный подбор: Лучшие предложения первыми"
+        - generic [ref=e375]: "Сортировка: выгода"
+      - generic [ref=e378]:
+        - generic [ref=e379]:
+          - img [ref=e380]
+          - text: Топ-1 выбор
+        - generic [ref=e383]:
+          - generic [ref=e384]: jajdj
+          - generic [ref=e385]: Крытый
+          - generic [ref=e386]: "31.03"
+        - generic [ref=e387]:
+          - heading "hfhashd ajsdhahd" [level=3] [ref=e388]:
+            - generic [ref=e389]: hfhashd
+            - img [ref=e390]
+            - generic [ref=e392]: ajsdhahd
+          - generic [ref=e393]:
+            - generic [ref=e394]: Nikita · Владелец вагонов
+            - generic [ref=e395]:
+              - img [ref=e396]
+              - text: "5.0"
+        - generic [ref=e398]:
+          - generic [ref=e399]:
+            - generic [ref=e400]: "Свободно: 3 ваг. / 30 т."
+            - generic [ref=e401]: "Бюджет: 15 000 ₽"
+          - generic [ref=e402]:
+            - generic [ref=e405]: 0 / 3 погружено
+            - button "Заказать" [ref=e406] [cursor=pointer]
+  - button "🐛" [ref=e431] [cursor=pointer]

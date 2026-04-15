@@ -1,0 +1,28 @@
+- generic [ref=e264]:
+  - button "Назад" [ref=e265] [cursor=pointer]:
+    - img [ref=e266]
+    - text: Назад
+  - heading "Регистрация" [level=2] [ref=e268]
+  - paragraph [ref=e269]: Введите данные вашей компании
+  - button "Войти через Telegram" [ref=e270] [cursor=pointer]:
+    - img [ref=e271]
+    - text: Войти через Telegram
+  - generic [ref=e275]: или
+  - generic [ref=e277]:
+    - paragraph [ref=e278]: Кто вы на платформе?
+    - generic [ref=e279]:
+      - button "Владелец вагонов" [ref=e280] [cursor=pointer]:
+        - img [ref=e281]
+        - text: Владелец вагонов
+      - button "Грузоотправитель" [active] [ref=e288] [cursor=pointer]:
+        - img [ref=e289]
+        - text: Грузоотправитель
+  - generic [ref=e293]:
+    - textbox "Email" [ref=e294]
+    - textbox "Пароль (минимум 6 символов)" [ref=e295]
+    - generic [ref=e296]:
+      - textbox "Ваше имя" [ref=e298]
+      - textbox "Название компании (ООО / ИП)" [ref=e300]
+      - textbox "+7 (___) ___-__-__" [ref=e302]
+    - button "Создать аккаунт" [ref=e303] [cursor=pointer]
+  - button "Есть аккаунт? Войти" [ref=e304] [cursor=pointer]
