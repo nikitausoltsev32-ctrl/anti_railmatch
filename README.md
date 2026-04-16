@@ -10,6 +10,21 @@
 
 ---
 
+## Closed Pilot Release Flow
+
+- Release branch for the pilot: `release/closed-pilot-v1`
+- GitHub pull requests must target `release/closed-pilot-v1`
+- GitHub CI must pass: `npm ci`, `npm run build`, `npm test`
+- Vercel preview deployments come from pull requests
+- Vercel production should point to `release/closed-pilot-v1`
+- Frontend env vars must be stored in **Vercel Project Settings**, not in `vercel.json`
+- Cloudflare stays **DNS-only** for `railmatch.ru` and `www.railmatch.ru`
+- Cloudflare proxy must remain disabled for the pilot; Vercel serves TLS and frontend traffic
+
+See [docs/closed-pilot-release-flow.md](docs/closed-pilot-release-flow.md) for the operational contract.
+
+---
+
 ## 📋 О проекте
 
 **RailMatch** — прямой маркетплейс, соединяющий грузоотправителей и владельцев вагонов без посредников-брокеров, которые традиционно берут **15–20%** от суммы сделки.
@@ -126,6 +141,7 @@ cp .env.example .env
 ```env
 VITE_SUPABASE_URL=https://<your-project>.supabase.co
 VITE_SUPABASE_ANON_KEY=<your-anon-key>
+VITE_TELEGRAM_BOT_USERNAME=RailMatchBot
 ```
 
 ### Запуск в режиме разработки
@@ -139,6 +155,10 @@ npm run dev
 ```bash
 npm run build
 ```
+
+### Vercel окружение
+
+Для preview и production-deploy фронтенда переменные `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` и `VITE_TELEGRAM_BOT_USERNAME` должны храниться в **Vercel Project Settings**. `vercel.json` больше не должен содержать встроенные env.
 
 ---
 
