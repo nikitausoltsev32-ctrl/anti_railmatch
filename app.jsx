@@ -35,7 +35,7 @@ const LazyFallback = () => (
 );
 
 import { haptic } from './src/haptic.js';
-import { supabase } from './src/supabaseClient';
+import { supabase, withTimeout } from './src/supabaseClient';
 import {
     PLATFORM_COMMISSION_RATE,
     VIOLATION_WARNING, VIOLATION_CHAT_BLOCK, VIOLATION_UNVERIFY, VIOLATION_BAN,
@@ -43,6 +43,8 @@ import {
 } from './src/constants.js';
 import { validateMessageIntent, validateMessageSequence } from './src/security.js';
 import { detect as preDetect } from './src/anti-leak.js';
+
+const STARTUP_TIMEOUT_MS = 7000;
 
 // --- ЭКРАН СБРОСА ПАРОЛЯ ---
 function ResetPasswordScreen({ isDark, onDone }) {
@@ -300,10 +302,28 @@ export default function App() {
             }
         };
 
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        const loadProfileWithGuard = (user, isInitialLogin = false, onSuccess = null) => (
+            withTimeout(
+                fetchProfile(user.id, isInitialLogin, user.user_metadata, user.email, onSuccess),
+                STARTUP_TIMEOUT_MS,
+                'profile-timeout',
+            ).then((result) => {
+                if (result === 'profile-timeout' && mounted) {
+                    console.warn('Profile bootstrap timed out; continuing without blocking UI');
+                    setUserProfile(null);
+                    setAuthChecking(false);
+                }
+            })
+        );
+
+        withTimeout(
+            supabase.auth.getSession(),
+            STARTUP_TIMEOUT_MS,
+            { data: { session: null } },
+        ).then(({ data: { session } }) => {
             if (session?.user) {
                 setSbUser(session.user);
-                fetchProfile(session.user.id, true, session.user.user_metadata, session.user.email);
+                loadProfileWithGuard(session.user, true);
             } else {
                 setAuthChecking(false);
             }
@@ -323,7 +343,7 @@ export default function App() {
                 const isInitialLogin = _event === 'SIGNED_IN';
                 const onSuccess = pendingLoginSuccessRef.current;
                 pendingLoginSuccessRef.current = null;
-                fetchProfile(user.id, isInitialLogin, user.user_metadata, user.email, onSuccess);
+                loadProfileWithGuard(user, isInitialLogin, onSuccess);
             } else {
                 setUserProfile(null);
                 // setScreen('landing'); // Изменил: если логаут, мы идём на лендинг (вызывается в handleLogout)
@@ -348,18 +368,25 @@ export default function App() {
         if (!initData) return;
 
         // Don't re-auth if already logged in
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        withTimeout(
+            supabase.auth.getSession(),
+            STARTUP_TIMEOUT_MS,
+            { data: { session: null } },
+        ).then(({ data: { session } }) => {
             if (session?.user) return; // already authed
 
             // Keep loading spinner visible during Mini App auth
             setAuthChecking(true);
             setAuthLoading(true);
-            fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-auth`, {
+            withTimeout(fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-auth`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ init_data: initData }),
-            })
-                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            }), STARTUP_TIMEOUT_MS, null)
+                .then((res) => {
+                    if (!res) throw new Error('Telegram auth timed out');
+                    return res.json().then(data => ({ ok: res.ok, data }));
+                })
                 .then(({ ok, data }) => {
                     if (!ok) throw new Error(data.error || 'Telegram auth failed');
                     return supabase.auth.setSession({
