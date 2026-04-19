@@ -850,7 +850,7 @@ export default function App() {
             sendNotification(
                 shipperProfile.id,
                 'Новая ставка на вашу заявку — RailMatch',
-                `Компания «${userProfile.company}» откликнулась на вашу заявку:\n${selectedRequest.stationFrom} → ${selectedRequest.stationTo}, ${selectedRequest.cargoType}.\n\nЦена: ${Number(price).toLocaleString()} ₽ · Вагонов: ${wagons} · Тонн: ${tons}\n\nОткройте платформу, чтобы продолжить переговоры.`
+                `${userProfile.name || 'Владелец вагонов'} откликнулся на вашу заявку:\n${selectedRequest.stationFrom} → ${selectedRequest.stationTo}, ${selectedRequest.cargoType}.\n\nЦена: ${Number(price).toLocaleString()} ₽ · Вагонов: ${wagons} · Тонн: ${tons}\n\nОткройте платформу, чтобы продолжить переговоры.`
             );
         }
 

@@ -89,16 +89,21 @@ serve(async (req) => {
       return prof ?? null;
     },
     loadBid: async (chatId) => {
-      // bids.ownerId is the wagon owner; shipperInn is on the linked request
-      const { data } = await svc
+      const { data: bid } = await svc
         .from("bids")
-        .select(`"ownerId", requests!inner("shipperInn")`)
+        .select(`"ownerId", "requestId"`)
         .eq("id", chatId)
         .single();
-      if (!data) return null;
+      if (!bid) return null;
+      const { data: req } = await svc
+        .from("requests")
+        .select(`"shipperInn"`)
+        .eq("id", (bid as any)["requestId"])
+        .single();
+      if (!req) return null;
       return {
-        ownerId: (data as any)["ownerId"],
-        shipperInn: (data as any).requests["shipperInn"],
+        ownerId: (bid as any)["ownerId"],
+        shipperInn: (req as any)["shipperInn"],
       };
     },
     loadHistory: async (chatId) => {
