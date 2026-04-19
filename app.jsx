@@ -850,7 +850,7 @@ export default function App() {
             sendNotification(
                 shipperProfile.id,
                 'Новая ставка на вашу заявку — RailMatch',
-                `Компания «${userProfile.company}» откликнулась на вашу заявку:\n${selectedRequest.stationFrom} → ${selectedRequest.stationTo}, ${selectedRequest.cargoType}.\n\nЦена: ${Number(price).toLocaleString()} ₽ · Вагонов: ${wagons} · Тонн: ${tons}\n\nОткройте платформу, чтобы продолжить переговоры.`
+                `Поступил новый отклик на вашу заявку:\n${selectedRequest.stationFrom} → ${selectedRequest.stationTo}, ${selectedRequest.cargoType}.\n\nЦена: ${Number(price).toLocaleString()} ₽ · Вагонов: ${wagons} · Тонн: ${tons}\n\nОткройте платформу, чтобы продолжить переговоры.`
             );
         }
 
@@ -997,8 +997,14 @@ export default function App() {
             }
 
             // --- Отправка через edge function (server-side detection + RLS) ---
+            const { data: { session: _chatSession } } = await supabase.auth.getSession();
+            if (!_chatSession) {
+                showToast('Сессия истекла. Обновите страницу.', 'error');
+                return;
+            }
             const { data: fnData, error: fnError } = await supabase.functions.invoke('send-chat-message', {
                 body: { chat_id: chatId, text: text.trim(), kind: 'user' },
+                headers: { Authorization: `Bearer ${_chatSession.access_token}` },
             });
             if (fnError) throw fnError;
             if (fnData?.blocked) {
@@ -1051,7 +1057,7 @@ export default function App() {
         sendNotification(
             bid.ownerId,
             'Ваша ставка принята — RailMatch',
-            `Компания «${userProfile.company}» приняла вашу ставку.\n\nОткройте платформу, чтобы перейти в чат.`
+            `Ваша ставка принята.\n\nОткройте платформу, чтобы перейти в чат.`
         );
 
         const req = requests.find(r => r.id === bid.requestId);
@@ -1122,7 +1128,7 @@ export default function App() {
                     sendNotification(
                         partnerId,
                         'Условия сделки согласованы — RailMatch',
-                        `Компания «${userProfile.company}» подтвердила условия. Обе стороны согласовали сделку!\n\nСледующий шаг — оплата комиссии платформы для раскрытия контактов.`
+                        `Партнёр подтвердил условия. Обе стороны согласовали сделку!\n\nСледующий шаг — оплата комиссии платформы для раскрытия контактов.`
                     );
                 }
             } else {
@@ -1139,7 +1145,7 @@ export default function App() {
                     sendNotification(
                         partnerId,
                         'Партнёр подтвердил условия — ваша очередь! RailMatch',
-                        `Компания «${userProfile.company}» подтвердила условия сделки.\n\nОткройте платформу, чтобы подтвердить со своей стороны.`
+                        `Партнёр подтвердил условия сделки.\n\nОткройте платформу, чтобы подтвердить со своей стороны.`
                     );
                 }
             }
@@ -1176,7 +1182,7 @@ export default function App() {
                 sendNotification(
                     partnerId,
                     'Предложение по оплате комиссии — RailMatch',
-                    `Компания «${userProfile.company}» предлагает ${modeText}.\n\nОткройте платформу, чтобы подтвердить или отклонить предложение.`
+                    `Партнёр предлагает ${modeText}.\n\nОткройте платформу, чтобы подтвердить или отклонить предложение.`
                 );
             }
         }
@@ -1203,7 +1209,7 @@ export default function App() {
                 sendNotification(
                     currentBid.commission_proposer_id,
                     'Партнёр подтвердил способ оплаты — RailMatch',
-                    `Компания «${userProfile.company}» согласовала ${modeText}.\n\nОткройте платформу и оплатите комиссию для раскрытия контактов.`
+                    `Партнёр согласовал ${modeText}.\n\nОткройте платформу и оплатите комиссию для раскрытия контактов.`
                 );
             }
         }
@@ -1228,7 +1234,7 @@ export default function App() {
                 sendNotification(
                     proposerId,
                     'Предложение по комиссии отклонено — RailMatch',
-                    `Компания «${userProfile.company}» отклонила ваше предложение по оплате комиссии.\n\nОткройте платформу, чтобы обсудить другой вариант.`
+                    `Партнёр отклонил ваше предложение по оплате комиссии.\n\nОткройте платформу, чтобы обсудить другой вариант.`
                 );
             }
         }
@@ -1298,7 +1304,7 @@ export default function App() {
             if (partnerId) {
                 const notifText = willReveal
                     ? `Комиссия полностью оплачена! Контакты партнёра открыты.\n\nОткройте платформу, чтобы увидеть контакты и подписать документы.`
-                    : `Компания «${userProfile.company}» оплатила свою часть комиссии (${Math.round(commissionTotal / 2).toLocaleString()} ₽).\n\nУ вас 1 час, чтобы оплатить вашу часть и раскрыть контакты.`;
+                    : `Партнёр оплатил свою часть комиссии (${Math.round(commissionTotal / 2).toLocaleString()} ₽).\n\nУ вас 1 час, чтобы оплатить вашу часть и раскрыть контакты.`;
                 sendNotification(
                     partnerId,
                     willReveal ? 'Контакты открыты — сделка завершена! RailMatch' : 'Партнёр оплатил комиссию — ваша очередь! RailMatch',
@@ -1347,7 +1353,7 @@ export default function App() {
                 sendNotification(
                     docPartnerId,
                     'Партнёр загрузил документ — RailMatch',
-                    `Компания «${userProfile?.company}» загрузила ${docNames[stage] || stage}.\n\nОткройте платформу, чтобы проверить документ.`
+                    `Партнёр загрузил ${docNames[stage] || stage}.\n\nОткройте платформу, чтобы проверить документ.`
                 );
             }
         }
