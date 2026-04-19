@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { haptic } from '../src/haptic.js';
 
-export default function BidModal({ request, onClose, onConfirm }) {
+export default function BidModal({ request, onClose, onConfirm, submitting = false }) {
     const maxWagons = request.totalWagons - (request.fulfilledWagons || 0);
     const [price, setPrice] = useState("");
     const [wagons, setWagons] = useState(maxWagons);
@@ -46,10 +46,10 @@ export default function BidModal({ request, onClose, onConfirm }) {
                     )}
 
                     <button
-                        onClick={() => { if (isValid) { haptic.notification('success'); onConfirm(price, wagons, tons); } }}
-                        disabled={!isValid}
+                        onClick={() => { if (isValid && !submitting) { haptic.notification('success'); onConfirm(price, wagons, tons); } }}
+                        disabled={!isValid || submitting}
                         className="w-full py-4 sm:py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-blue-500/20 uppercase tracking-widest text-xs hover:-translate-y-0.5 active:scale-95 transition-all mt-4 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                    >Отправить предложение</button>
+                    >{submitting ? 'Отправка...' : 'Отправить предложение'}</button>
                 </div>
             </div>
         </div>

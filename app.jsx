@@ -131,6 +131,7 @@ export default function App() {
 
     // UI стейты
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isBidSubmitting, setIsBidSubmitting] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [activeChat, setActiveChat] = useState(null);
     const [showDemoAlert, setShowDemoAlert] = useState(false);
@@ -799,7 +800,8 @@ export default function App() {
     }, [sbUser, userProfile?.role]);
 
     const handleBidSubmit = async (price, wagons, tons) => {
-        if (!sbUser || !userProfile) return;
+        if (!sbUser || !userProfile || isBidSubmitting) return;
+        setIsBidSubmitting(true);
 
         // Проверка: владелец уже откликался на эту заявку
         const alreadyBid = bids.find(
@@ -825,7 +827,6 @@ export default function App() {
             ownerId: sbUser.id,
             ownerName: userProfile.name || 'Владелец вагонов',
             ownerPhone: userProfile.phone,
-            ownerInn: userProfile.inn,
             price: Number(price),
             wagons: Number(wagons),
             tons: Number(tons),
@@ -836,10 +837,11 @@ export default function App() {
         if (error) {
             console.error("Error inserting bid", error);
             showToast("Ошибка при отправке отклика. Попробуйте ещё раз.", 'error');
+            setIsBidSubmitting(false);
             return;
         }
         showToast("Отклик успешно отправлен!", 'success');
-
+        setIsBidSubmitting(false);
         setIsModalOpen(false);
 
         // Уведомление грузоотправителю о новой ставке
@@ -2011,6 +2013,7 @@ export default function App() {
                     request={selectedRequest}
                     onClose={() => setIsModalOpen(false)}
                     onConfirm={handleBidSubmit}
+                    submitting={isBidSubmitting}
                 />
             )}{showDemoAlert && <DemoModal onClose={() => setShowDemoAlert(false)} onReg={() => { setShowDemoAlert(false); setScreen('auth'); }} />}
             {showOnboarding && userProfile && (
