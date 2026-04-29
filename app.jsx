@@ -1619,11 +1619,6 @@ export default function App() {
     return (
         <ErrorBoundary>
         <div className="min-h-screen transition-colors duration-700 ease-in-out bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white relative origin-top" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-            {/* DEV BANNER */}
-            <div className={`w-full bg-amber-400 dark:bg-amber-500 text-amber-900 dark:text-amber-950 text-center py-2 px-4 text-xs font-black tracking-wide z-50 flex items-center justify-center gap-2 flex-wrap${view === 'chat' ? ' hidden md:flex' : ''}`}>
-                <span>Сайт находится в разработке. По вопросам пишите в Telegram:</span>
-                <a href="https://t.me/onemonba" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:opacity-70 transition-opacity">@onemonba</a>
-            </div>
             <header className={`sticky top-0 z-50 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60${view === 'chat' ? ' hidden md:block' : ''}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('catalog')}>
